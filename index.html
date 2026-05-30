@@ -51,7 +51,8 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
 .qarow{display:flex;justify-content:space-between;align-items:center;padding:8px 11px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);cursor:pointer;margin-bottom:4px;transition:all .15s}
 .qarow:hover{border-color:var(--blue);background:var(--bg4)}
 .qaname{font-family:var(--fh);font-size:13px;font-weight:800;font-style:italic}.qasub{font-size:10px;color:var(--text3);margin-top:1px}
-.qaplus{width:26px;height:26px;background:var(--blue);border-radius:6px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:18px;font-weight:700;flex-shrink:0}
+.qaplus{width:36px;height:36px;background:var(--blue);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:700;flex-shrink:0;border:none;cursor:pointer;transition:background .15s}
+.qaplus:hover{background:var(--blue2)}
 .cathead{font-family:var(--fh);font-size:10px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:1px;margin:10px 0 5px 1px}
 .wrow{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)}.wrow:last-child{border-bottom:none}
 .wdate{font-size:12px;color:var(--text2)}.wtw{font-family:var(--fh);font-size:10px;font-weight:700;color:var(--blue);margin-top:1px}
@@ -87,6 +88,13 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
 .ing-total-lbl{font-family:var(--fh);font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
 .ing-total-nums{display:flex;gap:12px}.itn{font-size:12px;font-weight:600}
 .ms-badge{display:inline-flex;align-items:center;gap:5px;background:#22C55E18;border:1px solid #22C55E44;border-radius:20px;padding:3px 10px 3px 7px;font-family:var(--fh);font-size:12px;font-weight:700;color:var(--green);margin-left:10px}
+.drag-meal{display:flex;flex-direction:row;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);cursor:grab;margin-bottom:6px;transition:all .15s;user-select:none;gap:12px}
+.drag-meal:hover{border-color:var(--blue);background:var(--bg4)}
+.drag-meal.dragging{opacity:.35;cursor:grabbing;transform:scale(.98)}
+.drag-meal-info{flex:1;min-width:0}
+.drag-meal-actions{display:flex;align-items:center;flex-shrink:0}
+.drag-meal .qaname{font-family:var(--fh);font-size:15px;font-weight:800;font-style:italic;color:var(--text);margin-bottom:3px}
+.drag-meal .qasub{font-size:11px;color:var(--text3)}
 </style>
 </head>
 <body>
@@ -161,6 +169,15 @@ function vt(v){if(!v)return'';const c=v==='A'?'#0066FF18;color:#0066FF':v==='B'?
 function tL(ws){if(!ws.length)return[];const a=0.1,o=[{date:ws[0].date,tw:ws[0].w}];for(let i=1;i<ws.length;i++)o.push({date:ws[i].date,tw:+(a*ws[i].w+(1-a)*o[i-1].tw).toFixed(2)});return o}
 function wr(){const s=sW();if(s.length<2)return null;const t=tL(s);return+((t[t.length-1].tw-t[Math.max(0,t.length-8)].tw)/7*7).toFixed(2)}
 function fW(){const s=sW();if(S.wtab==='week'){const d=new Date();d.setDate(d.getDate()-7);return s.filter(x=>new Date(x.date)>=d)}if(S.wtab==='month'){const d=new Date();d.setMonth(d.getMonth()-1);return s.filter(x=>new Date(x.date)>=d)}return s}
+
+// Drag and Drop
+let dragId=null;
+function dragStart(e,id){dragId=id;e.dataTransfer.effectAllowed='copy';e.dataTransfer.setData('text/plain',id);setTimeout(()=>{const el=document.querySelector('[data-id="'+id+'"]');if(el)el.classList.add('dragging');},0);}
+function dragEnd(e){document.querySelectorAll('.drag-meal').forEach(el=>el.classList.remove('dragging'));dragId=null;}
+function dragOver(e){e.preventDefault();e.dataTransfer.dropEffect='copy';const z=document.getElementById('drop-zone');if(z)z.classList.add('drag-over');}
+function dragLeave(e){const z=document.getElementById('drop-zone');if(z&&!z.contains(e.relatedTarget))z.classList.remove('drag-over');}
+function dropMeal(e){e.preventDefault();const z=document.getElementById('drop-zone');if(z)z.classList.remove('drag-over');const id=e.dataTransfer.getData('text/plain')||dragId;if(!id)return;const m=am().find(x=>(x.id||x.name)===id);if(!m)return;if(!S.meals[S.mdate])S.meals[S.mdate]=[];S.meals[S.mdate].push({name:m.name,kcal:m.kcal,pro:m.pro,carb:m.carb,fat:m.fat,time:now()});LS.set('sc_m',S.meals);render();}
+
 function boot(){S.weights=LS.get('sc_w')||SEED;S.meals=LS.get('sc_m')||{};S.custom=LS.get('sc_cu')||[];render()}
 function go(v){S.view=v;document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.textContent.toLowerCase().startsWith(v.slice(0,3))));render()}
 function render(){kc();const vc=document.getElementById('vc');if(S.view==='dashboard')vc.innerHTML=vD();else if(S.view==='nutrition')vc.innerHTML=vN();else if(S.view==='weight')vc.innerHTML=vW();else if(S.view==='library')vc.innerHTML=vLib();document.getElementById('nw').textContent=lw().toFixed(1);setTimeout(ic,80)}
@@ -176,7 +193,80 @@ function vD(){
 }
 function mac(t){const rows=[{n:'Protein',v:t.pro,mn:160,mx:175,u:'g',c:'var(--protein)'},{n:'Carbs',v:t.carb,mn:180,mx:210,u:'g',c:'var(--carbs)'},{n:'Fat',v:t.fat,mn:55,mx:65,u:'g',c:'var(--fats)'}];return`<div class="mbar"><div class="mbhdr"><span class="mbname" style="color:var(--text2)">Calories</span><span class="mbnums"><b>${t.kcal}</b> / 2400 kcal</span></div><div class="track"><div class="fill" style="width:${pct(t.kcal,2400)}%;background:${bc(t.kcal,2200,2400)}"></div></div></div>${rows.map(r=>`<div class="mbar"><div class="mbhdr"><span class="mbname" style="color:${r.c}">${r.n}</span><span class="mbnums"><b>${r.v}${r.u}</b> / ${r.mx}${r.u}</span></div><div class="track"><div class="fill" style="width:${pct(r.v,r.mx)}%;background:${r.v>r.mx?'var(--red)':r.c}"></div></div></div>`).join('')}`}
 
-function vN(){const ms=dm(),t=tot(ms);return`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px"><div><div style="font-family:var(--fh);font-size:22px;font-weight:800;font-style:italic">Nutrition Log</div><div style="font-size:12px;color:var(--text3)">Tap a meal to log it instantly</div></div><input type="date" value="${S.mdate}" onchange="S.mdate=this.value;render()" style="width:155px"/></div><div class="g4"><div class="tile tb"><div class="tlbl">Calories</div><div class="tval ${t.kcal>2400?'cr':t.kcal>=2200?'cg':''}">${t.kcal}</div><div class="tsub">2200–2400</div></div><div class="tile"><div class="tlbl">Protein</div><div class="tval ${t.pro>=160?'cg':'ca'}">${t.pro}g</div><div class="tsub">160–175g</div></div><div class="tile"><div class="tlbl">Carbs</div><div class="tval ${t.carb>210?'cr':''}">${t.carb}g</div><div class="tsub">180–210g</div></div><div class="tile"><div class="tlbl">Fat</div><div class="tval ${t.fat>65?'cr':''}">${t.fat}g</div><div class="tsub">55–65g</div></div></div><div class="card sg">${mac(t)}</div><div class="g2"><div class="card"><div class="clbl">Library — Tap to Log</div><div style="max-height:500px;overflow-y:auto">${CATS.map(cat=>`<div class="cathead">${cat}</div>${am().filter(m=>m.cat===cat).map(m=>`<div class="qarow" onclick="qadd('${m.id||m.name}')"><div><div class="qaname">${m.name}${vt(m.v)}</div><div class="qasub">${m.kcal}kcal · <span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div></div><div class="qaplus">+</div></div>`).join('')}`).join('')}</div></div><div class="card"><div class="clbl">Logged — ${S.mdate}</div>${ms.length===0?'<div class="empty">No meals logged yet.<br>Tap any meal from the library to add it.</div>':ms.map((m,i)=>`<div class="mitem"><div><div class="mname">${m.name}</div><div class="mtime">${m.time||''}</div></div><div class="fx"><div style="text-align:right"><div class="mkcal">${m.kcal} kcal</div><div class="mmsub"><span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div></div><button class="delbtn" onclick="delM(${i})">x</button></div></div>`).join('')}</div></div>`}
+function vN(){
+  const ms=dm(),t=tot(ms);
+  const loggedRows=ms.length===0?
+    `<div id="drop-empty" style="border:2px dashed var(--border2);border-radius:var(--rs);padding:36px 20px;text-align:center;color:var(--text3);transition:all .2s">
+      <div style="font-size:32px;margin-bottom:10px">🍽️</div>
+      <div style="font-family:var(--fh);font-size:15px;font-weight:700;color:var(--text2);margin-bottom:4px">Drag meals here to log them</div>
+      <div style="font-size:12px">Or tap the + button on any meal</div>
+    </div>`:
+    ms.map((m,i)=>`
+      <div class="logged-item">
+        <div style="flex:1"><div class="mname">${m.name}</div><div class="mtime">${m.time||''}</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="text-align:right">
+            <div class="mkcal">${m.kcal} kcal</div>
+            <div class="mmsub"><span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
+          </div>
+          <button class="delbtn" onclick="delM(${i})">✕</button>
+        </div>
+      </div>`).join('');
+
+  return`
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+  <div>
+    <div style="font-family:var(--fh);font-size:22px;font-weight:800;font-style:italic">Nutrition Log</div>
+    <div style="font-size:12px;color:var(--text3)">Drag meals to log · or tap the + button</div>
+  </div>
+  <input type="date" value="${S.mdate}" onchange="S.mdate=this.value;render()" style="width:155px"/>
+</div>
+
+<div class="g4">
+  <div class="tile tb"><div class="tlbl">Calories</div><div class="tval ${t.kcal>2400?'cr':t.kcal>=2200?'cg':''}">${t.kcal}</div><div class="tsub">2200-2400</div></div>
+  <div class="tile"><div class="tlbl">Protein</div><div class="tval ${t.pro>=160?'cg':'ca'}">${t.pro}g</div><div class="tsub">160-175g</div></div>
+  <div class="tile"><div class="tlbl">Carbs</div><div class="tval ${t.carb>210?'cr':''}">${t.carb}g</div><div class="tsub">180-210g</div></div>
+  <div class="tile"><div class="tlbl">Fat</div><div class="tval ${t.fat>65?'cr':''}">${t.fat}g</div><div class="tsub">55-65g</div></div>
+</div>
+
+<div class="card sg">${mac(t)}</div>
+
+<div class="g2">
+  <div class="card">
+    <div class="clbl">Library — Tap or Drag to Log</div>
+    <div style="max-height:520px;overflow-y:auto">
+      ${CATS.map(cat=>`
+        <div class="cathead">${cat}</div>
+        ${am().filter(m=>m.cat===cat).map(m=>`
+          <div class="drag-meal"
+            draggable="true"
+            data-id="${m.id||m.name}"
+            ondragstart="dragStart(event,'${m.id||m.name}')"
+            ondragend="dragEnd(event)">
+            <div class="drag-meal-info">
+              <div class="qaname">${m.name}${vt(m.v)}</div>
+              <div class="qasub">${m.kcal}kcal · <span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
+            </div>
+            <div class="drag-meal-actions">
+              <button class="qaplus" onclick="event.stopPropagation();qadd('${m.id||m.name}')" title="Tap to log">+</button>
+            </div>
+          </div>`).join('')
+        }`).join('')}
+    </div>
+  </div>
+
+  <div class="card" id="drop-zone"
+    ondragover="dragOver(event)"
+    ondragleave="dragLeave(event)"
+    ondrop="dropMeal(event)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="clbl" style="margin-bottom:0">Logged — ${S.mdate}</div>
+      ${ms.length>0?`<span style="font-family:var(--fh);font-size:11px;color:var(--text3)">${ms.length} meal${ms.length!==1?'s':''} · ${t.kcal} kcal</span>`:''}
+    </div>
+    <div id="logged-list">${loggedRows}</div>
+  </div>
+</div>`;
+}
 
 function vW(){
   const s=sW(),tr=tL(s),cw=lw(),rate=wr(),tc=tr.length?tr[tr.length-1].tw.toFixed(1):cw.toFixed(1);
