@@ -4,10 +4,6 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>SRIMAN.CUTS — Nutrition & Weight Tracker</title>
-<link rel="icon" type="image/x-icon" href="favicon.ico"/>
-<link rel="icon" type="image/png" sizes="32x32" href="favicon-32x32.png"/>
-<link rel="icon" type="image/png" sizes="16x16" href="favicon-16x16.png"/>
-<link rel="apple-touch-icon" sizes="180x180" href="favicon-180x180.png"/>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,700;1,800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <style>
@@ -91,6 +87,46 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
 .ing-total-lbl{font-family:var(--fh);font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
 .ing-total-nums{display:flex;gap:12px}.itn{font-size:12px;font-weight:600}
 .ms-badge{display:inline-flex;align-items:center;gap:5px;background:#22C55E18;border:1px solid #22C55E44;border-radius:20px;padding:3px 10px 3px 7px;font-family:var(--fh);font-size:12px;font-weight:700;color:var(--green);margin-left:10px}
+
+.search-wrap{position:relative;margin-bottom:12px}
+.search-wrap input{padding-left:34px}
+.search-icon{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);font-size:13px;pointer-events:none}
+.search-result{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);margin-bottom:5px;cursor:pointer;transition:all .15s}
+.search-result:hover{border-color:var(--blue);background:var(--bg4)}
+.sr-name{font-family:var(--fh);font-size:14px;font-weight:800;font-style:italic;color:var(--text)}
+.sr-match{font-size:10px;color:var(--blue);font-weight:700;letter-spacing:.5px;text-transform:uppercase;margin-top:1px}
+.sr-macros{font-size:11px;color:var(--text3);margin-top:2px}
+.no-res{text-align:center;padding:16px;color:var(--text3);font-size:12px}
+.ing-editor{width:100%;border-collapse:collapse;margin-top:6px}
+.ing-editor th{font-family:var(--fh);font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;padding:4px 0;border-bottom:1px solid var(--border);text-align:left}
+.ing-editor th:not(:first-child){text-align:right}
+.ing-editor td{padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;vertical-align:middle}
+.ing-editor tr:last-child td{border-bottom:none}
+.ing-editor td:not(:first-child){text-align:right}
+.gram-inp{width:62px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;padding:5px 7px;text-align:right;outline:none;transition:border .15s;font-family:var(--fb)}
+.gram-inp:focus{border-color:var(--blue)}
+.im-cell{font-size:12px;color:var(--text2);min-width:36px;display:inline-block;text-align:right}
+.live-tot{background:var(--bg5);border-radius:8px;padding:10px 12px;margin-top:8px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px}
+.lt-lbl{font-family:var(--fh);font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
+.lt-nums{display:flex;gap:12px}
+.ltn2{font-size:13px;font-weight:700}
+.meal-act{display:flex;gap:8px;margin-top:10px;justify-content:space-between;align-items:center}
+.rst-btn{background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--text3);font-family:var(--fh);font-size:12px;font-weight:700;padding:6px 12px;cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.3px}
+.rst-btn:hover{border-color:var(--text2);color:var(--text)}
+.log-custom{background:var(--blue);color:#fff;border:none;border-radius:6px;font-family:var(--fh);font-size:12px;font-weight:700;padding:7px 16px;cursor:pointer;transition:background .15s;text-transform:uppercase;letter-spacing:.5px}
+.log-custom:hover{background:var(--blue2)}
+.drag-meal{display:flex;flex-direction:row;justify-content:space-between;align-items:center;padding:12px 14px;background:var(--bg3);border:1px solid var(--border);border-radius:var(--rs);cursor:grab;margin-bottom:6px;transition:all .15s;user-select:none;gap:12px}
+.drag-meal:hover{border-color:var(--blue);background:var(--bg4)}
+.drag-meal.dragging{opacity:.35;cursor:grabbing;transform:scale(.98)}
+.drag-meal-info{flex:1;min-width:0}
+.drag-meal-actions{display:flex;align-items:center;flex-shrink:0}
+.drag-meal .qaname{font-family:var(--fh);font-size:15px;font-weight:800;font-style:italic;color:var(--text);margin-bottom:3px}
+.drag-meal .qasub{font-size:11px;color:var(--text3)}
+#drop-zone{transition:border .2s,background .2s;min-height:180px}
+#drop-zone.drag-over{border-color:var(--blue) !important;background:var(--bg3);box-shadow:inset 0 0 0 2px #0066ff33}
+.logged-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);animation:slideIn .2s ease}
+.logged-item:last-child{border-bottom:none}
+@keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
 </style>
 </head>
 <body>
@@ -147,7 +183,7 @@ const LIB=[
   {id:'psc',cat:'Pre-Sleep',name:'Pre-Sleep C',v:'C',kcal:322,pro:22,carb:3,fat:25},
 ];
 const LS={get:k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let S={weights:[],meals:{},custom:[],view:'dashboard',mdate:td(),wtab:'all',openCards:{}};
+let S={weights:[],meals:{},custom:[],view:'dashboard',mdate:td(),wtab:'all',openCards:{},gO:{},sQ:'',lsQ:''};
 let CH={};
 function td(){return new Date().toISOString().split('T')[0]}
 function now(){let d=new Date();return`${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`}
@@ -165,6 +201,118 @@ function vt(v){if(!v)return'';const c=v==='A'?'#0066FF18;color:#0066FF':v==='B'?
 function tL(ws){if(!ws.length)return[];const a=0.1,o=[{date:ws[0].date,tw:ws[0].w}];for(let i=1;i<ws.length;i++)o.push({date:ws[i].date,tw:+(a*ws[i].w+(1-a)*o[i-1].tw).toFixed(2)});return o}
 function wr(){const s=sW();if(s.length<2)return null;const t=tL(s);return+((t[t.length-1].tw-t[Math.max(0,t.length-8)].tw)/7*7).toFixed(2)}
 function fW(){const s=sW();if(S.wtab==='week'){const d=new Date();d.setDate(d.getDate()-7);return s.filter(x=>new Date(x.date)>=d)}if(S.wtab==='month'){const d=new Date();d.setMonth(d.getMonth()-1);return s.filter(x=>new Date(x.date)>=d)}return s}
+
+function getG(id,i){const k=id+'_'+i;return S.gO[k]!==undefined?S.gO[k]:null;}
+function baseG(ing){return parseFloat(ing.qty)||100;}
+function calcIng(id,ings){return ings.map((ing,i)=>{const bg=baseG(ing);const cg=getG(id,i)!==null?getG(id,i):bg;const r=cg/bg;return{name:ing.name,g:cg,kcal:Math.round(ing.kcal*r),pro:+(ing.pro*r).toFixed(1),carb:+(ing.carb*r).toFixed(1),fat:+(ing.fat*r).toFixed(1)}});}
+function sumIngs(ings){return ings.reduce((a,x)=>({kcal:a.kcal+x.kcal,pro:+(a.pro+x.pro).toFixed(1),carb:+(a.carb+x.carb).toFixed(1),fat:+(a.fat+x.fat).toFixed(1)}),{kcal:0,pro:0,carb:0,fat:0});}
+
+function updateG(id,i,val){
+  S.gO[id+'_'+i]=parseFloat(val)||0;
+  const det=MD[id];if(!det)return;
+  const ings=calcIng(id,det.ingredients);
+  ings.forEach((ing,j)=>{
+    const ke=document.getElementById('imc-'+id+'-'+j+'-k');
+    const pe=document.getElementById('imc-'+id+'-'+j+'-p');
+    const ce=document.getElementById('imc-'+id+'-'+j+'-c');
+    const fe=document.getElementById('imc-'+id+'-'+j+'-f');
+    if(ke)ke.textContent=ing.kcal;
+    if(pe)pe.textContent=ing.pro+'g';
+    if(ce)ce.textContent=ing.carb+'g';
+    if(fe)fe.textContent=ing.fat+'g';
+  });
+  const t=sumIngs(ings);
+  const tk=document.getElementById('itot-'+id+'-k');const tp=document.getElementById('itot-'+id+'-p');
+  const tc=document.getElementById('itot-'+id+'-c');const tf=document.getElementById('itot-'+id+'-f');
+  if(tk)tk.textContent=t.kcal+' kcal';if(tp)tp.textContent=t.pro+'g P';
+  if(tc)tc.textContent=t.carb+'g C';if(tf)tf.textContent=t.fat+'g F';
+}
+
+function resetG(id){
+  const det=MD[id];if(!det)return;
+  det.ingredients.forEach((ing,i)=>{
+    delete S.gO[id+'_'+i];
+    const el=document.getElementById('gi-'+id+'-'+i);
+    if(el)el.value=baseG(ing);
+    updateG(id,i,baseG(ing));
+  });
+}
+
+function logCustomG(id){
+  const det=MD[id];if(!det)return;
+  const ings=calcIng(id,det.ingredients);
+  const t=sumIngs(ings);
+  const m=am().find(x=>(x.id||x.name)===id);
+  if(!S.meals[S.mdate])S.meals[S.mdate]=[];
+  S.meals[S.mdate].push({name:m?m.name:id,kcal:t.kcal,pro:t.pro,carb:t.carb,fat:t.fat,time:now()});
+  LS.set('sc_m',S.meals);
+  det.ingredients.forEach((_,i)=>delete S.gO[id+'_'+i]);
+  render();
+}
+
+function ingEditor(id){
+  const det=MD[id];if(!det)return'<div class="empty">No data</div>';
+  const ings=calcIng(id,det.ingredients);
+  const t=sumIngs(ings);
+  return`<div class="meal-note-strip">${det.note}</div>
+  <table class="ing-editor">
+    <thead><tr><th>Ingredient</th><th>g</th><th>Kcal</th><th style="color:var(--protein)">P</th><th style="color:var(--carbs)">C</th><th style="color:var(--fats)">F</th></tr></thead>
+    <tbody>${det.ingredients.map((ing,i)=>`<tr>
+      <td><div class="ing-name">${ing.name}</div></td>
+      <td><input class="gram-inp" id="gi-${id}-${i}" type="number" min="0" value="${ings[i].g}" oninput="updateG('${id}',${i},this.value)"/></td>
+      <td><span class="im-cell" id="imc-${id}-${i}-k">${ings[i].kcal}</span></td>
+      <td><span class="im-cell" style="color:var(--protein)" id="imc-${id}-${i}-p">${ings[i].pro}g</span></td>
+      <td><span class="im-cell" style="color:var(--carbs)" id="imc-${id}-${i}-c">${ings[i].carb}g</span></td>
+      <td><span class="im-cell" style="color:var(--fats)" id="imc-${id}-${i}-f">${ings[i].fat}g</span></td>
+    </tr>`).join('')}</tbody>
+  </table>
+  <div class="live-tot">
+    <span class="lt-lbl">Meal total</span>
+    <div class="lt-nums">
+      <span class="ltn2" id="itot-${id}-k">${t.kcal} kcal</span>
+      <span class="ltn2" style="color:var(--protein)" id="itot-${id}-p">${t.pro}g P</span>
+      <span class="ltn2" style="color:var(--carbs)" id="itot-${id}-c">${t.carb}g C</span>
+      <span class="ltn2" style="color:var(--fats)" id="itot-${id}-f">${t.fat}g F</span>
+    </div>
+  </div>
+  <div class="meal-act">
+    <button class="rst-btn" onclick="resetG('${id}')">↺ Reset</button>
+    <button class="log-custom" onclick="logCustomG('${id}')">+ Log to Today</button>
+  </div>`;
+}
+
+function doSearch(q,target){
+  const lower=(q||'').toLowerCase().trim();
+  const resId=target==='n'?'sr-n':'sr-l';
+  const el=document.getElementById(resId);if(!el)return;
+  if(lower.length<2){el.innerHTML='';return;}
+  const hits=[];
+  am().forEach(m=>{
+    const det=MD[m.id||m.name];
+    let on='';
+    if(m.name.toLowerCase().includes(lower))on='Meal name match';
+    if(!on&&det){const fi=det.ingredients.find(x=>x.name.toLowerCase().includes(lower));if(fi)on=fi.name;}
+    if(on)hits.push({...m,on});
+  });
+  if(!hits.length){el.innerHTML='<div class="no-res">No meals found for "'+q+'"</div>';return;}
+  el.innerHTML=hits.map(m=>`
+    <div class="search-result">
+      <div>
+        <div class="sr-name">${m.name}${vt(m.v)}</div>
+        <div class="sr-match">Contains: ${m.on}</div>
+        <div class="sr-macros">${m.kcal}kcal · <span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
+      </div>
+      <button class="qaplus" onclick="qadd('${m.id||m.name}');document.getElementById('${resId}').innerHTML='';document.getElementById('si-${target==='n'?'n':'l'}').value=''">+</button>
+    </div>`).join('');
+}
+
+
+function dragStart(e,id){S._dragId=id;e.dataTransfer.effectAllowed='copy';e.dataTransfer.setData('text/plain',id);setTimeout(()=>{const el=document.querySelector('[data-id="'+id+'"]');if(el)el.classList.add('dragging');},0);}
+function dragEnd(e){document.querySelectorAll('.drag-meal').forEach(el=>el.classList.remove('dragging'));S._dragId=null;}
+function dragOver(e){e.preventDefault();e.dataTransfer.dropEffect='copy';const z=document.getElementById('drop-zone');if(z)z.classList.add('drag-over');}
+function dragLeave(e){const z=document.getElementById('drop-zone');if(z&&!z.contains(e.relatedTarget))z.classList.remove('drag-over');}
+function dropMeal(e){e.preventDefault();const z=document.getElementById('drop-zone');if(z)z.classList.remove('drag-over');const id=e.dataTransfer.getData('text/plain')||S._dragId;if(!id)return;const m=am().find(x=>(x.id||x.name)===id);if(!m)return;if(!S.meals[S.mdate])S.meals[S.mdate]=[];S.meals[S.mdate].push({name:m.name,kcal:m.kcal,pro:m.pro,carb:m.carb,fat:m.fat,time:now()});LS.set('sc_m',S.meals);render();}
+
 function boot(){S.weights=LS.get('sc_w')||SEED;S.meals=LS.get('sc_m')||{};S.custom=LS.get('sc_cu')||[];render()}
 function go(v){S.view=v;document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.textContent.toLowerCase().startsWith(v.slice(0,3))));render()}
 function render(){kc();const vc=document.getElementById('vc');if(S.view==='dashboard')vc.innerHTML=vD();else if(S.view==='nutrition')vc.innerHTML=vN();else if(S.view==='weight')vc.innerHTML=vW();else if(S.view==='library')vc.innerHTML=vLib();document.getElementById('nw').textContent=lw().toFixed(1);setTimeout(ic,80)}
@@ -180,7 +328,70 @@ function vD(){
 }
 function mac(t){const rows=[{n:'Protein',v:t.pro,mn:160,mx:175,u:'g',c:'var(--protein)'},{n:'Carbs',v:t.carb,mn:180,mx:210,u:'g',c:'var(--carbs)'},{n:'Fat',v:t.fat,mn:55,mx:65,u:'g',c:'var(--fats)'}];return`<div class="mbar"><div class="mbhdr"><span class="mbname" style="color:var(--text2)">Calories</span><span class="mbnums"><b>${t.kcal}</b> / 2400 kcal</span></div><div class="track"><div class="fill" style="width:${pct(t.kcal,2400)}%;background:${bc(t.kcal,2200,2400)}"></div></div></div>${rows.map(r=>`<div class="mbar"><div class="mbhdr"><span class="mbname" style="color:${r.c}">${r.n}</span><span class="mbnums"><b>${r.v}${r.u}</b> / ${r.mx}${r.u}</span></div><div class="track"><div class="fill" style="width:${pct(r.v,r.mx)}%;background:${r.v>r.mx?'var(--red)':r.c}"></div></div></div>`).join('')}`}
 
-function vN(){const ms=dm(),t=tot(ms);return`<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px"><div><div style="font-family:var(--fh);font-size:22px;font-weight:800;font-style:italic">Nutrition Log</div><div style="font-size:12px;color:var(--text3)">Tap a meal to log it instantly</div></div><input type="date" value="${S.mdate}" onchange="S.mdate=this.value;render()" style="width:155px"/></div><div class="g4"><div class="tile tb"><div class="tlbl">Calories</div><div class="tval ${t.kcal>2400?'cr':t.kcal>=2200?'cg':''}">${t.kcal}</div><div class="tsub">2200–2400</div></div><div class="tile"><div class="tlbl">Protein</div><div class="tval ${t.pro>=160?'cg':'ca'}">${t.pro}g</div><div class="tsub">160–175g</div></div><div class="tile"><div class="tlbl">Carbs</div><div class="tval ${t.carb>210?'cr':''}">${t.carb}g</div><div class="tsub">180–210g</div></div><div class="tile"><div class="tlbl">Fat</div><div class="tval ${t.fat>65?'cr':''}">${t.fat}g</div><div class="tsub">55–65g</div></div></div><div class="card sg">${mac(t)}</div><div class="g2"><div class="card"><div class="clbl">Library — Tap to Log</div><div style="max-height:500px;overflow-y:auto">${CATS.map(cat=>`<div class="cathead">${cat}</div>${am().filter(m=>m.cat===cat).map(m=>`<div class="qarow" onclick="qadd('${m.id||m.name}')"><div><div class="qaname">${m.name}${vt(m.v)}</div><div class="qasub">${m.kcal}kcal · <span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div></div><div class="qaplus">+</div></div>`).join('')}`).join('')}</div></div><div class="card"><div class="clbl">Logged — ${S.mdate}</div>${ms.length===0?'<div class="empty">No meals logged yet.<br>Tap any meal from the library to add it.</div>':ms.map((m,i)=>`<div class="mitem"><div><div class="mname">${m.name}</div><div class="mtime">${m.time||''}</div></div><div class="fx"><div style="text-align:right"><div class="mkcal">${m.kcal} kcal</div><div class="mmsub"><span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div></div><button class="delbtn" onclick="delM(${i})">x</button></div></div>`).join('')}</div></div>`}
+function vN(){
+  const ms=dm(),t=tot(ms);
+  const loggedRows=ms.length===0?
+    `<div id="drop-empty" style="border:2px dashed var(--border2);border-radius:var(--rs);padding:36px 20px;text-align:center;color:var(--text3);transition:all .2s">
+      <div style="font-size:32px;margin-bottom:10px">🍽️</div>
+      <div style="font-family:var(--fh);font-size:15px;font-weight:700;color:var(--text2);margin-bottom:4px">Drag meals here to log them</div>
+      <div style="font-size:12px">Or tap the + button on any meal</div>
+    </div>`:
+    ms.map((m,i)=>`
+      <div class="logged-item">
+        <div style="flex:1"><div class="mname">${m.name}</div><div class="mtime">${m.time||''}</div></div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="text-align:right"><div class="mkcal">${m.kcal} kcal</div><div class="mmsub"><span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div></div>
+          <button class="delbtn" onclick="delM(${i})">✕</button>
+        </div>
+      </div>`).join('');
+  return`
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
+  <div><div style="font-family:var(--fh);font-size:22px;font-weight:800;font-style:italic">Nutrition Log</div>
+  <div style="font-size:12px;color:var(--text3)">Search ingredients · drag or tap + to log</div></div>
+  <input type="date" value="${S.mdate}" onchange="S.mdate=this.value;render()" style="width:155px"/>
+</div>
+<div class="g4">
+  <div class="tile tb"><div class="tlbl">Calories</div><div class="tval ${t.kcal>2400?'cr':t.kcal>=2200?'cg':''}">${t.kcal}</div><div class="tsub">2200-2400</div></div>
+  <div class="tile"><div class="tlbl">Protein</div><div class="tval ${t.pro>=160?'cg':'ca'}">${t.pro}g</div><div class="tsub">160-175g</div></div>
+  <div class="tile"><div class="tlbl">Carbs</div><div class="tval ${t.carb>210?'cr':''}">${t.carb}g</div><div class="tsub">180-210g</div></div>
+  <div class="tile"><div class="tlbl">Fat</div><div class="tval ${t.fat>65?'cr':''}">${t.fat}g</div><div class="tsub">55-65g</div></div>
+</div>
+<div class="card sg">${mac(t)}</div>
+<div class="g2">
+  <div class="card">
+    <div class="search-wrap">
+      <span class="search-icon">🔍</span>
+      <input id="si-n" type="text" placeholder="Search meals or ingredients... (e.g. tofu, paneer, oats)" oninput="doSearch(this.value,'n')"/>
+    </div>
+    <div id="sr-n" style="margin-bottom:8px"></div>
+    <div class="clbl">Library — Drag or Tap + to Log</div>
+    <div style="max-height:440px;overflow-y:auto">
+      ${CATS.map(cat=>`
+        <div class="cathead">${cat}</div>
+        ${am().filter(m=>m.cat===cat).map(m=>`
+          <div class="drag-meal" draggable="true" data-id="${m.id||m.name}"
+            ondragstart="dragStart(event,'${m.id||m.name}')"
+            ondragend="dragEnd(event)">
+            <div class="drag-meal-info">
+              <div class="qaname">${m.name}${vt(m.v)}</div>
+              <div class="qasub">${m.kcal}kcal · <span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
+            </div>
+            <div class="drag-meal-actions">
+              <button class="qaplus" onclick="event.stopPropagation();qadd('${m.id||m.name}')">+</button>
+            </div>
+          </div>`).join('')}`).join('')}
+    </div>
+  </div>
+  <div class="card" id="drop-zone"
+    ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropMeal(event)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+      <div class="clbl" style="margin-bottom:0">Logged — ${S.mdate}</div>
+      ${ms.length>0?`<span style="font-family:var(--fh);font-size:11px;color:var(--text3)">${ms.length} meal${ms.length!==1?'s':''} · ${t.kcal} kcal</span>`:''}
+    </div>
+    <div id="logged-list">${loggedRows}</div>
+  </div>
+</div>`;
+}
 
 function vW(){
   const s=sW(),tr=tL(s),cw=lw(),rate=wr(),tc=tr.length?tr[tr.length-1].tw.toFixed(1):cw.toFixed(1);
@@ -194,7 +405,63 @@ function vW(){
   <div class="card"><div class="clbl">History — ${s.length} entries</div><div style="max-height:500px;overflow-y:auto">${s.length===0?'<div class="empty">No entries yet</div>':[...s].reverse().map((e,i,arr)=>{const prev=arr[i+1];const delta=prev?(e.w-prev.w).toFixed(1):null;const tO=tr.find(t=>t.date===e.date);return`<div class="wrow"><div><div class="wdate">${e.date.slice(5)}</div>${tO?`<div class="wtw">trend ${tO.tw.toFixed(1)}kg</div>`:''}</div><div class="fx">${delta!==null?`<span class="wd2 ${+delta<0?'dn':'up'}">${+delta<0?'▼':'▲'}${Math.abs(+delta)}</span>`:''}<span class="wval2">${e.w.toFixed(1)}kg</span><button class="delbtn" onclick="delW('${e.date}')">x</button></div></div>`}).join('')}</div></div></div>`;
 }
 
-function vLib(){return`<div style="margin-bottom:16px"><div style="font-family:var(--fh);font-size:22px;font-weight:800;font-style:italic">Meal Library</div><div style="font-size:12px;color:var(--text3)">Click a meal to expand ingredients | tap + to log today</div></div>${CATS.map(cat=>`<div class="card sg"><div class="clbl">${cat}</div>${am().filter(m=>m.cat===cat).map(m=>{const id=m.id||m.name;const det=MD[id];const isO=!!S.openCards[id];return`<div class="meal-card"><div class="meal-card-header" onclick="tc2('${id}')"><div><div class="meal-card-name">${m.name}${vt(m.v)}</div><div style="display:flex;gap:10px;margin-top:3px"><span class="mcm">${m.kcal} kcal</span><span class="mcm pro">${m.pro}g P</span><span class="mcm carb">${m.carb}g C</span><span class="mcm fat">${m.fat}g F</span></div></div><div style="display:flex;align-items:center;gap:8px"><button class="addmeal-btn" onclick="event.stopPropagation();qaddL('${id}')">+ Log Today</button><span class="chevron" style="transform:${isO?'rotate(180deg)':'rotate(0deg)'}">▼</span></div></div><div class="meal-card-body ${isO?'open':''}">${det?`<div class="meal-note-strip">${det.note}</div><table class="ing-table"><thead><tr><th>Ingredient</th><th>Kcal</th><th style="color:var(--protein)">P</th><th style="color:var(--carbs)">C</th><th style="color:var(--fats)">F</th></tr></thead><tbody>${det.ingredients.map(g=>`<tr><td><div class="ing-name">${g.name}</div><div class="ing-qty">${g.qty}</div></td><td>${g.kcal}</td><td style="color:var(--protein)">${g.pro}g</td><td style="color:var(--carbs)">${g.carb}g</td><td style="color:var(--fats)">${g.fat}g</td></tr>`).join('')}</tbody></table><div class="ing-total"><span class="ing-total-lbl">Meal total</span><div class="ing-total-nums"><span class="itn">${m.kcal} kcal</span><span class="itn" style="color:var(--protein)">${m.pro}g P</span><span class="itn" style="color:var(--carbs)">${m.carb}g C</span><span class="itn" style="color:var(--fats)">${m.fat}g F</span></div></div>`:'<div class="empty">No data</div>'}</div></div>`}).join('')}</div>`).join('')}<div class="card"><div class="clbl">Add Custom Meal</div><div class="fr" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px"><div><label class="fl">Name</label><input id="ln" placeholder="My meal"/></div><div><label class="fl">Kcal</label><input id="lk" type="number" placeholder="0"/></div><div><label class="fl">P</label><input id="lp" type="number" placeholder="0"/></div><div><label class="fl">C</label><input id="lc2" type="number" placeholder="0"/></div><div><label class="fl">F</label><input id="lf" type="number" placeholder="0"/></div></div><div class="fr fr2"><div><label class="fl">Category</label><select id="lcat">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div><div><label class="fl">Notes</label><input id="lno" placeholder="Optional"/></div></div><button class="btn bb bsm" onclick="saveL()">Save to Library</button></div>`}
+function vLib(){
+  return`
+<div style="margin-bottom:16px">
+  <div style="font-family:var(--fh);font-size:22px;font-weight:800;font-style:italic">Meal Library</div>
+  <div style="font-size:12px;color:var(--text3)">Search ingredients · click meal to edit grams · macros update live</div>
+</div>
+
+<div class="card sg">
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input id="si-l" type="text" placeholder="Search any ingredient (e.g. tofu, paneer, seitan, oats)..." oninput="doSearch(this.value,'l')"/>
+  </div>
+  <div id="sr-l"></div>
+</div>
+
+${CATS.map(cat=>`
+  <div class="card sg"><div class="clbl">${cat}</div>
+    ${am().filter(m=>m.cat===cat).map(m=>{
+      const id=m.id||m.name;
+      const isO=!!S.openCards[id];
+      return`<div class="meal-card">
+        <div class="meal-card-header" onclick="tc2('${id}')">
+          <div>
+            <div class="meal-card-name">${m.name}${vt(m.v)}</div>
+            <div style="display:flex;gap:10px;margin-top:3px">
+              <span class="mcm">${m.kcal} kcal</span>
+              <span class="mcm pro">${m.pro}g P</span>
+              <span class="mcm carb">${m.carb}g C</span>
+              <span class="mcm fat">${m.fat}g F</span>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px">
+            <button class="addmeal-btn" onclick="event.stopPropagation();qaddL('${id}')">+ Log Today</button>
+            <span class="chevron" style="transform:${isO?'rotate(180deg)':'rotate(0deg)'}">▼</span>
+          </div>
+        </div>
+        <div class="meal-card-body ${isO?'open':''}">${ingEditor(id)}</div>
+      </div>`;
+    }).join('')}
+  </div>`).join('')}
+
+<div class="card">
+  <div class="clbl">Add Custom Meal</div>
+  <div class="fr" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">
+    <div><label class="fl">Name</label><input id="ln" placeholder="My meal"/></div>
+    <div><label class="fl">Kcal</label><input id="lk" type="number" placeholder="0"/></div>
+    <div><label class="fl">P</label><input id="lp" type="number" placeholder="0"/></div>
+    <div><label class="fl">C</label><input id="lc2" type="number" placeholder="0"/></div>
+    <div><label class="fl">F</label><input id="lf" type="number" placeholder="0"/></div>
+  </div>
+  <div class="fr fr2">
+    <div><label class="fl">Category</label><select id="lcat">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
+    <div><label class="fl">Notes</label><input id="lno" placeholder="Optional"/></div>
+  </div>
+  <button class="btn bb bsm" onclick="saveL()">Save to Library</button>
+</div>`;
+}
 
 function tc2(id){S.openCards[id]=!S.openCards[id];render()}
 function qadd(id){const m=am().find(x=>(x.id||x.name)===id);if(!m)return;if(!S.meals[S.mdate])S.meals[S.mdate]=[];S.meals[S.mdate].push({name:m.name,kcal:m.kcal,pro:m.pro,carb:m.carb,fat:m.fat,time:now()});LS.set('sc_m',S.meals);render()}
