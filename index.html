@@ -127,6 +127,42 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
 .logged-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);animation:slideIn .2s ease}
 .logged-item:last-child{border-bottom:none}
 @keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Meal Builder */
+.mb-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.mb-search-wrap{position:relative;margin-bottom:10px}
+.mb-search-wrap input{padding-left:34px;font-size:13px}
+.mb-results{position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rs);z-index:100;max-height:220px;overflow-y:auto;margin-top:3px;box-shadow:0 8px 24px #00000060}
+.mb-result{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;cursor:pointer;transition:background .12s;border-bottom:1px solid var(--border)}
+.mb-result:last-child{border-bottom:none}
+.mb-result:hover{background:var(--bg4)}
+.mb-result-name{font-size:13px;font-weight:600;color:var(--text)}
+.mb-result-cat{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px;margin-top:1px}
+.mb-result-macros{font-size:11px;color:var(--text3);text-align:right}
+.mb-result-macros span{color:var(--text2)}
+.mb-ing-row{display:grid;grid-template-columns:1fr 72px 52px 52px 52px 52px 32px;gap:6px;align-items:center;padding:8px 0;border-bottom:1px solid var(--border)}
+.mb-ing-row:last-child{border-bottom:none}
+.mb-ing-name{font-size:12px;font-weight:600;color:var(--text)}
+.mb-ing-cat{font-size:10px;color:var(--text3)}
+.mb-ing-val{font-size:12px;color:var(--text2);text-align:right}
+.mb-ing-val.pro{color:var(--protein)}
+.mb-ing-val.carb{color:var(--carbs)}
+.mb-ing-val.fat{color:var(--fats)}
+.mb-gram{width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;padding:5px 7px;text-align:right;outline:none;transition:border .15s;font-family:var(--fb)}
+.mb-gram:focus{border-color:var(--blue)}
+.mb-del{background:transparent;border:1px solid var(--border2);border-radius:5px;color:var(--text3);cursor:pointer;font-size:11px;padding:3px 7px;transition:all .15s;line-height:1}
+.mb-del:hover{border-color:var(--red);color:var(--red)}
+.mb-col-hdr{display:grid;grid-template-columns:1fr 72px 52px 52px 52px 52px 32px;gap:6px;padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px}
+.mb-col-h{font-family:var(--fh);font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;text-align:right}
+.mb-col-h:first-child{text-align:left}
+.mb-total{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg5);border-radius:8px;margin-top:10px;flex-wrap:wrap;gap:8px}
+.mb-total-lbl{font-family:var(--fh);font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
+.mb-total-nums{display:flex;gap:14px}
+.mb-tn{font-size:13px;font-weight:700}
+.mb-save-row{display:grid;grid-template-columns:1fr 180px 120px;gap:8px;margin-top:12px;align-items:end}
+.mb-save-row-2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;align-items:end}
+.mb-empty{text-align:center;padding:24px;color:var(--text3);font-size:12px}
+.mb-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;font-family:var(--fh);background:var(--bg5);color:var(--text3);margin-left:4px}
 </style>
 </head>
 <body>
@@ -183,7 +219,7 @@ const LIB=[
   {id:'psc',cat:'Pre-Sleep',name:'Pre-Sleep C',v:'C',kcal:322,pro:22,carb:3,fat:25},
 ];
 const LS={get:k=>{try{const v=localStorage.getItem(k);return v?JSON.parse(v):null}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
-let S={weights:[],meals:{},custom:[],view:'dashboard',mdate:td(),wtab:'all',openCards:{},gO:{},sQ:'',lsQ:''};
+let S={weights:[],meals:{},custom:[],view:'dashboard',mdate:td(),wtab:'all',openCards:{},gO:{},sQ:'',lsQ:'',mb:{ings:[],name:'',cat:'Breakfast',notes:'',ingSearch:''}};
 let CH={};
 function td(){return new Date().toISOString().split('T')[0]}
 function now(){let d=new Date();return`${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`}
@@ -313,6 +349,286 @@ function dragOver(e){e.preventDefault();e.dataTransfer.dropEffect='copy';const z
 function dragLeave(e){const z=document.getElementById('drop-zone');if(z&&!z.contains(e.relatedTarget))z.classList.remove('drag-over');}
 function dropMeal(e){e.preventDefault();const z=document.getElementById('drop-zone');if(z)z.classList.remove('drag-over');const id=e.dataTransfer.getData('text/plain')||S._dragId;if(!id)return;const m=am().find(x=>(x.id||x.name)===id);if(!m)return;if(!S.meals[S.mdate])S.meals[S.mdate]=[];S.meals[S.mdate].push({name:m.name,kcal:m.kcal,pro:m.pro,carb:m.carb,fat:m.fat,time:now()});LS.set('sc_m',S.meals);render();}
 
+
+const FOOD_DB = [
+  // Proteins
+  {name:'Vejoy Tofu',cat:'Protein',kcal:220,pro:12.6,carb:4,fat:13.9},
+  {name:'Yama BBQ Seitan',cat:'Protein',kcal:162,pro:21.3,carb:16,fat:1.3},
+  {name:'Soya Chunks (dry)',cat:'Protein',kcal:350,pro:52,carb:25,fat:1.3},
+  {name:'Paneer (low fat)',cat:'Protein',kcal:265,pro:18,carb:3,fat:20},
+  {name:'Clover Greek Yoghurt',cat:'Dairy',kcal:53,pro:9.5,carb:2,fat:0.7},
+  {name:'Clover Low Fat Milk',cat:'Dairy',kcal:47,pro:3.2,carb:4.8,fat:1},
+  {name:'Clover Gouda Cheese',cat:'Dairy',kcal:383,pro:25,carb:0,fat:31},
+  {name:'Vanilla Whey Protein',cat:'Supplement',kcal:400,pro:80,carb:10,fat:6.7},
+  {name:'Choc Mint Whey Protein',cat:'Supplement',kcal:400,pro:80,carb:10,fat:6.7},
+  {name:'Clover Low Fat Cottage Cheese',cat:'Dairy',kcal:72,pro:12,carb:3,fat:1},
+  // Grains & Carbs
+  {name:'Rolled Oats',cat:'Carb',kcal:380,pro:12.5,carb:67.5,fat:6.25},
+  {name:'San Remo Pulse Pasta',cat:'Carb',kcal:361,pro:21.3,carb:56.7,fat:3.2},
+  {name:'Sunbake Sourdough',cat:'Carb',kcal:240,pro:9,carb:45,fat:1.5},
+  {name:'Brown Rice (dry)',cat:'Carb',kcal:362,pro:7.5,carb:76,fat:2.7},
+  {name:'White Rice (dry)',cat:'Carb',kcal:365,pro:7,carb:80,fat:0.7},
+  {name:'Quinoa (dry)',cat:'Carb',kcal:368,pro:14,carb:64,fat:6},
+  {name:'Sweet Potato',cat:'Carb',kcal:86,pro:1.6,carb:20,fat:0.1},
+  {name:'Whole Wheat Bread',cat:'Carb',kcal:247,pro:13,carb:41,fat:3.4},
+  {name:'Corn Tortilla',cat:'Carb',kcal:218,pro:5.7,carb:46,fat:2.5},
+  // Vegetables
+  {name:'Capsicum (Bell Pepper)',cat:'Vegetable',kcal:31,pro:1,carb:6,fat:0.3},
+  {name:'Tomato',cat:'Vegetable',kcal:18,pro:0.9,carb:3.9,fat:0.2},
+  {name:'Onion',cat:'Vegetable',kcal:40,pro:1.1,carb:9.3,fat:0.1},
+  {name:'Spinach',cat:'Vegetable',kcal:23,pro:2.9,carb:3.6,fat:0.4},
+  {name:'Broccoli',cat:'Vegetable',kcal:34,pro:2.8,carb:7,fat:0.4},
+  {name:'Cucumber',cat:'Vegetable',kcal:15,pro:0.7,carb:3.6,fat:0.1},
+  {name:'Carrot',cat:'Vegetable',kcal:41,pro:0.9,carb:10,fat:0.2},
+  {name:'Mushroom',cat:'Vegetable',kcal:22,pro:3.1,carb:3.3,fat:0.3},
+  {name:'Courgette (Zucchini)',cat:'Vegetable',kcal:17,pro:1.2,carb:3.1,fat:0.3},
+  {name:'Beetroot',cat:'Vegetable',kcal:43,pro:1.6,carb:9.6,fat:0.2},
+  {name:'Baby Spinach',cat:'Vegetable',kcal:23,pro:2.9,carb:3.6,fat:0.4},
+  {name:'Green Beans',cat:'Vegetable',kcal:31,pro:1.8,carb:7,fat:0.1},
+  // Fruits
+  {name:'Banana',cat:'Fruit',kcal:89,pro:1.1,carb:23,fat:0.3},
+  {name:'Mixed Frozen Fruit',cat:'Fruit',kcal:50,pro:0.5,carb:12,fat:0.2},
+  {name:'Apple',cat:'Fruit',kcal:52,pro:0.3,carb:14,fat:0.2},
+  {name:'Blueberries',cat:'Fruit',kcal:57,pro:0.7,carb:14,fat:0.3},
+  {name:'Strawberries',cat:'Fruit',kcal:32,pro:0.7,carb:7.7,fat:0.3},
+  {name:'Mango',cat:'Fruit',kcal:60,pro:0.8,carb:15,fat:0.4},
+  {name:'Orange',cat:'Fruit',kcal:47,pro:0.9,carb:12,fat:0.1},
+  // Fats & Oils
+  {name:'Olive Oil',cat:'Fat',kcal:884,pro:0,carb:0,fat:100},
+  {name:'Peanut Butter',cat:'Fat',kcal:588,pro:25,carb:20,fat:50},
+  {name:'Almonds',cat:'Fat',kcal:579,pro:21,carb:22,fat:50},
+  {name:'Cashews',cat:'Fat',kcal:553,pro:18,carb:30,fat:44},
+  {name:'Flaxseed',cat:'Fat',kcal:534,pro:18,carb:29,fat:42},
+  {name:'Chia Seeds',cat:'Fat',kcal:486,pro:17,carb:42,fat:31},
+  {name:'Coconut Oil',cat:'Fat',kcal:892,pro:0,carb:0,fat:99},
+  {name:'Avocado',cat:'Fat',kcal:160,pro:2,carb:9,fat:15},
+  // Legumes
+  {name:'Chickpeas (cooked)',cat:'Legume',kcal:164,pro:8.9,carb:27,fat:2.6},
+  {name:'Black Beans (cooked)',cat:'Legume',kcal:132,pro:8.9,carb:24,fat:0.5},
+  {name:'Kidney Beans (cooked)',cat:'Legume',kcal:127,pro:8.7,carb:22.8,fat:0.5},
+  {name:'Lentils (cooked)',cat:'Legume',kcal:116,pro:9,carb:20,fat:0.4},
+  {name:'Green Peas',cat:'Legume',kcal:81,pro:5.4,carb:14,fat:0.4},
+  // Condiments & Other
+  {name:'Cooking Spray',cat:'Other',kcal:0,pro:0,carb:0,fat:0},
+  {name:'Soy Sauce',cat:'Condiment',kcal:53,pro:8.1,carb:5,fat:0.6},
+  {name:'Tomato Sauce (passata)',cat:'Condiment',kcal:32,pro:1.6,carb:6.6,fat:0.4},
+  {name:'Nutritional Yeast',cat:'Supplement',kcal:325,pro:50,carb:38,fat:3.8},
+  {name:'Honey',cat:'Condiment',kcal:304,pro:0.3,carb:82,fat:0},
+  {name:'Cinnamon',cat:'Spice',kcal:247,pro:4,carb:81,fat:1.2},
+  {name:'Turmeric',cat:'Spice',kcal:312,pro:9.7,carb:67,fat:3.2},
+  {name:'Garam Masala',cat:'Spice',kcal:379,pro:14,carb:58,fat:15},
+  {name:'Cumin',cat:'Spice',kcal:375,pro:18,carb:44,fat:22},
+];
+
+function searchFoodDB(q) {
+  if (!q || q.trim().length < 1) return [];
+  const lower = q.toLowerCase().trim();
+  return FOOD_DB.filter(f => f.name.toLowerCase().includes(lower)).slice(0, 8);
+}
+
+// ── MEAL BUILDER ─────────────────────────────────────────────────────────────
+function mbCalcRow(ing) {
+  const r = ing.g / 100;
+  return {
+    kcal: Math.round(ing.f.kcal * r),
+    pro: +(ing.f.pro * r).toFixed(1),
+    carb: +(ing.f.carb * r).toFixed(1),
+    fat: +(ing.f.fat * r).toFixed(1),
+  };
+}
+
+function mbTotals() {
+  return S.mb.ings.reduce((a, ing) => {
+    const v = mbCalcRow(ing);
+    return { kcal: a.kcal + v.kcal, pro: +(a.pro + v.pro).toFixed(1), carb: +(a.carb + v.carb).toFixed(1), fat: +(a.fat + v.fat).toFixed(1) };
+  }, { kcal: 0, pro: 0, carb: 0, fat: 0 });
+}
+
+function mbUpdateLive() {
+  // Read all gram inputs
+  S.mb.ings.forEach((ing, i) => {
+    const el = document.getElementById('mb-g-' + i);
+    if (el) {
+      const v = parseFloat(el.value);
+      ing.g = isNaN(v) || v < 0 ? 0 : v;
+    }
+  });
+  // Update individual row macros
+  S.mb.ings.forEach((ing, i) => {
+    const v = mbCalcRow(ing);
+    const setTxt = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+    setTxt('mb-k-' + i, v.kcal);
+    setTxt('mb-p-' + i, v.pro + 'g');
+    setTxt('mb-c-' + i, v.carb + 'g');
+    setTxt('mb-f-' + i, v.fat + 'g');
+  });
+  // Update totals
+  const t = mbTotals();
+  const setTxt = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+  setTxt('mb-tot-k', t.kcal + ' kcal');
+  setTxt('mb-tot-p', t.pro + 'g P');
+  setTxt('mb-tot-c', t.carb + 'g C');
+  setTxt('mb-tot-f', t.fat + 'g F');
+}
+
+function mbAddIng(food) {
+  // Check for duplicate
+  const exists = S.mb.ings.find(i => i.f.name === food.name);
+  if (exists) {
+    exists.g += 100;
+  } else {
+    S.mb.ings.push({ f: food, g: 100 });
+  }
+  S.mb.ingSearch = '';
+  // Close dropdown and re-render builder
+  const dd = document.getElementById('mb-dd');
+  if (dd) dd.innerHTML = '';
+  const si = document.getElementById('mb-si');
+  if (si) si.value = '';
+  mbRenderRows();
+}
+
+function mbRemoveIng(i) {
+  S.mb.ings.splice(i, 1);
+  mbRenderRows();
+}
+
+function mbRenderRows() {
+  const container = document.getElementById('mb-ing-list');
+  if (!container) return;
+  if (S.mb.ings.length === 0) {
+    container.innerHTML = '<div class="mb-empty">Search and add ingredients above to build your meal</div>';
+    const tot = document.getElementById('mb-totals');
+    if (tot) tot.style.display = 'none';
+    return;
+  }
+  const tot = document.getElementById('mb-totals');
+  if (tot) tot.style.display = '';
+  const t = mbTotals();
+  container.innerHTML = `
+    <div class="mb-col-hdr">
+      <div class="mb-col-h">Ingredient</div>
+      <div class="mb-col-h">Grams</div>
+      <div class="mb-col-h">Kcal</div>
+      <div class="mb-col-h" style="color:var(--protein)">P</div>
+      <div class="mb-col-h" style="color:var(--carbs)">C</div>
+      <div class="mb-col-h" style="color:var(--fats)">F</div>
+      <div class="mb-col-h"></div>
+    </div>
+    ${S.mb.ings.map((ing, i) => {
+      const v = mbCalcRow(ing);
+      return `<div class="mb-ing-row">
+        <div><div class="mb-ing-name">${ing.f.name}</div><div class="mb-ing-cat">${ing.f.cat}</div></div>
+        <input class="mb-gram" id="mb-g-${i}" type="number" min="0" step="5" value="${ing.g}" oninput="mbUpdateLive()"/>
+        <div class="mb-ing-val" id="mb-k-${i}">${v.kcal}</div>
+        <div class="mb-ing-val pro" id="mb-p-${i}">${v.pro}g</div>
+        <div class="mb-ing-val carb" id="mb-c-${i}">${v.carb}g</div>
+        <div class="mb-ing-val fat" id="mb-f-${i}">${v.fat}g</div>
+        <button class="mb-del" onclick="mbRemoveIng(${i})">✕</button>
+      </div>`;
+    }).join('')}
+  `;
+  // Update totals display
+  const setTxt = (id, val) => { const e = document.getElementById(id); if (e) e.textContent = val; };
+  setTxt('mb-tot-k', t.kcal + ' kcal');
+  setTxt('mb-tot-p', t.pro + 'g P');
+  setTxt('mb-tot-c', t.carb + 'g C');
+  setTxt('mb-tot-f', t.fat + 'g F');
+}
+
+function mbSearch(q) {
+  const dd = document.getElementById('mb-dd');
+  if (!dd) return;
+  if (!q || q.trim().length < 1) { dd.innerHTML = ''; return; }
+  const results = searchFoodDB(q);
+  if (!results.length) { dd.innerHTML = '<div class="mb-result"><span style="color:var(--text3);font-size:12px">No ingredients found for "' + q + '"</span></div>'; return; }
+  dd.innerHTML = results.map(f => `
+    <div class="mb-result" onclick="mbAddIng(${JSON.stringify(f).replace(/"/g, '&quot;')})">
+      <div>
+        <div class="mb-result-name">${f.name}</div>
+        <div class="mb-result-cat">${f.cat} · per 100g</div>
+      </div>
+      <div class="mb-result-macros">
+        <div>${f.kcal}kcal</div>
+        <div><span>${f.pro}g P</span> · ${f.carb}g C · ${f.fat}g F</div>
+      </div>
+    </div>`).join('');
+}
+
+function mbSave() {
+  // Sync gram values from inputs before saving
+  S.mb.ings.forEach((ing, i) => {
+    const el = document.getElementById('mb-g-' + i);
+    if (el) { const v = parseFloat(el.value); ing.g = isNaN(v) || v < 0 ? 0 : v; }
+  });
+  const nameEl = document.getElementById('mb-name');
+  const catEl = document.getElementById('mb-cat');
+  const notesEl = document.getElementById('mb-notes');
+  const name = nameEl ? nameEl.value.trim() : '';
+  const cat = catEl ? catEl.value : 'Breakfast';
+  const notes = notesEl ? notesEl.value.trim() : '';
+  // Validation
+  if (!name) { alert('Please enter a meal name'); nameEl && nameEl.focus(); return; }
+  if (S.mb.ings.length === 0) { alert('Add at least one ingredient'); return; }
+  const zeroIngs = S.mb.ings.filter(i => i.g === 0);
+  if (zeroIngs.length > 0) { if (!confirm(zeroIngs.map(i => i.f.name).join(', ') + ' has 0g — continue?')) return; }
+  // Duplicate name check
+  if (S.custom.find(m => m.name.toLowerCase() === name.toLowerCase())) {
+    if (!confirm('A meal named "' + name + '" already exists. Overwrite?')) return;
+    S.custom = S.custom.filter(m => m.name.toLowerCase() !== name.toLowerCase());
+  }
+  const t = mbTotals();
+  const newMeal = {
+    name, cat, note: notes || name,
+    kcal: t.kcal, pro: t.pro, carb: t.carb, fat: t.fat,
+    ingredients: S.mb.ings.map(ing => ({
+      name: ing.f.name,
+      qty: ing.g + 'g',
+      kcal: mbCalcRow(ing).kcal,
+      pro: mbCalcRow(ing).pro,
+      carb: mbCalcRow(ing).carb,
+      fat: mbCalcRow(ing).fat,
+    }))
+  };
+  S.custom.push(newMeal);
+  LS.set('sc_cu', S.custom);
+  // Reset builder
+  S.mb = { ings: [], name: '', cat: 'Breakfast', notes: '', ingSearch: '' };
+  render();
+}
+
+function mbRenderBuilder() {
+  return `
+<div class="mb-wrap">
+  <div style="font-family:var(--fh);font-size:14px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">Build Your Meal — Ingredient by Ingredient</div>
+  <div class="mb-search-wrap">
+    <span class="search-icon">🔍</span>
+    <input id="mb-si" type="text" placeholder="Search ingredient to add (e.g. tofu, oats, paneer, banana)..." style="padding-left:34px" oninput="mbSearch(this.value)" onblur="setTimeout(()=>{const d=document.getElementById('mb-dd');if(d)d.innerHTML=''},200)"/>
+    <div class="mb-dd" id="mb-dd"></div>
+  </div>
+  <div id="mb-ing-list"><div class="mb-empty">Search and add ingredients above to build your meal</div></div>
+  <div id="mb-totals" style="display:none">
+    <div class="mb-total">
+      <span class="mb-total-lbl">Meal total</span>
+      <div class="mb-total-nums">
+        <span class="mb-tn" id="mb-tot-k">0 kcal</span>
+        <span class="mb-tn" style="color:var(--protein)" id="mb-tot-p">0g P</span>
+        <span class="mb-tn" style="color:var(--carbs)" id="mb-tot-c">0g C</span>
+        <span class="mb-tn" style="color:var(--fats)" id="mb-tot-f">0g F</span>
+      </div>
+    </div>
+    <div class="mb-save-row">
+      <div><label class="fl">Meal Name</label><input id="mb-name" placeholder="e.g. My Tofu Bowl" type="text"/></div>
+      <div><label class="fl">Category</label><select id="mb-cat">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
+      <div><label class="fl">Notes</label><input id="mb-notes" placeholder="Optional tip"/></div>
+    </div>
+    <div style="margin-top:10px;display:flex;gap:8px;justify-content:space-between;align-items:center">
+      <button class="rst-btn" onclick="S.mb.ings=[];mbRenderRows()">✕ Clear all</button>
+      <button class="log-custom" onclick="mbSave()">💾 Save to Library</button>
+    </div>
+  </div>
+</div>`;
+}
 function boot(){S.weights=LS.get('sc_w')||SEED;S.meals=LS.get('sc_m')||{};S.custom=LS.get('sc_cu')||[];render()}
 function go(v){S.view=v;document.querySelectorAll('.pill').forEach(p=>p.classList.toggle('on',p.textContent.toLowerCase().startsWith(v.slice(0,3))));render()}
 function render(){kc();const vc=document.getElementById('vc');if(S.view==='dashboard')vc.innerHTML=vD();else if(S.view==='nutrition')vc.innerHTML=vN();else if(S.view==='weight')vc.innerHTML=vW();else if(S.view==='library')vc.innerHTML=vLib();document.getElementById('nw').textContent=lw().toFixed(1);setTimeout(ic,80)}
@@ -447,19 +763,20 @@ ${CATS.map(cat=>`
   </div>`).join('')}
 
 <div class="card">
-  <div class="clbl">Add Custom Meal</div>
-  <div class="fr" style="grid-template-columns:2fr 1fr 1fr 1fr 1fr;gap:8px;margin-bottom:10px">
-    <div><label class="fl">Name</label><input id="ln" placeholder="My meal"/></div>
-    <div><label class="fl">Kcal</label><input id="lk" type="number" placeholder="0"/></div>
-    <div><label class="fl">P</label><input id="lp" type="number" placeholder="0"/></div>
-    <div><label class="fl">C</label><input id="lc2" type="number" placeholder="0"/></div>
-    <div><label class="fl">F</label><input id="lf" type="number" placeholder="0"/></div>
-  </div>
-  <div class="fr fr2">
-    <div><label class="fl">Category</label><select id="lcat">${CATS.map(c=>`<option>${c}</option>`).join('')}</select></div>
-    <div><label class="fl">Notes</label><input id="lno" placeholder="Optional"/></div>
-  </div>
-  <button class="btn bb bsm" onclick="saveL()">Save to Library</button>
+  <div class="clbl">Create Custom Meal</div>
+  ${mbRenderBuilder()}
+  ${S.custom.length ? `<div style="margin-top:16px">
+    <div style="font-family:var(--fh);font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px">Your Custom Meals (${S.custom.length})</div>
+    ${S.custom.map((m,i)=>`
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--border)">
+        <div>
+          <span style="font-family:var(--fh);font-size:13px;font-weight:700;color:var(--text)">${m.name}</span>
+          <span class="mb-badge">${m.cat}</span>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">${m.kcal}kcal · <span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
+        </div>
+        <button class="delbtn" onclick="S.custom.splice(${i},1);LS.set('sc_cu',S.custom);render()">✕</button>
+      </div>`).join('')}
+  </div>` : ''}
 </div>`;
 }
 
