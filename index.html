@@ -1014,13 +1014,14 @@ async function syncFromCloud() {
         const date = r.date.slice(0,10);
         if (!meals[date]) meals[date] = [];
         meals[date].push({
-          _id:   r.id,
-          name:  r.name,
-          kcal:  Math.round(r.kcal),
-          pro:   +parseFloat(r.pro).toFixed(1),
-          carb:  +parseFloat(r.carb).toFixed(1),
-          fat:   +parseFloat(r.fat).toFixed(1),
-          time:  r.logged_time || '',
+          _id:    r.id,
+          _libId: r.lib_id || null,
+          name:   r.name,
+          kcal:   Math.round(r.kcal),
+          pro:    +parseFloat(r.pro).toFixed(1),
+          carb:   +parseFloat(r.carb).toFixed(1),
+          fat:    +parseFloat(r.fat).toFixed(1),
+          time:   r.logged_time || '',
         });
       });
       S.meals = meals;
@@ -1089,6 +1090,7 @@ async function cloudAddMeal(date, meal) {
     date, name:meal.name, kcal:meal.kcal,
     pro:meal.pro, carb:meal.carb, fat:meal.fat,
     logged_time: meal.time, sort_order: sortOrder,
+    lib_id: meal._libId || null,
   }).select().single();
   if (error) { syncStatus('error', 'Save failed'); return null; }
   syncStatus('synced', 'Saved');
@@ -1729,33 +1731,38 @@ function toggleLogCard(i) { S.openCards['log_'+i] = !S.openCards['log_'+i]; rend
 function toggleNCard(id) { S.openCards['n_'+id] = !S.openCards['n_'+id]; render(); }
 
 function loggedItemEditor(m, idx) {
-  /* Try to find the source meal for ingredient breakdown */
+  /* Find source meal — by _libId first, then by name match as fallback */
   const libId = m._libId;
   const det = libId ? MD[libId] : null;
-  const custom = libId ? S.custom.find(c => (c.id||c.name) === libId) : null;
-  const baseIngs = det ? det.ingredients
-    : custom ? custom.ingredients.map(i => ({...i, qty: String(parseFloat(i.qty)||100)}))
-    : null;
-
-  /* If no ingredient data — show simple macro edit */
-  if (!baseIngs) {
-    return `<div style="background:var(--bg4);border-radius:var(--rs);padding:12px;margin-bottom:10px">
-      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Edit macros for this entry:</div>
-      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
-        <div><label class="fl">Kcal</label><input type="number" id="le-k-${idx}" value="${m.kcal}" style="font-size:12px;padding:6px 8px"/></div>
-        <div><label class="fl">Protein g</label><input type="number" id="le-p-${idx}" value="${m.pro}" step="0.1" style="font-size:12px;padding:6px 8px"/></div>
-        <div><label class="fl">Carbs g</label><input type="number" id="le-c-${idx}" value="${m.carb}" step="0.1" style="font-size:12px;padding:6px 8px"/></div>
-        <div><label class="fl">Fat g</label><input type="number" id="le-f-${idx}" value="${m.fat}" step="0.1" style="font-size:12px;padding:6px 8px"/></div>
-      </div>
-      <button class="log-custom" style="width:100%" onclick="updateLoggedMacros(${idx})">Update Entry</button>
-    </div>`;
+  let custom = libId ? S.custom.find(c => (c.id||c.name) === libId) : null;
+  /* Name fallback — catches meals logged before _libId was stored */
+  if (!det && !custom) {
+    custom = S.custom.find(c => c.name === m.name);
+    const mdKey = Object.keys(MD).find(k => {
+      const l = LIB.find(x => x.id === k);
+      return l && l.name === m.name;
+    });
+    if (mdKey && !custom) {
+      return loggedItemEditorWithDet(m, idx, mdKey, MD[mdKey]);
+    }
   }
+  if (det) return loggedItemEditorWithDet(m, idx, libId, det);
 
-  /* Has ingredients — show gram editor */
+  const baseIngs = custom ? custom.ingredients.map(i => ({...i, qty: String(parseFloat(i.qty)||100)})) : null;
+  if (!baseIngs) return loggedItemMacroEditor(m, idx);
+  return loggedItemEditorWithIngs(m, idx, baseIngs);
+}
+
+function loggedItemEditorWithDet(m, idx, id, det) {
+  return loggedItemEditorWithIngs(m, idx, det.ingredients, det.note);
+}
+
+function loggedItemEditorWithIngs(m, idx, baseIngs, note) {
   const edId = 'logged_'+idx;
   const ings = calcIng(edId, baseIngs);
   const t = sumIngs(ings);
   return `<div style="background:var(--bg4);border-radius:var(--rs);padding:12px;margin-bottom:10px">
+    ${note ? `<div class="meal-note-strip" style="margin-top:0;margin-bottom:8px">${note}</div>` : ''}
     <table class="ing-editor" style="margin-top:0">
       <thead><tr><th>Ingredient</th><th>g</th><th>Kcal</th><th style="color:var(--protein)">P</th><th style="color:var(--carbs)">C</th><th style="color:var(--fats)">F</th></tr></thead>
       <tbody>${baseIngs.map((ing,i) => `<tr>
@@ -1780,6 +1787,19 @@ function loggedItemEditor(m, idx) {
       <button class="rst-btn" onclick="resetGCustom('${edId}',${JSON.stringify(baseIngs).replace(/"/g,'&quot;')})">↺ Reset</button>
       <button class="log-custom" onclick="updateLoggedEntry(${idx},'${edId}',${JSON.stringify(baseIngs).replace(/"/g,'&quot;')})">✓ Update Log</button>
     </div>
+  </div>`;
+}
+
+function loggedItemMacroEditor(m, idx) {
+  return `<div style="background:var(--bg4);border-radius:var(--rs);padding:12px;margin-bottom:10px">
+    <div style="font-size:11px;color:var(--text3);margin-bottom:10px">No ingredient breakdown available — edit totals directly:</div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
+      <div><label class="fl">Kcal</label><input type="number" id="le-k-${idx}" value="${m.kcal}" style="font-size:12px;padding:6px 8px"/></div>
+      <div><label class="fl">Protein g</label><input type="number" id="le-p-${idx}" value="${m.pro}" step="0.1" style="font-size:12px;padding:6px 8px"/></div>
+      <div><label class="fl">Carbs g</label><input type="number" id="le-c-${idx}" value="${m.carb}" step="0.1" style="font-size:12px;padding:6px 8px"/></div>
+      <div><label class="fl">Fat g</label><input type="number" id="le-f-${idx}" value="${m.fat}" step="0.1" style="font-size:12px;padding:6px 8px"/></div>
+    </div>
+    <button class="log-custom" style="width:100%" onclick="updateLoggedMacros(${idx})">✓ Update Entry</button>
   </div>`;
 }
 
