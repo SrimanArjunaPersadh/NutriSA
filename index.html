@@ -264,45 +264,7 @@ const WATER_GOAL_NORMAL = 12;   // cups of 250ml = 3L
 const WATER_GOAL_SEITAN = 14;   // cups of 250ml = 3.5L
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-const CATS = ['Breakfast','Lunch','Post-Workout','Pre-Workout','Pre-Sleep'];
-
-/* Meal ingredient detail — kept as-is, but category updated to match CATS */
-const MD = {
-  'ba':{note:'Day A — oats + yoghurt. Cinnamon blunts blood sugar spike.',ingredients:[{name:'Rolled oats',qty:'80g',kcal:304,pro:10,carb:54,fat:5},{name:'Clover low fat milk',qty:'250ml',kcal:118,pro:8,carb:12,fat:3},{name:'Clover Greek yoghurt',qty:'150g',kcal:80,pro:14,carb:3,fat:1},{name:'Mixed frozen fruit',qty:'100g',kcal:50,pro:1,carb:12,fat:0},{name:'Cinnamon',qty:'1tsp',kcal:0,pro:0,carb:0,fat:0}]},
-  'bb':{note:'Day B — whey-boosted oats. Stir whey into cooled oats.',ingredients:[{name:'Rolled oats',qty:'80g',kcal:304,pro:10,carb:54,fat:5},{name:'Clover low fat milk',qty:'200ml',kcal:94,pro:6,carb:10,fat:2},{name:'Choc mint whey',qty:'30g',kcal:120,pro:24,carb:3,fat:2},{name:'Cinnamon',qty:'1tsp',kcal:0,pro:0,carb:0,fat:0}]},
-  'bc':{note:'Day C — banana adds glycogen for the long stretch before training.',ingredients:[{name:'Rolled oats',qty:'80g',kcal:304,pro:10,carb:54,fat:5},{name:'Clover low fat milk',qty:'250ml',kcal:118,pro:8,carb:12,fat:3},{name:'Clover Greek yoghurt',qty:'100g',kcal:53,pro:10,carb:2,fat:1},{name:'Banana (small)',qty:'80g',kcal:72,pro:1,carb:18,fat:0}]},
-  'la':{note:'Day A — HIGH SODIUM ⚠️ Drink 3.5L+ water today. Cook pasta and seitan separately.',ingredients:[{name:'Yama BBQ seitan',qty:'133g',kcal:215,pro:28,carb:21,fat:2},{name:'San Remo pulse pasta',qty:'80g',kcal:289,pro:17,carb:45,fat:3},{name:'Capsicum+onion+tomato',qty:'200g',kcal:50,pro:2,carb:10,fat:0},{name:'Cooking spray',qty:'3g',kcal:15,pro:0,carb:0,fat:2}]},
-  'lb':{note:'Day B — tofu is high fat. Skip gouda at pre-sleep tonight. Boil tofu 3min before frying.',ingredients:[{name:'Vejoy tofu',qty:'200g',kcal:440,pro:25,carb:8,fat:28},{name:'Capsicum+onion+tomato',qty:'300g',kcal:75,pro:3,carb:15,fat:0},{name:'Sunbake sourdough',qty:'75g',kcal:180,pro:7,carb:34,fat:1},{name:'Cooking spray',qty:'3g',kcal:15,pro:0,carb:0,fat:2}]},
-  'lc':{note:'Day C — soya chunks: lowest sodium, highest protein per calorie. Boil 10min, rinse, then cook.',ingredients:[{name:'Soya chunks',qty:'80g',kcal:280,pro:42,carb:20,fat:1},{name:'San Remo pulse pasta',qty:'60g',kcal:217,pro:13,carb:34,fat:2},{name:'Capsicum+onion+tomato',qty:'250g',kcal:63,pro:2,carb:12,fat:0},{name:'Cooking spray',qty:'3g',kcal:15,pro:0,carb:0,fat:2}]},
-  'da':{note:'Day A — post-workout. Eat within 45min. Fast (whey) + slow (seitan+yoghurt) protein.',ingredients:[{name:'Yama BBQ seitan',qty:'67g',kcal:108,pro:14,carb:11,fat:1},{name:'Clover Greek yoghurt',qty:'100g',kcal:53,pro:10,carb:2,fat:1},{name:'Vanilla whey',qty:'15g',kcal:60,pro:12,carb:2,fat:1},{name:'Sunbake sourdough',qty:'75g',kcal:180,pro:7,carb:34,fat:1}]},
-  'db':{note:'Day B — stir choc mint whey into cold yoghurt. Quick post-gym assembly.',ingredients:[{name:'Clover Greek yoghurt',qty:'150g',kcal:80,pro:14,carb:3,fat:1},{name:'Choc mint whey',qty:'15g',kcal:60,pro:12,carb:2,fat:1},{name:'Sunbake sourdough',qty:'75g',kcal:180,pro:7,carb:34,fat:1},{name:'Clover gouda',qty:'15g',kcal:57,pro:4,carb:0,fat:5}]},
-  'dc':{note:'Day C — lowest fat post-workout. Simple and fast.',ingredients:[{name:'Clover Greek yoghurt',qty:'200g',kcal:106,pro:19,carb:4,fat:1},{name:'Choc mint whey',qty:'15g',kcal:60,pro:12,carb:2,fat:1},{name:'Sunbake sourdough',qty:'75g',kcal:180,pro:7,carb:34,fat:1}]},
-  'sa':{note:'Pre-Workout A — eat 90min before training. Banana for glycogen.',ingredients:[{name:'Clover Greek yoghurt',qty:'200g',kcal:106,pro:19,carb:4,fat:1},{name:'Vanilla whey',qty:'15g',kcal:60,pro:12,carb:2,fat:1},{name:'Banana (small)',qty:'80g',kcal:72,pro:1,carb:18,fat:0}]},
-  'sb':{note:'Pre-Workout B — lightest on stomach. Good when lunch was heavy.',ingredients:[{name:'Clover Greek yoghurt',qty:'200g',kcal:106,pro:19,carb:4,fat:1},{name:'Mixed frozen fruit',qty:'100g',kcal:50,pro:1,carb:12,fat:0},{name:'Vanilla whey',qty:'15g',kcal:60,pro:12,carb:2,fat:1}]},
-  'sc':{note:'Pre-Workout C — highest protein shake. Blend all. Drink 90min before training.',ingredients:[{name:'Clover low fat milk',qty:'300ml',kcal:141,pro:10,carb:14,fat:3},{name:'Vanilla whey',qty:'30g',kcal:120,pro:24,carb:3,fat:2},{name:'Banana (small)',qty:'80g',kcal:72,pro:1,carb:18,fat:0},{name:'Clover Greek yoghurt',qty:'100g',kcal:53,pro:10,carb:2,fat:1}]},
-  'psa':{note:'Pre-Sleep A — paneer casein feeds muscle synthesis 7-8hrs. Non-negotiable every night.',ingredients:[{name:'Paneer (low fat)',qty:'100g',kcal:265,pro:18,carb:3,fat:20},{name:'Clover gouda',qty:'15g',kcal:57,pro:4,carb:0,fat:5}]},
-  'psb':{note:'Pre-Sleep B — Day B was high fat (tofu). Skip gouda. Paneer only.',ingredients:[{name:'Paneer (low fat)',qty:'120g',kcal:318,pro:22,carb:4,fat:24}]},
-  'psc':{note:'Pre-Sleep C — same as A. Gouda slows casein digestion rate, good here.',ingredients:[{name:'Paneer (low fat)',qty:'100g',kcal:265,pro:18,carb:3,fat:20},{name:'Clover gouda',qty:'15g',kcal:57,pro:4,carb:0,fat:5}]},
-};
-
-/* FIX: category field updated to match renamed CATS */
-const LIB = [
-  {id:'ba', cat:'Breakfast',     name:'Breakfast A',    v:'A', kcal:552, pro:33, carb:81, fat:9},
-  {id:'bb', cat:'Breakfast',     name:'Breakfast B',    v:'B', kcal:518, pro:40, carb:67, fat:9},
-  {id:'bc', cat:'Breakfast',     name:'Breakfast C',    v:'C', kcal:547, pro:29, carb:86, fat:9},
-  {id:'la', cat:'Lunch',         name:'Lunch A',        v:'A', kcal:569, pro:47, carb:76, fat:7},
-  {id:'lb', cat:'Lunch',         name:'Lunch B',        v:'B', kcal:710, pro:35, carb:57, fat:31},
-  {id:'lc', cat:'Lunch',         name:'Lunch C',        v:'C', kcal:575, pro:57, carb:66, fat:5},
-  {id:'da', cat:'Post-Workout',  name:'Post-Workout A', v:'A', kcal:401, pro:43, carb:49, fat:4},
-  {id:'db', cat:'Post-Workout',  name:'Post-Workout B', v:'B', kcal:377, pro:37, carb:39, fat:8},
-  {id:'dc', cat:'Post-Workout',  name:'Post-Workout C', v:'C', kcal:346, pro:38, carb:40, fat:3},
-  {id:'sa', cat:'Pre-Workout',   name:'Pre-Workout A',  v:'A', kcal:238, pro:32, carb:24, fat:2},
-  {id:'sb', cat:'Pre-Workout',   name:'Pre-Workout B',  v:'B', kcal:216, pro:32, carb:18, fat:2},
-  {id:'sc', cat:'Pre-Workout',   name:'Pre-Workout C',  v:'C', kcal:386, pro:45, carb:37, fat:6},
-  {id:'psa',cat:'Pre-Sleep',     name:'Pre-Sleep A',    v:'A', kcal:322, pro:22, carb:3,  fat:25},
-  {id:'psb',cat:'Pre-Sleep',     name:'Pre-Sleep B',    v:'B', kcal:318, pro:22, carb:4,  fat:24},
-  {id:'psc',cat:'Pre-Sleep',     name:'Pre-Sleep C',    v:'C', kcal:322, pro:22, carb:3,  fat:25},
-];
+const CATS = ['Breakfast','Lunch','Supper','Pre-Workout'];
 
 /* FIX #5 — foods that should trigger a warning when added */
 const FLAGGED_FOODS = {
@@ -326,7 +288,6 @@ let S = {
   mdate: td(), wtab:'all', openCards:{}, gO:{},
   sQ:'', lsQ:'',
   water:{},
-  hidden: [],  // array of meal ids hidden from library
   ql: { ings:[] },
   mb:{ ings:[], name:'', cat:'Breakfast', notes:'', ingSearch:'' }
 };
@@ -347,19 +308,7 @@ function tot(ms) {
 }
 function pct(v, mx) { return Math.min(100, Math.round(v/mx*100)); }
 function bc(v, mn, mx) { return v>mx?'var(--red)': v>=mn?'var(--green)':'var(--blue)'; }
-function am() { return [...LIB, ...S.custom].filter(m => !S.hidden.includes(m.id||m.name)); }
-
-function hideMeal(id) {
-  if (!S.hidden.includes(id)) S.hidden.push(id);
-  LS.set('sc_hi', S.hidden);
-  render();
-}
-
-function showAllMeals() {
-  S.hidden = [];
-  LS.set('sc_hi', S.hidden);
-  render();
-}
+function am() { return [...S.custom]; }
 function vt(v) {
   if (!v) return '';
   const c = v==='A'?'#0066FF18;color:#0066FF': v==='B'?'#22C55E18;color:#22C55E':'#F59E0B18;color:#F59E0B';
@@ -469,21 +418,6 @@ function sumIngs(ings) {
   }), {kcal:0,pro:0,carb:0,fat:0});
 }
 
-/* Debounced DOM update — FIX #5 debounce 300ms */
-const _debouncedUpdateG = debounce((id, i, val) => {
-  S.gO[id+'_'+i] = parseFloat(val) || 0;
-  const det = MD[id]; if (!det) return;
-  const ings = calcIng(id, det.ingredients);
-  ings.forEach((ing, j) => {
-    const setT = (sfx, v) => { const e = document.getElementById(`imc-${id}-${j}-${sfx}`); if(e) e.textContent = v; };
-    setT('k', ing.kcal); setT('p', ing.pro+'g'); setT('c', ing.carb+'g'); setT('f', ing.fat+'g');
-  });
-  const t = sumIngs(ings);
-  const setT = (sfx, v) => { const e = document.getElementById(`itot-${id}-${sfx}`); if(e) e.textContent = v; };
-  setT('k', t.kcal+' kcal'); setT('p', t.pro+'g P'); setT('c', t.carb+'g C'); setT('f', t.fat+'g F');
-}, 300);
-
-function updateG(id, i, val) { _debouncedUpdateG(id, i, val); }
 
 /* Custom meal gram editing — uses passed ingredient array instead of MD */
 const _debouncedUpdateGCustom = debounce((id, i, val, ings) => {
@@ -516,100 +450,49 @@ function resetGCustom(id, ings) {
   setT('k', t.kcal+' kcal'); setT('p', t.pro+'g P'); setT('c', t.carb+'g C'); setT('f', t.fat+'g F');
 }
 
-function resetG(id) {
-  const det = MD[id]; if (!det) return;
-  det.ingredients.forEach((ing, i) => {
-    delete S.gO[id+'_'+i];
-    const el = document.getElementById('gi-'+id+'-'+i);
-    if (el) el.value = baseG(ing);
-    // call directly (no debounce) so reset is instant
-    S.gO[id+'_'+i] = baseG(ing);
-    const ings = calcIng(id, det.ingredients);
-    ings.forEach((g, j) => {
-      const setT = (sfx, v) => { const e = document.getElementById(`imc-${id}-${j}-${sfx}`); if(e) e.textContent = v; };
-      setT('k', g.kcal); setT('p', g.pro+'g'); setT('c', g.carb+'g'); setT('f', g.fat+'g');
-    });
-    const t = sumIngs(ings);
-    const setT = (sfx, v) => { const e = document.getElementById(`itot-${id}-${sfx}`); if(e) e.textContent = v; };
-    setT('k', t.kcal+' kcal'); setT('p', t.pro+'g P'); setT('c', t.carb+'g C'); setT('f', t.fat+'g F');
-    delete S.gO[id+'_'+i];
-  });
-}
+
 
 function logCustomG(id) {
-  const det = MD[id];
-  const custom = !det ? S.custom.find(m => (m.id||m.name) === id) : null;
-  const baseIngs = det ? det.ingredients
-    : custom ? custom.ingredients.map(ing => ({...ing, qty: String(parseFloat(ing.qty)||100)}))
-    : null;
-  if (!baseIngs) return;
+  const custom = S.custom.find(m => m.name === id);
+  if (!custom || !custom.ingredients || !custom.ingredients.length) return;
+  const baseIngs = custom.ingredients.map(ing => ({...ing, qty: String(parseFloat(ing.qty)||100)}));
   const ings = calcIng(id, baseIngs);
   const t = sumIngs(ings);
-  const m = am().find(x => (x.id||x.name) === id);
   if (!S.meals[S.mdate]) S.meals[S.mdate] = [];
-  S.meals[S.mdate].push({name: m ? m.name : id, kcal: t.kcal, pro: t.pro, carb: t.carb, fat: t.fat, time: now(), _libId: id});
+  const meal = {name: custom.name, kcal: t.kcal, pro: t.pro, carb: t.carb, fat: t.fat, time: now(),
+    _libId: custom.name,
+    _ings: baseIngs.map((ing, i) => ({name:ing.name, qty:String(ings[i].g), kcal:ings[i].kcal, pro:ings[i].pro, carb:ings[i].carb, fat:ings[i].fat}))};
+  const mealIdx = S.meals[S.mdate].length;
+  S.meals[S.mdate].push(meal);
   LS.set('sc_m', S.meals);
   baseIngs.forEach((_,i) => delete S.gO[id+'_'+i]);
   render();
+  cloudAddMeal(S.mdate, meal).then(cloudId => {
+    if (cloudId && S.meals[S.mdate][mealIdx]) {
+      S.meals[S.mdate][mealIdx]._id = cloudId;
+      LS.set('sc_m', S.meals);
+    }
+  });
 }
 
 function ingEditor(id) {
-  const det = MD[id];
-
-  /* Custom meals — build a synthetic det from stored ingredients so the
-     same gram-editing pipeline works exactly like plan meals */
-  if (!det) {
-    const custom = S.custom.find(m => (m.id||m.name) === id);
-    if (!custom || !custom.ingredients || !custom.ingredients.length) {
-      return '<div class="empty" style="padding:16px;font-size:12px">No ingredient breakdown saved for this meal.</div>';
-    }
-    /* Synthetic det compatible with calcIng / sumIngs */
-    const synDet = {
-      note: custom.note || '',
-      ingredients: custom.ingredients.map(ing => ({
-        name: ing.name,
-        qty:  String(parseFloat(ing.qty) || 100),   // strip unit label → number string
-        kcal: ing.kcal, pro: ing.pro, carb: ing.carb, fat: ing.fat
-      }))
-    };
-    const ings = calcIng(id, synDet.ingredients);
-    const t = sumIngs(ings);
-    return `${synDet.note ? `<div class="meal-note-strip">${synDet.note}</div>` : ''}
-  <table class="ing-editor">
-    <thead><tr><th>Ingredient</th><th>g</th><th>Kcal</th><th style="color:var(--protein)">P</th><th style="color:var(--carbs)">C</th><th style="color:var(--fats)">F</th></tr></thead>
-    <tbody>${synDet.ingredients.map((ing,i) => `<tr>
-      <td><div class="ing-name">${ing.name}</div></td>
-      <td><input class="gram-inp" id="gi-${id}-${i}" type="number" min="0" step="5" value="${ings[i].g}" oninput="updateGCustom('${id}',${i},this.value,${JSON.stringify(synDet.ingredients).replace(/"/g,'&quot;')})"/></td>
-      <td><span class="im-cell" id="imc-${id}-${i}-k">${ings[i].kcal}</span></td>
-      <td><span class="im-cell" style="color:var(--protein)" id="imc-${id}-${i}-p">${ings[i].pro}g</span></td>
-      <td><span class="im-cell" style="color:var(--carbs)" id="imc-${id}-${i}-c">${ings[i].carb}g</span></td>
-      <td><span class="im-cell" style="color:var(--fats)" id="imc-${id}-${i}-f">${ings[i].fat}g</span></td>
-    </tr>`).join('')}</tbody>
-  </table>
-  <div class="live-tot">
-    <span class="lt-lbl">Meal total</span>
-    <div class="lt-nums">
-      <span class="ltn2" id="itot-${id}-k">${t.kcal} kcal</span>
-      <span class="ltn2" style="color:var(--protein)" id="itot-${id}-p">${t.pro}g P</span>
-      <span class="ltn2" style="color:var(--carbs)" id="itot-${id}-c">${t.carb}g C</span>
-      <span class="ltn2" style="color:var(--fats)" id="itot-${id}-f">${t.fat}g F</span>
-    </div>
-  </div>
-  <div class="meal-act">
-    <button class="rst-btn" onclick="resetGCustom('${id}',${JSON.stringify(synDet.ingredients).replace(/"/g,'&quot;')})">↺ Reset</button>
-    <button class="log-custom" onclick="logCustomG('${id}')">+ Log to Today</button>
-  </div>`;
+  const custom = S.custom.find(m => m.name === id);
+  if (!custom || !custom.ingredients || !custom.ingredients.length) {
+    return '<div class="empty" style="padding:16px;font-size:12px">No ingredient breakdown saved for this meal.</div>';
   }
-
-  /* Standard plan meals — full gram editor */
-  const ings = calcIng(id, det.ingredients);
+  const baseIngs = custom.ingredients.map(ing => ({
+    name: ing.name,
+    qty:  String(parseFloat(ing.qty) || 100),
+    kcal: ing.kcal, pro: ing.pro, carb: ing.carb, fat: ing.fat
+  }));
+  const ings = calcIng(id, baseIngs);
   const t = sumIngs(ings);
-  return `<div class="meal-note-strip">${det.note}</div>
+  return `${custom.note ? `<div class="meal-note-strip">${custom.note}</div>` : ''}
   <table class="ing-editor">
     <thead><tr><th>Ingredient</th><th>g</th><th>Kcal</th><th style="color:var(--protein)">P</th><th style="color:var(--carbs)">C</th><th style="color:var(--fats)">F</th></tr></thead>
-    <tbody>${det.ingredients.map((ing,i) => `<tr>
+    <tbody>${baseIngs.map((ing,i) => `<tr>
       <td><div class="ing-name">${ing.name}</div></td>
-      <td><input class="gram-inp" id="gi-${id}-${i}" type="number" min="0" step="5" value="${ings[i].g}" oninput="updateG('${id}',${i},this.value)"/></td>
+      <td><input class="gram-inp" id="gi-${id}-${i}" type="number" min="0" step="5" value="${ings[i].g}" oninput="updateGCustom('${id}',${i},this.value,${JSON.stringify(baseIngs).replace(/"/g,'&quot;')})"/></td>
       <td><span class="im-cell" id="imc-${id}-${i}-k">${ings[i].kcal}</span></td>
       <td><span class="im-cell" style="color:var(--protein)" id="imc-${id}-${i}-p">${ings[i].pro}g</span></td>
       <td><span class="im-cell" style="color:var(--carbs)" id="imc-${id}-${i}-c">${ings[i].carb}g</span></td>
@@ -626,7 +509,7 @@ function ingEditor(id) {
     </div>
   </div>
   <div class="meal-act">
-    <button class="rst-btn" onclick="resetG('${id}')">↺ Reset</button>
+    <button class="rst-btn" onclick="resetGCustom('${id}',${JSON.stringify(baseIngs).replace(/"/g,'&quot;')})">↺ Reset</button>
     <button class="log-custom" onclick="logCustomG('${id}')">+ Log to Today</button>
   </div>`;
 }
@@ -639,13 +522,8 @@ function doSearch(q, target) {
   if (lower.length < 2) { el.innerHTML = ''; return; }
   const hits = [];
   am().forEach(m => {
-    const det = MD[m.id||m.name];
     let on = '';
     if (m.name.toLowerCase().includes(lower)) on = 'Meal name match';
-    if (!on && det) {
-      const fi = det.ingredients.find(x => x.name.toLowerCase().includes(lower));
-      if (fi) on = fi.name;
-    }
     if (!on && m.ingredients && m.ingredients.length) {
       const fi = m.ingredients.find(x => x.name.toLowerCase().includes(lower));
       if (fi) on = fi.name;
@@ -660,7 +538,7 @@ function doSearch(q, target) {
         <div class="sr-match">Contains: ${m.on}</div>
         <div class="sr-macros">${m.kcal}kcal · <span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
       </div>
-      <button class="qaplus" onclick="qadd('${m.id||m.name}');document.getElementById('${resId}').innerHTML='';document.getElementById('si-${target==='n'?'n':'l'}').value=''">+</button>
+      <button class="qaplus" onclick="qadd('${m.name}');document.getElementById('${resId}').innerHTML='';document.getElementById('si-${target==='n'?'n':'l'}').value=''">+</button>
     </div>`).join('');
 }
 
@@ -674,21 +552,38 @@ function dragStart(e, id) {
 function dragEnd() { document.querySelectorAll('.drag-meal').forEach(el => el.classList.remove('dragging')); S._dragId = null; }
 function dragOver(e) { e.preventDefault(); e.dataTransfer.dropEffect='copy'; const z=document.getElementById('drop-zone'); if(z) z.classList.add('drag-over'); }
 function dragLeave(e) { const z=document.getElementById('drop-zone'); if(z&&!z.contains(e.relatedTarget)) z.classList.remove('drag-over'); }
-function dropMeal(e) {
+async function dropMeal(e) {
   e.preventDefault();
   const z = document.getElementById('drop-zone'); if(z) z.classList.remove('drag-over');
   const id = e.dataTransfer.getData('text/plain') || S._dragId; if(!id) return;
-  const m = am().find(x => (x.id||x.name) === id); if(!m) return;
+  const m = am().find(x => x.name === id); if(!m) return;
   if (!S.meals[S.mdate]) S.meals[S.mdate] = [];
-  S.meals[S.mdate].push({name:m.name, kcal:m.kcal, pro:m.pro, carb:m.carb, fat:m.fat, time:now()});
+  const baseIngs = m.ingredients && m.ingredients.length
+    ? m.ingredients.map(ing => ({...ing, qty: String(parseFloat(ing.qty)||100)}))
+    : null;
+  const meal = {
+    name: m.name, kcal: m.kcal, pro: m.pro, carb: m.carb, fat: m.fat,
+    time: now(), _libId: m.name,
+    _ings: baseIngs ? baseIngs.map(ing => ({
+      name: ing.name, qty: ing.qty,
+      kcal: ing.kcal, pro: ing.pro, carb: ing.carb, fat: ing.fat
+    })) : null
+  };
+  const mealIdx = S.meals[S.mdate].length;
+  S.meals[S.mdate].push(meal);
   LS.set('sc_m', S.meals);
   render();
+  const cloudId = await cloudAddMeal(S.mdate, meal);
+  if (cloudId && S.meals[S.mdate][mealIdx]) {
+    S.meals[S.mdate][mealIdx]._id = cloudId;
+    LS.set('sc_m', S.meals);
+  }
 }
 
 /* ─── WATER TRACKER ───────────────────────────────────────────────────────── */
 function isSeitanDay() {
   const ms = dm();
-  return ms.some(m => m.name.toLowerCase().includes('seitan') || m.name.toLowerCase().includes('lunch a'));
+  return ms.some(m => m.name.toLowerCase().includes('seitan'));
 }
 function waterGoal() { return isSeitanDay() ? WATER_GOAL_SEITAN : WATER_GOAL_NORMAL; }
 function waterCups() { return S.water[S.mdate] || 0; }
@@ -697,91 +592,117 @@ function waterCups() { return S.water[S.mdate] || 0; }
 /* ─── FOOD DATABASE ───────────────────────────────────────────────────────── */
 const FOOD_DB = [
   {name:'Vejoy Tofu',              cat:'Protein',    unit:'g',     defaultQty:150, per100:{kcal:220,pro:12.6,carb:4,   fat:13.9}},
-  {name:'Yama BBQ Seitan',         cat:'Protein',    unit:'g',     defaultQty:133, per100:{kcal:161,pro:21.3,carb:16,  fat:1.3}},
-  {name:'Soya Chunks (dry)',        cat:'Protein',    unit:'g',     defaultQty:80,  per100:{kcal:350,pro:52,  carb:25,  fat:1.3}},
-  {name:'Paneer (low fat)',         cat:'Protein',    unit:'g',     defaultQty:100, per100:{kcal:265,pro:18,  carb:3,   fat:20}},
-  {name:'Clover Greek Yoghurt',     cat:'Dairy',      unit:'g',     defaultQty:150, per100:{kcal:53, pro:9.5, carb:2,   fat:0.7}},
-  {name:'Clover Low Fat Milk',      cat:'Dairy',      unit:'ml',    defaultQty:250, per100:{kcal:47, pro:3.2, carb:4.8, fat:1}},
-  {name:'Clover Gouda Cheese',      cat:'Dairy',      unit:'g',     defaultQty:20,  per100:{kcal:383,pro:25,  carb:0,   fat:31}},
-  {name:'Clover Cottage Cheese',    cat:'Dairy',      unit:'g',     defaultQty:100, per100:{kcal:72, pro:12,  carb:3,   fat:1}},
-  {name:'Vanilla Whey Protein',          cat:'Supplement', unit:'g', defaultQty:30, per100:{kcal:400,pro:80,carb:10,fat:6.7}},
-  {name:'Choc Mint Whey Protein',        cat:'Supplement', unit:'g', defaultQty:30, per100:{kcal:400,pro:80,carb:10,fat:6.7}},
-  {name:'Peanut Butter Cup Whey Protein',cat:'Supplement', unit:'g', defaultQty:30, per100:{kcal:400,pro:80,carb:10,fat:6.7}},
-  {name:'Nutritional Yeast',        cat:'Supplement', unit:'g',     defaultQty:13,  per100:{kcal:346,pro:53,  carb:40,  fat:3.8}},
-  {name:'Creatine',                 cat:'Supplement', unit:'g',     defaultQty:5,   per100:{kcal:0,  pro:0,   carb:0,   fat:0}},
-  {name:'Rolled Oats',              cat:'Carb',       unit:'g',     defaultQty:80,  per100:{kcal:380,pro:12.5,carb:67.5,fat:6.25}},
-  {name:'San Remo Pulse Pasta',     cat:'Carb',       unit:'g',     defaultQty:80,  per100:{kcal:361,pro:21.3,carb:56.7,fat:3.2}},
-  {name:'Sunbake Sourdough',        cat:'Carb',       unit:'g',     defaultQty:75,  per100:{kcal:240,pro:9.1, carb:45.3,fat:1.5}},
-  {name:'Brown Rice (dry)',         cat:'Carb',       unit:'g',     defaultQty:75,  per100:{kcal:362,pro:7.5, carb:76,  fat:2.7}},
-  {name:'White Rice (dry)',         cat:'Carb',       unit:'g',     defaultQty:75,  per100:{kcal:365,pro:7,   carb:80,  fat:0.7}},
-  {name:'Quinoa (dry)',             cat:'Carb',       unit:'g',     defaultQty:75,  per100:{kcal:368,pro:14,  carb:64,  fat:6}},
-  {name:'Sweet Potato',             cat:'Carb',       unit:'g',     defaultQty:150, per100:{kcal:86, pro:1.6, carb:20,  fat:0.1}},
-  {name:'Whole Wheat Bread',        cat:'Carb',       unit:'g',     defaultQty:56,  per100:{kcal:246,pro:12.9,carb:40.7,fat:3.2}},
-  {name:'Corn Tortilla',              cat:'Carb', unit:'g', defaultQty:54,  per100:{kcal:218,pro:5.7, carb:45.4,fat:2.5}},
-  {name:'Rice Cake',                  cat:'Carb', unit:'g', defaultQty:18,  per100:{kcal:387,pro:7.5, carb:81.1,fat:2.8}},
-  {name:"Kellogg's Coco Pops",        cat:'Carb', unit:'g', defaultQty:30,  per100:{kcal:347,pro:7,   carb:76.7,fat:1.7}},
-  {name:'Capsicum (Bell Pepper)',   cat:'Vegetable',  unit:'g',     defaultQty:100, per100:{kcal:31, pro:1,   carb:6,   fat:0.3}},
-  {name:'Tomato',                   cat:'Vegetable',  unit:'g',     defaultQty:120, per100:{kcal:18, pro:0.9, carb:3.9, fat:0.2}},
-  {name:'Cherry Tomatoes',          cat:'Vegetable',  unit:'g',     defaultQty:100, per100:{kcal:18, pro:0.9, carb:3.9, fat:0.2}},
-  {name:'Onion',                    cat:'Vegetable',  unit:'g',     defaultQty:110, per100:{kcal:40, pro:1.1, carb:9.3, fat:0.1}},
-  {name:'Spinach',                  cat:'Vegetable',  unit:'g',     defaultQty:60,  per100:{kcal:23, pro:2.9, carb:3.6, fat:0.4}},
-  {name:'Broccoli',                 cat:'Vegetable',  unit:'g',     defaultQty:100, per100:{kcal:34, pro:2.8, carb:7,   fat:0.4}},
-  {name:'Cucumber',                 cat:'Vegetable',  unit:'g',     defaultQty:100, per100:{kcal:15, pro:0.7, carb:3.6, fat:0.1}},
-  {name:'Carrot',                   cat:'Vegetable',  unit:'g',     defaultQty:60,  per100:{kcal:41, pro:0.9, carb:10,  fat:0.2}},
-  {name:'Mushroom',                 cat:'Vegetable',  unit:'g',     defaultQty:80,  per100:{kcal:22, pro:3.1, carb:3.3, fat:0.3}},
-  {name:'Courgette (Zucchini)',     cat:'Vegetable',  unit:'g',     defaultQty:120, per100:{kcal:17, pro:1.2, carb:3.1, fat:0.3}},
-  {name:'Beetroot',                 cat:'Vegetable',  unit:'g',     defaultQty:80,  per100:{kcal:43, pro:1.6, carb:9.6, fat:0.2}},
-  {name:'Green Beans',              cat:'Vegetable',  unit:'g',     defaultQty:80,  per100:{kcal:31, pro:1.8, carb:7,   fat:0.1}},
-  {name:'Mixed Veg (frozen)',       cat:'Vegetable',  unit:'g',     defaultQty:100, per100:{kcal:55, pro:3,   carb:10,  fat:0.5}},
-  {name:'Banana',                   cat:'Fruit',      unit:'g',     defaultQty:100, per100:{kcal:89, pro:1.1, carb:23,  fat:0.3}},
-  {name:'Banana (small)',           cat:'Fruit',      unit:'g',     defaultQty:80,  per100:{kcal:89, pro:1.1, carb:23,  fat:0.3}},
-  {name:'Mixed Frozen Fruit',       cat:'Fruit',      unit:'g',     defaultQty:100, per100:{kcal:50, pro:0.5, carb:12,  fat:0.2}},
-  {name:'Apple',                    cat:'Fruit',      unit:'g',     defaultQty:182, per100:{kcal:52, pro:0.3, carb:14,  fat:0.2}},
-  {name:'Blueberries',              cat:'Fruit',      unit:'g',     defaultQty:80,  per100:{kcal:57, pro:0.7, carb:14,  fat:0.3}},
-  {name:'Strawberries',             cat:'Fruit',      unit:'g',     defaultQty:100, per100:{kcal:32, pro:0.7, carb:7.7, fat:0.3}},
-  {name:'Mango',                    cat:'Fruit',      unit:'g',     defaultQty:100, per100:{kcal:60, pro:0.8, carb:15,  fat:0.4}},
-  {name:'Orange',                   cat:'Fruit',      unit:'g',     defaultQty:130, per100:{kcal:47, pro:0.9, carb:12,  fat:0.1}},
-  {name:'Dates',                    cat:'Fruit',      unit:'g',     defaultQty:24,  per100:{kcal:277,pro:1.8, carb:75,  fat:0.2}},
-  {name:'Amla (Indian Gooseberry)', cat:'Fruit',      unit:'g',     defaultQty:20,  per100:{kcal:44, pro:0.9, carb:10,  fat:0.6}},
-  /* FIX #5 — olive oil kept in DB (for honesty in tracking) but flagged via FLAGGED_FOODS */
-  {name:'Olive Oil',                cat:'Fat',        unit:'g',     defaultQty:14,  per100:{kcal:884,pro:0,   carb:0,   fat:100}},
-  {name:'Coconut Oil',              cat:'Fat',        unit:'g',     defaultQty:14,  per100:{kcal:862,pro:0,   carb:0,   fat:100}},
-  {name:'Peanut Butter',            cat:'Fat',        unit:'g',     defaultQty:32,  per100:{kcal:588,pro:25,  carb:20,  fat:50}},
-  {name:'Almonds',                  cat:'Fat',        unit:'g',     defaultQty:12,  per100:{kcal:579,pro:21,  carb:22,  fat:50}},
-  {name:'Cashews',                  cat:'Fat',        unit:'g',     defaultQty:30,  per100:{kcal:553,pro:18,  carb:30,  fat:44}},
-  {name:'Flaxseed',                 cat:'Fat',        unit:'g',     defaultQty:10,  per100:{kcal:534,pro:18,  carb:29,  fat:42}},
-  {name:'Chia Seeds',               cat:'Fat',        unit:'g',     defaultQty:12,  per100:{kcal:486,pro:17,  carb:42,  fat:31}},
-  {name:'Avocado',                  cat:'Fat',        unit:'g',     defaultQty:100, per100:{kcal:160,pro:2,   carb:9,   fat:15}},
-  {name:'Cooking Spray',            cat:'Other',      unit:'g',     defaultQty:3,   per100:{kcal:333,pro:0,   carb:0,   fat:33}},
-  {name:'Chickpeas (cooked)',       cat:'Legume',     unit:'g',     defaultQty:100, per100:{kcal:164,pro:8.9, carb:27,  fat:2.6}},
-  {name:'Black Beans (cooked)',     cat:'Legume',     unit:'g',     defaultQty:100, per100:{kcal:132,pro:8.9, carb:24,  fat:0.5}},
-  {name:'Kidney Beans (cooked)',    cat:'Legume',     unit:'g',     defaultQty:100, per100:{kcal:127,pro:8.7, carb:22.8,fat:0.5}},
-  {name:'Lentils (cooked)',         cat:'Legume',     unit:'g',     defaultQty:100, per100:{kcal:116,pro:9,   carb:20,  fat:0.4}},
-  {name:'Green Peas',               cat:'Legume',     unit:'g',     defaultQty:80,  per100:{kcal:81, pro:5.4, carb:14,  fat:0.4}},
-  {name:'Soy Sauce',                cat:'Condiment',  unit:'g',     defaultQty:15,  per100:{kcal:53, pro:8.1, carb:4.9, fat:0.6}},
-  {name:'Tomato Sauce (passata)',   cat:'Condiment',  unit:'g',     defaultQty:100, per100:{kcal:32, pro:1.6, carb:6.6, fat:0.4}},
-  {name:'Honey',                    cat:'Condiment',  unit:'g',     defaultQty:7,   per100:{kcal:304,pro:0.3, carb:82,  fat:0}},
-  {name:'Cinnamon',                 cat:'Spice',      unit:'g',     defaultQty:2.5, per100:{kcal:247,pro:4,   carb:81,  fat:1.2}},
-  {name:'Turmeric',                 cat:'Spice',      unit:'g',     defaultQty:2.5, per100:{kcal:354,pro:8,   carb:65,  fat:10}},
-  {name:'Garam Masala',             cat:'Spice',      unit:'g',     defaultQty:2.5, per100:{kcal:379,pro:13,  carb:50,  fat:15}},
-  {name:'Cumin',                    cat:'Spice',      unit:'g',     defaultQty:2.5, per100:{kcal:375,pro:18,  carb:44,  fat:22}},
-  {name:'Black Pepper',             cat:'Spice',      unit:'g',     defaultQty:2.5, per100:{kcal:251,pro:10,  carb:64,  fat:3.3}},
-  {name:'Salt',                     cat:'Spice',      unit:'g',     defaultQty:1,   per100:{kcal:0,  pro:0,   carb:0,   fat:0}},
+  {name:'Yama BBQ Seitan',         cat:'Protein',   unit:'steak', defaultQty:1,   perUnit:{kcal:215,pro:28.3,carb:21.3,fat:1.7}, unitLabel:'steak (133g)'},
+  {name:'Soya Chunks (dry)',        cat:'Protein',   unit:'g',     defaultQty:80,  per100:{kcal:350,pro:52,  carb:25,  fat:1.3}},
+  {name:'Paneer (low fat)',         cat:'Protein',   unit:'g',     defaultQty:100, per100:{kcal:265,pro:18,  carb:3,   fat:20}},
+  {name:'Clover Greek Yoghurt',     cat:'Dairy',     unit:'g',     defaultQty:150, per100:{kcal:53, pro:9.5, carb:2,   fat:0.7}},
+  {name:'Clover Low Fat Milk',      cat:'Dairy',     unit:'ml',    defaultQty:250, per100:{kcal:47, pro:3.2, carb:4.8, fat:1}},
+  {name:'Clover Gouda Cheese',      cat:'Dairy',     unit:'g',     defaultQty:20,  per100:{kcal:383,pro:25,  carb:0,   fat:31}},
+  {name:'Clover Cottage Cheese',    cat:'Dairy',     unit:'g',     defaultQty:100, per100:{kcal:72, pro:12,  carb:3,   fat:1}},
+  {name:'Vanilla Whey Protein',          cat:'Supplement',unit:'scoop',defaultQty:1, perUnit:{kcal:132,pro:27,carb:2,fat:1.4}, unitLabel:'scoop (33g)'},
+  {name:'Choc Mint Whey Protein',        cat:'Supplement',unit:'scoop',defaultQty:1, perUnit:{kcal:132,pro:27,carb:2,fat:1.4}, unitLabel:'scoop (33g)'},
+  {name:'Peanut Butter Cup Whey Protein',cat:'Supplement',unit:'scoop',defaultQty:1, perUnit:{kcal:132,pro:27,carb:2,fat:1.4}, unitLabel:'scoop (33g)'},
+  {name:'USN Hardcore Whey gH',          cat:'Supplement',unit:'scoop',defaultQty:1, perUnit:{kcal:132,pro:27,carb:2,fat:1.4},unitLabel:'scoop (33g)'},
+  {name:'Nutritional Yeast',        cat:'Supplement',unit:'tbsp',  defaultQty:2,   perUnit:{kcal:45, pro:6.9,carb:5.2,fat:0.5},unitLabel:'tbsp (13g)'},
+  {name:'Creatine',                 cat:'Supplement',unit:'g',     defaultQty:5,   per100:{kcal:0,  pro:0,   carb:0,   fat:0}},
+  {name:'Rolled Oats',              cat:'Carb',      unit:'g',     defaultQty:80,  per100:{kcal:380,pro:12.5,carb:67.5,fat:6.25}},
+  {name:'San Remo Pulse Pasta',     cat:'Carb',      unit:'g',     defaultQty:80,  per100:{kcal:361,pro:21.3,carb:56.7,fat:3.2}},
+  {name:'Sunbake Sourdough',        cat:'Carb',      unit:'slice', defaultQty:2,   perUnit:{kcal:90, pro:3.4, carb:17,  fat:0.55},unitLabel:'slice (37g)'},
+  {name:'Brown Rice (dry)',         cat:'Carb',      unit:'g',     defaultQty:75,  per100:{kcal:362,pro:7.5, carb:76,  fat:2.7}},
+  {name:'White Rice (dry)',         cat:'Carb',      unit:'g',     defaultQty:75,  per100:{kcal:365,pro:7,   carb:80,  fat:0.7}},
+  {name:'Quinoa (dry)',             cat:'Carb',      unit:'g',     defaultQty:75,  per100:{kcal:368,pro:14,  carb:64,  fat:6}},
+  {name:'Sweet Potato',             cat:'Carb',      unit:'g',     defaultQty:150, per100:{kcal:86, pro:1.6, carb:20,  fat:0.1}},
+  {name:'Whole Wheat Bread',        cat:'Carb',      unit:'slice', defaultQty:2,   perUnit:{kcal:69, pro:3.6, carb:11.4,fat:0.9},unitLabel:'slice (28g)'},
+  {name:'Corn Tortilla',            cat:'Carb',      unit:'piece', defaultQty:2,   perUnit:{kcal:58, pro:1.5, carb:12.2,fat:0.7},unitLabel:'tortilla (27g)'},
+  {name:'Rice Cake',                cat:'Carb',      unit:'piece', defaultQty:2,   perUnit:{kcal:35, pro:0.7, carb:7.3, fat:0.3},unitLabel:'cake (9g)'},
+  {name:"Kellogg's Coco Pops",      cat:'Carb',      unit:'g',     defaultQty:30,  per100:{kcal:347,pro:7,   carb:76.7,fat:1.7}},
+  {name:'Capsicum (Bell Pepper)',   cat:'Vegetable', unit:'g',     defaultQty:100, per100:{kcal:31, pro:1,   carb:6,   fat:0.3}},
+  {name:'Tomato',                   cat:'Vegetable', unit:'piece', defaultQty:1,   perUnit:{kcal:22, pro:1.1, carb:4.8, fat:0.2},unitLabel:'medium (120g)'},
+  {name:'Cherry Tomatoes',          cat:'Vegetable', unit:'g',     defaultQty:100, per100:{kcal:18, pro:0.9, carb:3.9, fat:0.2}},
+  {name:'Onion',                    cat:'Vegetable', unit:'piece', defaultQty:1,   perUnit:{kcal:44, pro:1.2, carb:10.3,fat:0.1},unitLabel:'medium (110g)'},
+  {name:'Spinach',                  cat:'Vegetable', unit:'g',     defaultQty:60,  per100:{kcal:23, pro:2.9, carb:3.6, fat:0.4}},
+  {name:'Broccoli',                 cat:'Vegetable', unit:'g',     defaultQty:100, per100:{kcal:34, pro:2.8, carb:7,   fat:0.4}},
+  {name:'Cucumber',                 cat:'Vegetable', unit:'g',     defaultQty:100, per100:{kcal:15, pro:0.7, carb:3.6, fat:0.1}},
+  {name:'Carrot',                   cat:'Vegetable', unit:'piece', defaultQty:1,   perUnit:{kcal:25, pro:0.6, carb:6,   fat:0.1},unitLabel:'medium (60g)'},
+  {name:'Mushroom',                 cat:'Vegetable', unit:'g',     defaultQty:80,  per100:{kcal:22, pro:3.1, carb:3.3, fat:0.3}},
+  {name:'Courgette (Zucchini)',     cat:'Vegetable', unit:'g',     defaultQty:120, per100:{kcal:17, pro:1.2, carb:3.1, fat:0.3}},
+  {name:'Beetroot',                 cat:'Vegetable', unit:'g',     defaultQty:80,  per100:{kcal:43, pro:1.6, carb:9.6, fat:0.2}},
+  {name:'Green Beans',              cat:'Vegetable', unit:'g',     defaultQty:80,  per100:{kcal:31, pro:1.8, carb:7,   fat:0.1}},
+  {name:'Mixed Veg (frozen)',       cat:'Vegetable', unit:'g',     defaultQty:100, per100:{kcal:55, pro:3,   carb:10,  fat:0.5}},
+  {name:'Banana',                   cat:'Fruit',     unit:'piece', defaultQty:1,   perUnit:{kcal:89, pro:1.1, carb:23,  fat:0.3},unitLabel:'medium (100g)'},
+  {name:'Banana (small)',           cat:'Fruit',     unit:'piece', defaultQty:1,   perUnit:{kcal:72, pro:0.9, carb:18,  fat:0.2},unitLabel:'small (80g)'},
+  {name:'Mixed Frozen Fruit',       cat:'Fruit',     unit:'g',     defaultQty:100, per100:{kcal:50, pro:0.5, carb:12,  fat:0.2}},
+  {name:'Apple',                    cat:'Fruit',     unit:'piece', defaultQty:1,   perUnit:{kcal:95, pro:0.5, carb:25,  fat:0.3},unitLabel:'medium (182g)'},
+  {name:'Blueberries',              cat:'Fruit',     unit:'g',     defaultQty:80,  per100:{kcal:57, pro:0.7, carb:14,  fat:0.3}},
+  {name:'Strawberries',             cat:'Fruit',     unit:'g',     defaultQty:100, per100:{kcal:32, pro:0.7, carb:7.7, fat:0.3}},
+  {name:'Mango',                    cat:'Fruit',     unit:'g',     defaultQty:100, per100:{kcal:60, pro:0.8, carb:15,  fat:0.4}},
+  {name:'Orange',                   cat:'Fruit',     unit:'piece', defaultQty:1,   perUnit:{kcal:62, pro:1.2, carb:15,  fat:0.2},unitLabel:'medium (130g)'},
+  {name:'Dates',                    cat:'Fruit',     unit:'piece', defaultQty:3,   perUnit:{kcal:20, pro:0.2, carb:5.3, fat:0},  unitLabel:'date (8g)'},
+  {name:'Amla (Indian Gooseberry)', cat:'Fruit',     unit:'piece', defaultQty:2,   perUnit:{kcal:5,  pro:0.1, carb:1.3, fat:0},  unitLabel:'amla (10g)'},
+  {name:'Olive Oil',                cat:'Fat',       unit:'tbsp',  defaultQty:1,   perUnit:{kcal:119,pro:0,   carb:0,   fat:13.5},unitLabel:'tbsp (14g)'},
+  {name:'Coconut Oil',              cat:'Fat',       unit:'tbsp',  defaultQty:1,   perUnit:{kcal:120,pro:0,   carb:0,   fat:14},  unitLabel:'tbsp (14g)'},
+  {name:'Peanut Butter',            cat:'Fat',       unit:'tbsp',  defaultQty:2,   perUnit:{kcal:94, pro:4,   carb:3.2, fat:8},   unitLabel:'tbsp (16g)'},
+  {name:'Almonds',                  cat:'Fat',       unit:'piece', defaultQty:10,  perUnit:{kcal:7,  pro:0.3, carb:0.3, fat:0.6}, unitLabel:'almond'},
+  {name:'Cashews',                  cat:'Fat',       unit:'g',     defaultQty:30,  per100:{kcal:553,pro:18,  carb:30,  fat:44}},
+  {name:'Flaxseed',                 cat:'Fat',       unit:'tbsp',  defaultQty:1,   perUnit:{kcal:55, pro:1.9, carb:3,   fat:4.3}, unitLabel:'tbsp (10g)'},
+  {name:'Chia Seeds',               cat:'Fat',       unit:'tbsp',  defaultQty:1,   perUnit:{kcal:58, pro:2,   carb:5,   fat:3.7}, unitLabel:'tbsp (12g)'},
+  {name:'Avocado',                  cat:'Fat',       unit:'g',     defaultQty:100, per100:{kcal:160,pro:2,   carb:9,   fat:15}},
+  {name:'Cooking Spray',            cat:'Other',     unit:'spray', defaultQty:3,   perUnit:{kcal:1,  pro:0,   carb:0,   fat:0.1}, unitLabel:'spray (1 sec)'},
+  {name:'Chickpeas (cooked)',       cat:'Legume',    unit:'g',     defaultQty:100, per100:{kcal:164,pro:8.9, carb:27,  fat:2.6}},
+  {name:'Black Beans (cooked)',     cat:'Legume',    unit:'g',     defaultQty:100, per100:{kcal:132,pro:8.9, carb:24,  fat:0.5}},
+  {name:'Kidney Beans (cooked)',    cat:'Legume',    unit:'g',     defaultQty:100, per100:{kcal:127,pro:8.7, carb:22.8,fat:0.5}},
+  {name:'Lentils (cooked)',         cat:'Legume',    unit:'g',     defaultQty:100, per100:{kcal:116,pro:9,   carb:20,  fat:0.4}},
+  {name:'Green Peas',               cat:'Legume',    unit:'g',     defaultQty:80,  per100:{kcal:81, pro:5.4, carb:14,  fat:0.4}},
+  {name:'Soy Sauce',                cat:'Condiment', unit:'tbsp',  defaultQty:1,   perUnit:{kcal:8,  pro:1.3, carb:0.8, fat:0.1}, unitLabel:'tbsp (15ml)'},
+  {name:'Tomato Sauce (passata)',   cat:'Condiment', unit:'g',     defaultQty:100, per100:{kcal:32, pro:1.6, carb:6.6, fat:0.4}},
+  {name:'Illovo Maple Flavoured Syrup',  cat:'Condiment', unit:'g',     defaultQty:10,  per100:{kcal:310,pro:0,   carb:71,  fat:0},   },
+  {name:'Honey',                    cat:'Condiment', unit:'tsp',   defaultQty:1,   perUnit:{kcal:21, pro:0,   carb:5.7, fat:0},   unitLabel:'tsp (7g)'},
+  {name:'Cinnamon',                 cat:'Spice',     unit:'tsp',   defaultQty:1,   perUnit:{kcal:6,  pro:0.1, carb:2,   fat:0},   unitLabel:'tsp (2.5g)'},
+  {name:'Turmeric',                 cat:'Spice',     unit:'tsp',   defaultQty:1,   perUnit:{kcal:8,  pro:0.2, carb:1.7, fat:0.1}, unitLabel:'tsp (2.5g)'},
+  {name:'Garam Masala',             cat:'Spice',     unit:'tsp',   defaultQty:1,   perUnit:{kcal:9,  pro:0.3, carb:1.5, fat:0.4}, unitLabel:'tsp (2.5g)'},
+  {name:'Cumin',                    cat:'Spice',     unit:'tsp',   defaultQty:1,   perUnit:{kcal:8,  pro:0.4, carb:0.9, fat:0.5}, unitLabel:'tsp (2.5g)'},
+  {name:'Black Pepper',             cat:'Spice',     unit:'tsp',   defaultQty:1,   perUnit:{kcal:6,  pro:0.2, carb:1.4, fat:0.1}, unitLabel:'tsp (2.5g)'},
+  {name:'Salt',                     cat:'Spice',     unit:'pinch', defaultQty:1,   perUnit:{kcal:0,  pro:0,   carb:0,   fat:0},   unitLabel:'pinch'},
 ];
 
 /* ─── FOOD DB HELPERS ─────────────────────────────────────────────────────── */
+function isGramUnit(food) { return food.unit === 'g' || food.unit === 'ml'; }
+
 function foodMacros(food, qty) {
-  const r = qty / 100;
-  return {
-    kcal: Math.round((food.per100||food.perUnit).kcal * r),
-    pro:  +((food.per100||food.perUnit).pro  * r).toFixed(1),
-    carb: +((food.per100||food.perUnit).carb * r).toFixed(1),
-    fat:  +((food.per100||food.perUnit).fat  * r).toFixed(1),
-  };
+  if (isGramUnit(food)) {
+    const r = qty / 100;
+    return {
+      kcal: Math.round(food.per100.kcal * r),
+      pro:  +(food.per100.pro  * r).toFixed(1),
+      carb: +(food.per100.carb * r).toFixed(1),
+      fat:  +(food.per100.fat  * r).toFixed(1),
+    };
+  } else {
+    return {
+      kcal: Math.round(food.perUnit.kcal * qty),
+      pro:  +(food.perUnit.pro  * qty).toFixed(1),
+      carb: +(food.perUnit.carb * qty).toFixed(1),
+      fat:  +(food.perUnit.fat  * qty).toFixed(1),
+    };
+  }
 }
-function unitLabel(food) { return food.unit; }
-function unitStep(food) { return food.unit === 'ml' ? 10 : 5; }
-function unitMin() { return 0; }
+
+function unitDisplayLabel(food, qty) {
+  if (isGramUnit(food)) return food.unit;
+  const base = food.unit;
+  // Simple pluralisation for display
+  const plurals = {slice:'slices',piece:'pieces',scoop:'scoops',steak:'steaks',spray:'sprays',tbsp:'tbsp',tsp:'tsp',pinch:'pinch'};
+  return qty === 1 ? base : (plurals[base] || base);
+}
+
+function unitStep(food) {
+  if (isGramUnit(food)) return food.unit === 'ml' ? 10 : 5;
+  if (food.unit === 'tbsp' || food.unit === 'tsp') return 0.5;
+  return 1;
+}
+
+function unitMin(food) { return 0; }
+
 function searchFoodDB(q) {
   if (!q || q.trim().length < 1) return [];
   const lower = q.toLowerCase().trim();
@@ -860,8 +781,8 @@ function mbRenderRows() {
           <div class="mb-ing-cat">${ing.f.cat}</div>
         </div>
         <div style="display:flex;align-items:center;gap:4px;justify-content:flex-end">
-          <input class="mb-gram" id="mb-g-${i}" type="number" min="0" step="${unitStep(ing.f)}" value="${ing.qty}" oninput="mbUpdateLive()" style="width:58px"/>
-          <span style="font-size:11px;color:var(--text3);white-space:nowrap;min-width:20px">${ing.f.unit}</span>
+          <input class="mb-gram" id="mb-g-${i}" type="number" min="${unitMin(ing.f)}" step="${unitStep(ing.f)}" value="${ing.qty}" oninput="mbUpdateLive()" style="width:58px"/>
+          <span style="font-size:11px;color:var(--text3);white-space:nowrap;min-width:28px">${unitDisplayLabel(ing.f, ing.qty)}</span>
         </div>
         <div class="mb-ing-val${isOil?' oil-warn':''}" id="mb-k-${i}">${v.kcal}</div>
         <div class="mb-ing-val pro" id="mb-p-${i}">${v.pro}g</div>
@@ -880,12 +801,13 @@ function mbSearch(q) {
   const results = searchFoodDB(q);
   if (!results.length) { dd.innerHTML=`<div class="mb-result"><span style="color:var(--text3);font-size:12px">No ingredients found for "${q}"</span></div>`; return; }
   dd.innerHTML = results.map(f => {
-    const m = f.per100 || f.perUnit;
+    const m = isGramUnit(f) ? f.per100 : f.perUnit;
+    const perLabel = isGramUnit(f) ? `per 100${f.unit}` : `per ${f.unitLabel || f.unit}`;
     const isOil = !!FLAGGED_FOODS[f.name];
     return `<div class="mb-result" onmousedown="event.preventDefault();mbAddIng(${JSON.stringify(f).replace(/"/g,'&quot;')})">
       <div>
         <div class="mb-result-name${isOil?' oil-warn':''}">${f.name}${isOil?' ⚠️ Off-plan':''}</div>
-        <div class="mb-result-cat">${f.cat} · per 100${f.unit}</div>
+        <div class="mb-result-cat">${f.cat} · ${perLabel}</div>
       </div>
       <div class="mb-result-macros">
         <div>${m.kcal}kcal</div><div><span>${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
@@ -1070,7 +992,8 @@ async function syncFromCloud() {
     /* Custom meals */
     if (cRes.data.length > 0) {
       S.custom = cRes.data.map(r => ({
-        _id:         r.id,
+        _id:         r.id,   // kept for cloud delete operations
+        id:          r.id,   // also expose as id so (c.id||c.name) lookups work
         name:        r.name,
         cat:         r.cat,
         note:        r.note || '',
@@ -1186,12 +1109,13 @@ function qlSearch(q) {
     return;
   }
   dd.innerHTML = results.map(f => {
-    const m = f.per100;
+    const m = isGramUnit(f) ? f.per100 : f.perUnit;
+    const perLabel = isGramUnit(f) ? `per 100${f.unit}` : `per ${f.unitLabel || f.unit}`;
     const isOil = !!FLAGGED_FOODS[f.name];
     return `<div class="ql-result" onmousedown="event.preventDefault();qlAddIng(${JSON.stringify(f).replace(/"/g,'&quot;')})">
       <div>
         <div class="ql-result-name${isOil?' oil-warn':''}">${f.name}${isOil?' ⚠️':''}</div>
-        <div class="ql-result-cat">${f.cat} · per 100${f.unit}</div>
+        <div class="ql-result-cat">${f.cat} · ${perLabel}</div>
       </div>
       <div class="ql-result-macros">
         <div>${m.kcal}kcal</div>
@@ -1260,8 +1184,8 @@ function qlRenderRows() {
       return `<div class="ql-row">
         <div><div class="ql-ing-name">${ing.f.name}</div><div class="ql-ing-cat">${ing.f.cat}</div></div>
         <div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
-          <input class="ql-gram" id="ql-g-${i}" type="number" min="0" step="5" value="${ing.qty}" oninput="qlUpdateLive()" style="width:52px"/>
-          <span style="font-size:10px;color:var(--text3)">${ing.f.unit}</span>
+          <input class="ql-gram" id="ql-g-${i}" type="number" min="${unitMin(ing.f)}" step="${unitStep(ing.f)}" value="${ing.qty}" oninput="qlUpdateLive()" style="width:52px"/>
+          <span style="font-size:10px;color:var(--text3)">${unitDisplayLabel(ing.f, ing.qty)}</span>
         </div>
         <div class="ql-val" id="ql-k-${i}">${v.kcal}</div>
         <div class="ql-val pro" id="ql-p-${i}">${v.pro}g</div>
@@ -1366,7 +1290,6 @@ function boot() {
   S.meals   = LS.get('sc_m') || {};
   S.custom  = LS.get('sc_cu') || [];
   S.water   = LS.get('sc_wa') || {};
-  S.hidden  = LS.get('sc_hi') || [];
   render();
   /* Sync from Supabase after render — don't block UI */
   if (sb) {
@@ -1520,7 +1443,7 @@ function vN() {
                 <div class="mkcal">${m.kcal} kcal</div>
                 <div class="mmsub"><span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
               </div>
-              <button class="delbtn" onclick="event.stopPropagation();delM(${i})">✕</button>
+              <button class="delbtn" onclick="event.stopPropagation();delM(${i})" title="Delete entry" style="padding:4px 10px;font-size:13px">🗑</button>
               <span class="log-chevron" style="font-size:11px;color:var(--text3);transition:transform .2s;display:inline-block;transform:${isO?'rotate(180deg)':'rotate(0deg)'}">▼</span>
             </div>
           </div>
@@ -1596,7 +1519,7 @@ function vN() {
           if (!meals.length) return '';
           return `<div class="cathead">${cat}</div>
           ${meals.map(m => {
-            const id = m.id||m.name;
+            const id = m.name;
             const isO = !!S.openCards['n_'+id];
             return `<div class="meal-card" style="margin-bottom:5px" draggable="true" data-id="${id}"
               ondragstart="dragStart(event,'${id}')" ondragend="dragEnd(event)">
@@ -1741,7 +1664,7 @@ function vLib() {
     <div style="font-family:var(--fh);font-size:22px;font-weight:800;font-style:italic">Meal Library</div>
     <div style="font-size:12px;color:var(--text3)">Build custom meals · search ingredients · edit grams · macros update live</div>
   </div>
-  ${S.hidden.length ? `<button class="rst-btn" onclick="showAllMeals()" style="font-size:11px">↺ Restore ${S.hidden.length} hidden meal${S.hidden.length>1?'s':''}</button>` : ''}
+  
 </div>
 
 <div class="card sg">
@@ -1775,7 +1698,7 @@ ${CATS.map(cat=>`
   <div class="card sg">
     <div class="clbl">${cat}</div>
     ${am().filter(m=>m.cat===cat).map(m => {
-      const id = m.id||m.name;
+      const id = m.name;
       const isO = !!S.openCards[id];
       return `<div class="meal-card">
         <div class="meal-card-header" onclick="tc2('${id}')">
@@ -1830,32 +1753,20 @@ function toggleLogCard(i) {
 }
 
 function loggedItemEditor(m, idx) {
-  /* 1. Try _libId → MD (plan meals) */
-  const libId = m._libId;
-  const det = libId ? MD[libId] : null;
-  if (det) return loggedItemEditorWithIngs(m, idx, det.ingredients, det.note);
-
-  /* 2. Try _libId → custom meals */
-  let custom = libId ? S.custom.find(c => (c.id||c.name) === libId) : null;
-  if (!custom) custom = S.custom.find(c => c.name === m.name);
+  /* Path 1 — meal logged from library: find by _libId or name in custom meals.
+     _libId stores the meal name string (set when logging via qadd/logCustomG).
+     Match by name since custom meal IDs from Supabase are UUIDs, not names. */
+  const libLookup = m._libId || m.name;
+  const custom = S.custom.find(c => c.name === libLookup || c.id === libLookup || c._id === libLookup);
   if (custom && custom.ingredients && custom.ingredients.length) {
     const baseIngs = custom.ingredients.map(i => ({...i, qty: String(parseFloat(i.qty)||100)}));
     return loggedItemEditorWithIngs(m, idx, baseIngs, custom.note);
   }
-
-  /* 3. Quick log entries — ingredients stored directly on the meal */
+  /* Path 2 — quick log or any entry with stored ingredients */
   if (m._ings && m._ings.length) {
     return loggedItemEditorWithIngs(m, idx, m._ings);
   }
-
-  /* 4. Name fallback for old plan meal entries logged before _libId existed */
-  const mdKey = Object.keys(MD).find(k => {
-    const l = LIB.find(x => x.id === k);
-    return l && l.name === m.name;
-  });
-  if (mdKey) return loggedItemEditorWithIngs(m, idx, MD[mdKey].ingredients, MD[mdKey].note);
-
-  /* 5. No ingredient data at all — raw macro editor */
+  /* Path 3 — no ingredient data: raw macro editor */
   return loggedItemMacroEditor(m, idx);
 }
 
@@ -1863,13 +1774,17 @@ function loggedItemEditorWithIngs(m, idx, baseIngs, note) {
   const edId = 'logged_'+idx;
   const ings = calcIng(edId, baseIngs);
   const t = sumIngs(ings);
+  /* Store baseIngs in state keyed by edId so onclick handlers can access
+     without embedding JSON in HTML attributes — avoids quote-escaping bugs */
+  S._logEditorIngs = S._logEditorIngs || {};
+  S._logEditorIngs[edId] = baseIngs;
   return `<div style="background:var(--bg4);border-radius:var(--rs);padding:12px;margin-bottom:10px">
     ${note ? `<div class="meal-note-strip" style="margin-top:0;margin-bottom:8px">${note}</div>` : ''}
     <table class="ing-editor" style="margin-top:0">
       <thead><tr><th>Ingredient</th><th>g</th><th>Kcal</th><th style="color:var(--protein)">P</th><th style="color:var(--carbs)">C</th><th style="color:var(--fats)">F</th></tr></thead>
       <tbody>${baseIngs.map((ing,i) => `<tr>
         <td><div class="ing-name" style="font-size:11px">${ing.name}</div></td>
-        <td><input class="gram-inp" id="gi-${edId}-${i}" type="number" min="0" step="5" value="${ings[i].g}" oninput="updateGCustom('${edId}',${i},this.value,${JSON.stringify(baseIngs).replace(/"/g,'&quot;')})"/></td>
+        <td><input class="gram-inp" id="gi-${edId}-${i}" type="number" min="0" step="5" value="${ings[i].g}" oninput="updateGCustom('${edId}',${i},this.value,S._logEditorIngs['${edId}'])"/></td>
         <td><span class="im-cell" id="imc-${edId}-${i}-k">${ings[i].kcal}</span></td>
         <td><span class="im-cell" style="color:var(--protein)" id="imc-${edId}-${i}-p">${ings[i].pro}g</span></td>
         <td><span class="im-cell" style="color:var(--carbs)" id="imc-${edId}-${i}-c">${ings[i].carb}g</span></td>
@@ -1886,8 +1801,8 @@ function loggedItemEditorWithIngs(m, idx, baseIngs, note) {
       </div>
     </div>
     <div style="display:flex;gap:8px;margin-top:10px;justify-content:space-between">
-      <button class="rst-btn" onclick="resetGCustom('${edId}',${JSON.stringify(baseIngs).replace(/"/g,'&quot;')})">↺ Reset</button>
-      <button class="log-custom" onclick="updateLoggedEntry(${idx},'${edId}',${JSON.stringify(baseIngs).replace(/"/g,'&quot;')})">✓ Update Log</button>
+      <button class="rst-btn" onclick="resetGCustom('${edId}',S._logEditorIngs['${edId}'])">↺ Reset</button>
+      <button class="log-custom" onclick="updateLoggedEntry(${idx},'${edId}',S._logEditorIngs['${edId}'])">✓ Update Log</button>
     </div>
   </div>`;
 }
@@ -1904,6 +1819,7 @@ function loggedItemMacroEditor(m, idx) {
     <button class="log-custom" style="width:100%" onclick="updateLoggedMacros(${idx})">✓ Update Entry</button>
   </div>`;
 }
+
 
 async function updateLoggedEntry(idx, edId, baseIngs) {
   /* Read current gram values from inputs */
@@ -1952,10 +1868,22 @@ async function updateLoggedMacros(idx) {
 }
 
 async function qadd(id) {
-  const m = am().find(x=>(x.id||x.name)===id); if(!m) return;
+  const m = am().find(x => x.name === id); if(!m) return;
   if (!S.meals[S.mdate]) S.meals[S.mdate] = [];
-  const meal = {name:m.name, kcal:m.kcal, pro:m.pro, carb:m.carb, fat:m.fat, time:now(), _libId:id};
-  const mealIdx = S.meals[S.mdate].length; // capture index BEFORE push
+  /* Always use meal name as _libId — name is the reliable lookup key.
+     UUIDs change if a meal is deleted and recreated; names don't. */
+  const baseIngs = m.ingredients && m.ingredients.length
+    ? m.ingredients.map(ing => ({...ing, qty: String(parseFloat(ing.qty)||100)}))
+    : null;
+  const meal = {
+    name: m.name, kcal: m.kcal, pro: m.pro, carb: m.carb, fat: m.fat,
+    time: now(), _libId: m.name,
+    _ings: baseIngs ? baseIngs.map(ing => ({
+      name: ing.name, qty: ing.qty,
+      kcal: ing.kcal, pro: ing.pro, carb: ing.carb, fat: ing.fat
+    })) : null
+  };
+  const mealIdx = S.meals[S.mdate].length;
   S.meals[S.mdate].push(meal);
   LS.set('sc_m', S.meals);
   render();
@@ -1969,21 +1897,13 @@ async function qadd(id) {
 function qaddL(id) { S.mdate = td(); qadd(id); go('nutrition'); }
 
 async function confirmDeleteMeal(id) {
-  const isPlan = !!LIB.find(x => (x.id||x.name) === id);
-  if (isPlan) {
-    /* Plan meals can't be permanently deleted — they're in code.
-       We hide them from the library instead. */
-    if (!confirm('Hide this meal from your library? You can restore all hidden meals from Library settings.')) return;
-    hideMeal(id);
-  } else {
-    if (!confirm('Permanently delete this custom meal?')) return;
-    await deleteCustomMeal(id);
-  }
+  if (!confirm('Delete this meal from your library?')) return;
+  await deleteCustomMeal(id);
 }
 
 async function deleteCustomMeal(id) {
-  const meal = S.custom.find(m => (m.id||m.name) === id);
-  S.custom = S.custom.filter(m => (m.id||m.name) !== id);
+  const meal = S.custom.find(m => m.name === id);
+  S.custom = S.custom.filter(m => m.name !== id);
   LS.set('sc_cu', S.custom);
   render();
   if (meal && meal._id) await cloudDelCustomMeal(meal._id);
