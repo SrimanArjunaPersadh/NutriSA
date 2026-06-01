@@ -1291,8 +1291,14 @@ async function qlLogAll() {
 
 function qlRenderWidget() {
   return `
-<div class="ql-wrap">
-  <div style="font-family:var(--fh);font-size:14px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">⚡ Quick Log — No meal name required</div>
+<div style="margin-bottom:4px">
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+    <div style="width:28px;height:28px;background:linear-gradient(135deg,#0066FF,#33A1FF);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">⚡</div>
+    <div>
+      <div style="font-family:var(--fh);font-size:15px;font-weight:800;font-style:italic;color:var(--text)">Quick Log</div>
+      <div style="font-size:11px;color:var(--text3);margin-top:1px">Search any ingredient · no meal name needed</div>
+    </div>
+  </div>
   <div class="ql-search-wrap">
     <span class="search-icon">🔍</span>
     <input id="ql-si" type="text" placeholder="Search ingredient (e.g. Greek yoghurt, banana, whey...)" style="padding-left:34px"
@@ -1301,7 +1307,7 @@ function qlRenderWidget() {
                  if(event.key==='Escape'){const d=document.getElementById('ql-dd');if(d)d.innerHTML=''}"/>
     <div class="ql-dd" id="ql-dd"></div>
   </div>
-  <div id="ql-rows"><div style="text-align:center;padding:16px;color:var(--text3);font-size:12px">Search and add ingredients above</div></div>
+  <div id="ql-rows"><div style="text-align:center;padding:14px 0 6px;color:var(--text3);font-size:12px">Add ingredients above to build your entry</div></div>
   <div id="ql-footer" style="display:none">
     <div class="ql-tot">
       <span class="ql-tot-lbl">Total</span>
@@ -1313,7 +1319,7 @@ function qlRenderWidget() {
       </div>
     </div>
     <div class="ql-actions">
-      <div style="flex:1;min-width:160px"><input id="ql-name" type="text" placeholder="Name this meal (optional)" style="font-size:12px;padding:7px 10px"/></div>
+      <div style="flex:1;min-width:140px"><input id="ql-name" type="text" placeholder="Name this meal (optional)" style="font-size:12px;padding:7px 10px"/></div>
       <div style="display:flex;gap:8px">
         <button class="rst-btn" onclick="S.ql.ings=[];qlRenderRows()">✕ Clear</button>
         <button class="log-custom" onclick="qlLogAll()">+ Log to Today</button>
@@ -1536,46 +1542,59 @@ function vN() {
 </div>
 
 <div class="g2">
-  <div class="card" style="display:flex;flex-direction:column;gap:0">
-    ${qlRenderWidget()}
-    <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
-    <div class="search-wrap" style="margin-bottom:8px">
-      <span class="search-icon">🔍</span>
-      <input id="si-n" type="text" placeholder="Search saved meals..." oninput="doSearch(this.value,'n')"/>
+  <div style="display:flex;flex-direction:column;gap:12px">
+
+    <!-- Quick Log card -->
+    <div class="card">
+      ${qlRenderWidget()}
     </div>
-    <div id="sr-n" style="margin-bottom:8px"></div>
-    <div class="clbl">Saved Meals — Tap to expand · + to log</div>
-    <div style="max-height:380px;overflow-y:auto">
-      ${CATS.map(cat => {
-        const meals = am().filter(m => m.cat===cat);
-        if (!meals.length) return '';
-        return `<div class="cathead">${cat}</div>
-        ${meals.map(m => {
-          const id = m.id||m.name;
-          const isO = !!S.openCards['n_'+id];
-          return `<div class="meal-card" style="margin-bottom:5px" draggable="true" data-id="${id}"
-            ondragstart="dragStart(event,'${id}')" ondragend="dragEnd(event)">
-            <div class="meal-card-header" style="padding:10px 12px;cursor:grab" onclick="toggleNCard('${id}')">
-              <div style="flex:1;min-width:0">
-                <div class="meal-card-name" style="font-size:14px">${m.name}${vt(m.v)}</div>
-                <div style="display:flex;gap:8px;margin-top:2px;flex-wrap:wrap">
-                  <span class="mcm">${m.kcal} kcal</span>
-                  <span class="mcm pro">${m.pro}g P</span>
-                  <span class="mcm carb">${m.carb}g C</span>
-                  <span class="mcm fat">${m.fat}g F</span>
+
+    <!-- Saved Meals card -->
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <div style="width:28px;height:28px;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">📋</div>
+        <div>
+          <div style="font-family:var(--fh);font-size:15px;font-weight:800;font-style:italic;color:var(--text)">Saved Meals</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:1px">Tap to expand ingredients · drag or + to log</div>
+        </div>
+      </div>
+      <div class="search-wrap" style="margin-bottom:10px">
+        <span class="search-icon">🔍</span>
+        <input id="si-n" type="text" placeholder="Search saved meals..." oninput="doSearch(this.value,'n')"/>
+      </div>
+      <div id="sr-n" style="margin-bottom:6px"></div>
+      <div style="max-height:420px;overflow-y:auto">
+        ${CATS.map(cat => {
+          const meals = am().filter(m => m.cat===cat);
+          if (!meals.length) return '';
+          return `<div class="cathead">${cat}</div>
+          ${meals.map(m => {
+            const id = m.id||m.name;
+            const isO = !!S.openCards['n_'+id];
+            return `<div class="meal-card" style="margin-bottom:5px" draggable="true" data-id="${id}"
+              ondragstart="dragStart(event,'${id}')" ondragend="dragEnd(event)">
+              <div class="meal-card-header" style="padding:10px 12px;cursor:grab" onclick="toggleNCard('${id}')">
+                <div style="flex:1;min-width:0">
+                  <div class="meal-card-name" style="font-size:14px">${m.name}${vt(m.v)}</div>
+                  <div style="display:flex;gap:8px;margin-top:2px;flex-wrap:wrap">
+                    <span class="mcm">${m.kcal} kcal</span>
+                    <span class="mcm pro">${m.pro}g P</span>
+                    <span class="mcm carb">${m.carb}g C</span>
+                    <span class="mcm fat">${m.fat}g F</span>
+                  </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                  <button class="qaplus" style="width:28px;height:28px;font-size:16px" onclick="event.stopPropagation();qadd('${id}')">+</button>
+                  <span class="chevron" style="transform:${isO?'rotate(180deg)':'rotate(0deg)'}">▼</span>
                 </div>
               </div>
-              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-                <button class="qaplus" style="width:28px;height:28px;font-size:16px" onclick="event.stopPropagation();qadd('${id}')">+</button>
-                <span class="chevron" style="transform:${isO?'rotate(180deg)':'rotate(0deg)'}">▼</span>
-              </div>
-            </div>
-            <div class="meal-card-body ${isO?'open':''}">${isO ? ingEditor(id) : ''}</div>
-          </div>`;
-        }).join('')}`;
-      }).join('')}
+              <div class="meal-card-body ${isO?'open':''}">${isO ? ingEditor(id) : ''}</div>
+            </div>`;
+          }).join('')}`;
+        }).join('')}
+      </div>
     </div>
-    </div><!-- end saved meals section -->
+
   </div>
   <div class="card" id="drop-zone" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropMeal(event)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
