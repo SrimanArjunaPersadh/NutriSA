@@ -257,7 +257,7 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
    Every reference in the app derives from these. */
 const GOAL = 88, RATET = 0.5 / 7;
 const KCAL_MIN = 2200, KCAL_TARGET = 2300, KCAL_MAX = 2400;
-const PRO_MIN = 160, PRO_TARGET = 167, PRO_MAX = 175;
+const PRO_MIN = 175, PRO_TARGET = 175, PRO_MAX = 175;
 const CARB_MIN = 180, CARB_MAX = 210;
 const FAT_MIN = 55, FAT_MAX = 65;
 const WATER_GOAL_NORMAL = 12;   // cups of 250ml = 3L
@@ -326,7 +326,8 @@ let S = {
   mdate: td(), wtab:'all', openCards:{}, gO:{},
   sQ:'', lsQ:'',
   water:{},
-  ql: { ings:[] },   // quick log staging area
+  hidden: [],  // array of meal ids hidden from library
+  ql: { ings:[] },
   mb:{ ings:[], name:'', cat:'Breakfast', notes:'', ingSearch:'' }
 };
 let CH = {};
@@ -346,7 +347,19 @@ function tot(ms) {
 }
 function pct(v, mx) { return Math.min(100, Math.round(v/mx*100)); }
 function bc(v, mn, mx) { return v>mx?'var(--red)': v>=mn?'var(--green)':'var(--blue)'; }
-function am() { return [...LIB, ...S.custom]; }
+function am() { return [...LIB, ...S.custom].filter(m => !S.hidden.includes(m.id||m.name)); }
+
+function hideMeal(id) {
+  if (!S.hidden.includes(id)) S.hidden.push(id);
+  LS.set('sc_hi', S.hidden);
+  render();
+}
+
+function showAllMeals() {
+  S.hidden = [];
+  LS.set('sc_hi', S.hidden);
+  render();
+}
 function vt(v) {
   if (!v) return '';
   const c = v==='A'?'#0066FF18;color:#0066FF': v==='B'?'#22C55E18;color:#22C55E':'#F59E0B18;color:#F59E0B';
@@ -1018,6 +1031,7 @@ async function syncFromCloud() {
         cloudMeals[date].push({
           _id:    r.id,
           _libId: r.lib_id || null,
+          _ings:  r.ings_json ? (() => { try { return JSON.parse(r.ings_json); } catch(e) { return null; } })() : null,
           name:   r.name,
           kcal:   Math.round(r.kcal),
           pro:    +parseFloat(r.pro).toFixed(1),
@@ -1026,18 +1040,28 @@ async function syncFromCloud() {
           time:   r.logged_time || '',
         });
       });
-      /* Merge strategy: for each date, use whichever source has MORE entries.
-         This prevents a delayed cloud sync from wiping locally-logged meals
-         that haven't finished saving to Supabase yet. */
+      /* Merge strategy: cloud is source of truth for count.
+         But preserve _ings and _libId from local entries when cloud
+         doesn't have them yet (race condition during save). */
       const localMeals = S.meals || {};
       const allDates = new Set([...Object.keys(cloudMeals), ...Object.keys(localMeals)]);
       const merged = {};
       allDates.forEach(date => {
         const cloud = cloudMeals[date] || [];
         const local = localMeals[date] || [];
-        /* Use cloud if it has entries — it's the source of truth.
-           Fall back to local only if cloud has nothing for that date. */
-        merged[date] = cloud.length >= local.length ? cloud : local;
+        if (cloud.length >= local.length) {
+          /* Use cloud but patch in _ings/_libId from local where missing */
+          merged[date] = cloud.map((cm, i) => {
+            const lm = local[i];
+            return {
+              ...cm,
+              _ings:  cm._ings  || (lm && lm._ings)  || null,
+              _libId: cm._libId || (lm && lm._libId) || null,
+            };
+          });
+        } else {
+          merged[date] = local;
+        }
       });
       S.meals = merged;
       LS.set('sc_m', S.meals);
@@ -1106,6 +1130,7 @@ async function cloudAddMeal(date, meal) {
     pro:meal.pro, carb:meal.carb, fat:meal.fat,
     logged_time: meal.time, sort_order: sortOrder,
     lib_id: meal._libId || null,
+    ings_json: meal._ings ? JSON.stringify(meal._ings) : null,
   }).select().single();
   if (error) { syncStatus('error', 'Save failed'); return null; }
   syncStatus('synced', 'Saved');
@@ -1277,14 +1302,15 @@ async function qlLogAll() {
     }))
   };
   if (!S.meals[S.mdate]) S.meals[S.mdate] = [];
+  const mealIdx = S.meals[S.mdate].length; // lock index BEFORE push
   S.meals[S.mdate].push(meal);
   LS.set('sc_m', S.meals);
   S.ql.ings = [];
   render();
+  // Save to cloud — _ings included via ings_json
   const cloudId = await cloudAddMeal(S.mdate, meal);
-  if (cloudId) {
-    const idx = S.meals[S.mdate].length - 1;
-    if (S.meals[S.mdate][idx]) S.meals[S.mdate][idx]._id = cloudId;
+  if (cloudId && S.meals[S.mdate] && S.meals[S.mdate][mealIdx]) {
+    S.meals[S.mdate][mealIdx]._id = cloudId;
     LS.set('sc_m', S.meals);
   }
 }
@@ -1340,6 +1366,7 @@ function boot() {
   S.meals   = LS.get('sc_m') || {};
   S.custom  = LS.get('sc_cu') || [];
   S.water   = LS.get('sc_wa') || {};
+  S.hidden  = LS.get('sc_hi') || [];
   render();
   /* Sync from Supabase after render — don't block UI */
   if (sb) {
@@ -1434,7 +1461,7 @@ function vD() {
   </div>
   <div class="tile tg">
     <div class="tlbl">Protein Left</div>
-    <div class="tval ${t.pro>=PRO_MIN?'cg':'ca'}">${Math.max(0,PRO_TARGET-t.pro)}<span class="tunit"> g</span></div>
+    <div class="tval ${t.pro>=PRO_TARGET?'cg':'ca'}">${Math.max(0,+(PRO_TARGET-t.pro).toFixed(1))}<span class="tunit"> g</span></div>
     <div class="tsub">${t.pro}g / ${PRO_TARGET}g</div>
   </div>
 </div>
@@ -1585,6 +1612,7 @@ function vN() {
                 </div>
                 <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
                   <button class="qaplus" style="width:28px;height:28px;font-size:16px" onclick="event.stopPropagation();qadd('${id}')">+</button>
+                  <button onclick="event.stopPropagation();confirmDeleteMeal('${id}')" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-size:12px;transition:all .15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">🗑</button>
                   <span class="chevron" style="transform:${isO?'rotate(180deg)':'rotate(0deg)'}">▼</span>
                 </div>
               </div>
@@ -1708,9 +1736,12 @@ function vW() {
 /* ─── LIBRARY VIEW ────────────────────────────────────────────────────────── */
 function vLib() {
   return `
-<div style="margin-bottom:16px">
-  <div style="font-family:var(--fh);font-size:22px;font-weight:800;font-style:italic">Meal Library</div>
-  <div style="font-size:12px;color:var(--text3)">Build custom meals · search ingredients · edit grams · macros update live</div>
+<div style="margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+  <div>
+    <div style="font-family:var(--fh);font-size:22px;font-weight:800;font-style:italic">Meal Library</div>
+    <div style="font-size:12px;color:var(--text3)">Build custom meals · search ingredients · edit grams · macros update live</div>
+  </div>
+  ${S.hidden.length ? `<button class="rst-btn" onclick="showAllMeals()" style="font-size:11px">↺ Restore ${S.hidden.length} hidden meal${S.hidden.length>1?'s':''}</button>` : ''}
 </div>
 
 <div class="card sg">
@@ -1759,6 +1790,7 @@ ${CATS.map(cat=>`
           </div>
           <div style="display:flex;align-items:center;gap:8px">
             <button class="addmeal-btn" onclick="event.stopPropagation();qaddL('${id}')">+ Log Today</button>
+            <button onclick="event.stopPropagation();confirmDeleteMeal('${id}')" class="delbtn" style="padding:5px 8px;font-size:13px" title="Delete or hide meal">🗑</button>
             <span class="chevron" style="transform:${isO?'rotate(180deg)':'rotate(0deg)'}">▼</span>
           </div>
         </div>
@@ -1935,6 +1967,27 @@ async function qadd(id) {
 }
 
 function qaddL(id) { S.mdate = td(); qadd(id); go('nutrition'); }
+
+async function confirmDeleteMeal(id) {
+  const isPlan = !!LIB.find(x => (x.id||x.name) === id);
+  if (isPlan) {
+    /* Plan meals can't be permanently deleted — they're in code.
+       We hide them from the library instead. */
+    if (!confirm('Hide this meal from your library? You can restore all hidden meals from Library settings.')) return;
+    hideMeal(id);
+  } else {
+    if (!confirm('Permanently delete this custom meal?')) return;
+    await deleteCustomMeal(id);
+  }
+}
+
+async function deleteCustomMeal(id) {
+  const meal = S.custom.find(m => (m.id||m.name) === id);
+  S.custom = S.custom.filter(m => (m.id||m.name) !== id);
+  LS.set('sc_cu', S.custom);
+  render();
+  if (meal && meal._id) await cloudDelCustomMeal(meal._id);
+}
 
 async function delM(i) {
   const meal = (S.meals[S.mdate]||[])[i];
