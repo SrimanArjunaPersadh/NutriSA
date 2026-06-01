@@ -472,6 +472,37 @@ const _debouncedUpdateG = debounce((id, i, val) => {
 
 function updateG(id, i, val) { _debouncedUpdateG(id, i, val); }
 
+/* Custom meal gram editing — uses passed ingredient array instead of MD */
+const _debouncedUpdateGCustom = debounce((id, i, val, ings) => {
+  S.gO[id+'_'+i] = parseFloat(val) || 0;
+  const calculated = calcIng(id, ings);
+  calculated.forEach((ing, j) => {
+    const setT = (sfx, v) => { const e = document.getElementById(`imc-${id}-${j}-${sfx}`); if(e) e.textContent = v; };
+    setT('k', ing.kcal); setT('p', ing.pro+'g'); setT('c', ing.carb+'g'); setT('f', ing.fat+'g');
+  });
+  const t = sumIngs(calculated);
+  const setT = (sfx, v) => { const e = document.getElementById(`itot-${id}-${sfx}`); if(e) e.textContent = v; };
+  setT('k', t.kcal+' kcal'); setT('p', t.pro+'g P'); setT('c', t.carb+'g C'); setT('f', t.fat+'g F');
+}, 300);
+
+function updateGCustom(id, i, val, ings) { _debouncedUpdateGCustom(id, i, val, ings); }
+
+function resetGCustom(id, ings) {
+  ings.forEach((ing, i) => {
+    delete S.gO[id+'_'+i];
+    const el = document.getElementById('gi-'+id+'-'+i);
+    if (el) el.value = baseG(ing);
+  });
+  const calculated = calcIng(id, ings);
+  calculated.forEach((ing, j) => {
+    const setT = (sfx, v) => { const e = document.getElementById(`imc-${id}-${j}-${sfx}`); if(e) e.textContent = v; };
+    setT('k', ing.kcal); setT('p', ing.pro+'g'); setT('c', ing.carb+'g'); setT('f', ing.fat+'g');
+  });
+  const t = sumIngs(calculated);
+  const setT = (sfx, v) => { const e = document.getElementById(`itot-${id}-${sfx}`); if(e) e.textContent = v; };
+  setT('k', t.kcal+' kcal'); setT('p', t.pro+'g P'); setT('c', t.carb+'g C'); setT('f', t.fat+'g F');
+}
+
 function resetG(id) {
   const det = MD[id]; if (!det) return;
   det.ingredients.forEach((ing, i) => {
@@ -493,53 +524,67 @@ function resetG(id) {
 }
 
 function logCustomG(id) {
-  const det = MD[id]; if (!det) return;
-  const ings = calcIng(id, det.ingredients);
+  const det = MD[id];
+  const custom = !det ? S.custom.find(m => (m.id||m.name) === id) : null;
+  const baseIngs = det ? det.ingredients
+    : custom ? custom.ingredients.map(ing => ({...ing, qty: String(parseFloat(ing.qty)||100)}))
+    : null;
+  if (!baseIngs) return;
+  const ings = calcIng(id, baseIngs);
   const t = sumIngs(ings);
   const m = am().find(x => (x.id||x.name) === id);
   if (!S.meals[S.mdate]) S.meals[S.mdate] = [];
-  S.meals[S.mdate].push({name: m ? m.name : id, kcal: t.kcal, pro: t.pro, carb: t.carb, fat: t.fat, time: now()});
+  S.meals[S.mdate].push({name: m ? m.name : id, kcal: t.kcal, pro: t.pro, carb: t.carb, fat: t.fat, time: now(), _libId: id});
   LS.set('sc_m', S.meals);
-  det.ingredients.forEach((_,i) => delete S.gO[id+'_'+i]);
+  baseIngs.forEach((_,i) => delete S.gO[id+'_'+i]);
   render();
 }
 
 function ingEditor(id) {
   const det = MD[id];
 
-  /* For custom meals — no MD entry, use stored ingredients array instead */
+  /* Custom meals — build a synthetic det from stored ingredients so the
+     same gram-editing pipeline works exactly like plan meals */
   if (!det) {
     const custom = S.custom.find(m => (m.id||m.name) === id);
     if (!custom || !custom.ingredients || !custom.ingredients.length) {
       return '<div class="empty" style="padding:16px;font-size:12px">No ingredient breakdown saved for this meal.</div>';
     }
-    const t = { kcal: custom.kcal, pro: custom.pro, carb: custom.carb, fat: custom.fat };
-    if (custom.note) {
-      // render note strip if present
-    }
-    return `${custom.note ? `<div class="meal-note-strip">${custom.note}</div>` : ''}
+    /* Synthetic det compatible with calcIng / sumIngs */
+    const synDet = {
+      note: custom.note || '',
+      ingredients: custom.ingredients.map(ing => ({
+        name: ing.name,
+        qty:  String(parseFloat(ing.qty) || 100),   // strip unit label → number string
+        kcal: ing.kcal, pro: ing.pro, carb: ing.carb, fat: ing.fat
+      }))
+    };
+    const ings = calcIng(id, synDet.ingredients);
+    const t = sumIngs(ings);
+    return `${synDet.note ? `<div class="meal-note-strip">${synDet.note}</div>` : ''}
   <table class="ing-editor">
-    <thead><tr><th>Ingredient</th><th>Amount</th><th>Kcal</th><th style="color:var(--protein)">P</th><th style="color:var(--carbs)">C</th><th style="color:var(--fats)">F</th></tr></thead>
-    <tbody>${custom.ingredients.map(ing => `<tr>
+    <thead><tr><th>Ingredient</th><th>g</th><th>Kcal</th><th style="color:var(--protein)">P</th><th style="color:var(--carbs)">C</th><th style="color:var(--fats)">F</th></tr></thead>
+    <tbody>${synDet.ingredients.map((ing,i) => `<tr>
       <td><div class="ing-name">${ing.name}</div></td>
-      <td style="text-align:right;color:var(--text3);font-size:11px">${ing.qty}</td>
-      <td><span class="im-cell">${ing.kcal}</span></td>
-      <td><span class="im-cell" style="color:var(--protein)">${ing.pro}g</span></td>
-      <td><span class="im-cell" style="color:var(--carbs)">${ing.carb}g</span></td>
-      <td><span class="im-cell" style="color:var(--fats)">${ing.fat}g</span></td>
+      <td><input class="gram-inp" id="gi-${id}-${i}" type="number" min="0" step="5" value="${ings[i].g}" oninput="updateGCustom('${id}',${i},this.value,${JSON.stringify(synDet.ingredients).replace(/"/g,'&quot;')})"/></td>
+      <td><span class="im-cell" id="imc-${id}-${i}-k">${ings[i].kcal}</span></td>
+      <td><span class="im-cell" style="color:var(--protein)" id="imc-${id}-${i}-p">${ings[i].pro}g</span></td>
+      <td><span class="im-cell" style="color:var(--carbs)" id="imc-${id}-${i}-c">${ings[i].carb}g</span></td>
+      <td><span class="im-cell" style="color:var(--fats)" id="imc-${id}-${i}-f">${ings[i].fat}g</span></td>
     </tr>`).join('')}</tbody>
   </table>
   <div class="live-tot">
     <span class="lt-lbl">Meal total</span>
     <div class="lt-nums">
-      <span class="ltn2">${t.kcal} kcal</span>
-      <span class="ltn2" style="color:var(--protein)">${t.pro}g P</span>
-      <span class="ltn2" style="color:var(--carbs)">${t.carb}g C</span>
-      <span class="ltn2" style="color:var(--fats)">${t.fat}g F</span>
+      <span class="ltn2" id="itot-${id}-k">${t.kcal} kcal</span>
+      <span class="ltn2" style="color:var(--protein)" id="itot-${id}-p">${t.pro}g P</span>
+      <span class="ltn2" style="color:var(--carbs)" id="itot-${id}-c">${t.carb}g C</span>
+      <span class="ltn2" style="color:var(--fats)" id="itot-${id}-f">${t.fat}g F</span>
     </div>
   </div>
   <div class="meal-act">
-    <button class="log-custom" onclick="qaddL('${id}')">+ Log Today</button>
+    <button class="rst-btn" onclick="resetGCustom('${id}',${JSON.stringify(synDet.ingredients).replace(/"/g,'&quot;')})">↺ Reset</button>
+    <button class="log-custom" onclick="logCustomG('${id}')">+ Log to Today</button>
   </div>`;
   }
 
@@ -1398,17 +1443,30 @@ function vN() {
   const loggedRows = ms.length===0
     ? `<div id="drop-empty" style="border:2px dashed var(--border2);border-radius:var(--rs);padding:36px 20px;text-align:center;color:var(--text3);transition:all .2s">
         <div style="font-size:32px;margin-bottom:10px">🍽️</div>
-        <div style="font-family:var(--fh);font-size:15px;font-weight:700;color:var(--text2);margin-bottom:4px">Drag meals here to log them</div>
-        <div style="font-size:12px">Or tap the + button on any meal</div>
+        <div style="font-family:var(--fh);font-size:15px;font-weight:700;color:var(--text2);margin-bottom:4px">Drag meals here or use Quick Log</div>
+        <div style="font-size:12px">Or tap the + button on any saved meal</div>
        </div>`
-    : ms.map((m,i) => `
-        <div class="logged-item">
-          <div style="flex:1"><div class="mname">${m.name}</div><div class="mtime">${m.time||''}</div></div>
-          <div style="display:flex;align-items:center;gap:8px">
-            <div style="text-align:right"><div class="mkcal">${m.kcal} kcal</div><div class="mmsub"><span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div></div>
-            <button class="delbtn" onclick="delM(${i})">✕</button>
+    : ms.map((m,i) => {
+        const isO = !!S.openCards['log_'+i];
+        const hasDetail = (m._libId && (MD[m._libId] || S.custom.find(c=>(c.id||c.name)===m._libId)));
+        return `<div style="border-bottom:1px solid var(--border)">
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;cursor:pointer" onclick="toggleLogCard(${i})">
+            <div style="flex:1">
+              <div class="mname">${m.name}</div>
+              <div class="mtime">${m.time||''}</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px">
+              <div style="text-align:right">
+                <div class="mkcal">${m.kcal} kcal</div>
+                <div class="mmsub"><span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
+              </div>
+              <button class="delbtn" onclick="event.stopPropagation();delM(${i})">✕</button>
+              <span style="font-size:11px;color:var(--text3);transition:transform .2s;display:inline-block;transform:${isO?'rotate(180deg)':'rotate(0deg)'}">▼</span>
+            </div>
           </div>
-        </div>`).join('');
+          ${isO ? loggedItemEditor(m, i) : ''}
+        </div>`;
+      }).join('');
 
   return `
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px">
@@ -1468,8 +1526,9 @@ function vN() {
         ${meals.map(m => {
           const id = m.id||m.name;
           const isO = !!S.openCards['n_'+id];
-          return `<div class="meal-card" style="margin-bottom:5px">
-            <div class="meal-card-header" style="padding:10px 12px" onclick="toggleNCard('${id}')">
+          return `<div class="meal-card" style="margin-bottom:5px" draggable="true" data-id="${id}"
+            ondragstart="dragStart(event,'${id}')" ondragend="dragEnd(event)">
+            <div class="meal-card-header" style="padding:10px 12px;cursor:grab" onclick="toggleNCard('${id}')">
               <div style="flex:1;min-width:0">
                 <div class="meal-card-name" style="font-size:14px">${m.name}${vt(m.v)}</div>
                 <div style="display:flex;gap:8px;margin-top:2px;flex-wrap:wrap">
@@ -1666,12 +1725,115 @@ ${CATS.map(cat=>`
 /* ─── ACTIONS ─────────────────────────────────────────────────────────────── */
 function tc2(id) { S.openCards[id] = !S.openCards[id]; render(); }
 /* Nutrition page meal card toggle — uses 'n_' prefix to avoid clash with library */
+function toggleLogCard(i) { S.openCards['log_'+i] = !S.openCards['log_'+i]; render(); }
 function toggleNCard(id) { S.openCards['n_'+id] = !S.openCards['n_'+id]; render(); }
+
+function loggedItemEditor(m, idx) {
+  /* Try to find the source meal for ingredient breakdown */
+  const libId = m._libId;
+  const det = libId ? MD[libId] : null;
+  const custom = libId ? S.custom.find(c => (c.id||c.name) === libId) : null;
+  const baseIngs = det ? det.ingredients
+    : custom ? custom.ingredients.map(i => ({...i, qty: String(parseFloat(i.qty)||100)}))
+    : null;
+
+  /* If no ingredient data — show simple macro edit */
+  if (!baseIngs) {
+    return `<div style="background:var(--bg4);border-radius:var(--rs);padding:12px;margin-bottom:10px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px">Edit macros for this entry:</div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
+        <div><label class="fl">Kcal</label><input type="number" id="le-k-${idx}" value="${m.kcal}" style="font-size:12px;padding:6px 8px"/></div>
+        <div><label class="fl">Protein g</label><input type="number" id="le-p-${idx}" value="${m.pro}" step="0.1" style="font-size:12px;padding:6px 8px"/></div>
+        <div><label class="fl">Carbs g</label><input type="number" id="le-c-${idx}" value="${m.carb}" step="0.1" style="font-size:12px;padding:6px 8px"/></div>
+        <div><label class="fl">Fat g</label><input type="number" id="le-f-${idx}" value="${m.fat}" step="0.1" style="font-size:12px;padding:6px 8px"/></div>
+      </div>
+      <button class="log-custom" style="width:100%" onclick="updateLoggedMacros(${idx})">Update Entry</button>
+    </div>`;
+  }
+
+  /* Has ingredients — show gram editor */
+  const edId = 'logged_'+idx;
+  const ings = calcIng(edId, baseIngs);
+  const t = sumIngs(ings);
+  return `<div style="background:var(--bg4);border-radius:var(--rs);padding:12px;margin-bottom:10px">
+    <table class="ing-editor" style="margin-top:0">
+      <thead><tr><th>Ingredient</th><th>g</th><th>Kcal</th><th style="color:var(--protein)">P</th><th style="color:var(--carbs)">C</th><th style="color:var(--fats)">F</th></tr></thead>
+      <tbody>${baseIngs.map((ing,i) => `<tr>
+        <td><div class="ing-name" style="font-size:11px">${ing.name}</div></td>
+        <td><input class="gram-inp" id="gi-${edId}-${i}" type="number" min="0" step="5" value="${ings[i].g}" oninput="updateGCustom('${edId}',${i},this.value,${JSON.stringify(baseIngs).replace(/"/g,'&quot;')})"/></td>
+        <td><span class="im-cell" id="imc-${edId}-${i}-k">${ings[i].kcal}</span></td>
+        <td><span class="im-cell" style="color:var(--protein)" id="imc-${edId}-${i}-p">${ings[i].pro}g</span></td>
+        <td><span class="im-cell" style="color:var(--carbs)" id="imc-${edId}-${i}-c">${ings[i].carb}g</span></td>
+        <td><span class="im-cell" style="color:var(--fats)" id="imc-${edId}-${i}-f">${ings[i].fat}g</span></td>
+      </tr>`).join('')}</tbody>
+    </table>
+    <div class="live-tot" style="margin-top:8px">
+      <span class="lt-lbl">New total</span>
+      <div class="lt-nums">
+        <span class="ltn2" id="itot-${edId}-k">${t.kcal} kcal</span>
+        <span class="ltn2" style="color:var(--protein)" id="itot-${edId}-p">${t.pro}g P</span>
+        <span class="ltn2" style="color:var(--carbs)" id="itot-${edId}-c">${t.carb}g C</span>
+        <span class="ltn2" style="color:var(--fats)" id="itot-${edId}-f">${t.fat}g F</span>
+      </div>
+    </div>
+    <div style="display:flex;gap:8px;margin-top:10px;justify-content:space-between">
+      <button class="rst-btn" onclick="resetGCustom('${edId}',${JSON.stringify(baseIngs).replace(/"/g,'&quot;')})">↺ Reset</button>
+      <button class="log-custom" onclick="updateLoggedEntry(${idx},'${edId}',${JSON.stringify(baseIngs).replace(/"/g,'&quot;')})">✓ Update Log</button>
+    </div>
+  </div>`;
+}
+
+async function updateLoggedEntry(idx, edId, baseIngs) {
+  /* Read current gram values from inputs */
+  baseIngs.forEach((ing, i) => {
+    const el = document.getElementById('gi-'+edId+'-'+i);
+    if (el) S.gO[edId+'_'+i] = parseFloat(el.value) || 0;
+  });
+  const ings = calcIng(edId, baseIngs);
+  const t = sumIngs(ings);
+  const meal = S.meals[S.mdate][idx];
+  if (!meal) return;
+  const cloudId = meal._id;
+  meal.kcal = t.kcal; meal.pro = t.pro; meal.carb = t.carb; meal.fat = t.fat;
+  LS.set('sc_m', S.meals);
+  baseIngs.forEach((_,i) => delete S.gO[edId+'_'+i]);
+  S.openCards['log_'+idx] = false;
+  render();
+  /* Update in Supabase */
+  if (sb && cloudId) {
+    syncStatus('syncing', 'Saving...');
+    const {error} = await sb.from('meal_logs').update({
+      kcal: t.kcal, pro: t.pro, carb: t.carb, fat: t.fat
+    }).eq('id', cloudId);
+    syncStatus(error ? 'error' : 'synced', error ? 'Save failed' : 'Saved');
+  }
+}
+
+async function updateLoggedMacros(idx) {
+  const k = parseFloat(document.getElementById('le-k-'+idx)?.value)||0;
+  const p = parseFloat(document.getElementById('le-p-'+idx)?.value)||0;
+  const c = parseFloat(document.getElementById('le-c-'+idx)?.value)||0;
+  const f = parseFloat(document.getElementById('le-f-'+idx)?.value)||0;
+  const meal = S.meals[S.mdate][idx]; if (!meal) return;
+  const cloudId = meal._id;
+  meal.kcal=Math.round(k); meal.pro=+p.toFixed(1); meal.carb=+c.toFixed(1); meal.fat=+f.toFixed(1);
+  LS.set('sc_m', S.meals);
+  S.openCards['log_'+idx] = false;
+  render();
+  if (sb && cloudId) {
+    syncStatus('syncing', 'Saving...');
+    const {error} = await sb.from('meal_logs').update({
+      kcal: meal.kcal, pro: meal.pro, carb: meal.carb, fat: meal.fat
+    }).eq('id', cloudId);
+    syncStatus(error ? 'error' : 'synced', error ? 'Save failed' : 'Saved');
+  }
+}
 
 async function qadd(id) {
   const m = am().find(x=>(x.id||x.name)===id); if(!m) return;
   if (!S.meals[S.mdate]) S.meals[S.mdate] = [];
-  const meal = {name:m.name, kcal:m.kcal, pro:m.pro, carb:m.carb, fat:m.fat, time:now()};
+  const meal = {name:m.name, kcal:m.kcal, pro:m.pro, carb:m.carb, fat:m.fat, time:now(), _libId:id};
+  S.meals[S.mdate].push(meal);
   /* Optimistic local update first — app feels instant */
   S.meals[S.mdate].push(meal);
   LS.set('sc_m', S.meals);
