@@ -6,6 +6,7 @@
 <title>SRIMAN.CUTS — Nutrition & Weight Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,700;1,800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 :root{
@@ -182,6 +183,15 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
 .mb-save-row{display:grid;grid-template-columns:1fr 180px 120px;gap:8px;margin-top:12px;align-items:end}
 .mb-empty{text-align:center;padding:24px;color:var(--text3);font-size:12px}
 .mb-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:10px;font-weight:700;font-family:var(--fh);background:var(--bg5);color:var(--text3);margin-left:4px}
+
+/* Sync status indicator */
+.sync-dot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:5px;flex-shrink:0}
+.sync-bar{display:flex;align-items:center;font-family:var(--fh);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--text3);padding:4px 0}
+.sync-bar.synced .sync-dot{background:var(--green);box-shadow:0 0 6px #22C55E88}
+.sync-bar.syncing .sync-dot{background:var(--amber);animation:pulse 1s infinite}
+.sync-bar.offline .sync-dot{background:var(--text3)}
+.sync-bar.error .sync-dot{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 </style>
 </head>
 <body>
@@ -194,7 +204,7 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
       <button class="pill" onclick="go('weight')">Weight</button>
       <button class="pill" onclick="go('library')">Library</button>
     </div>
-    <div><div class="nwval"><span id="nw">97.3</span> kg</div><div class="nwlbl">Current weight</div></div>
+    <div><div class="nwval"><span id="nw">97.3</span> kg</div><div class="nwlbl">Current weight</div><div class="sync-bar offline" id="sync-bar"><span class="sync-dot"></span><span id="sync-txt">Connecting...</span></div></div>
   </div>
   <div id="vc"></div>
 </div>
@@ -542,15 +552,6 @@ function isSeitanDay() {
 }
 function waterGoal() { return isSeitanDay() ? WATER_GOAL_SEITAN : WATER_GOAL_NORMAL; }
 function waterCups() { return S.water[S.mdate] || 0; }
-function toggleWater(n) {
-  const cur = waterCups();
-  S.water[S.mdate] = cur === n ? n - 1 : n;
-  LS.set('sc_wa', S.water);
-  // partial re-render of water widget only
-  const wc = waterCups(), wg = waterGoal();
-  const el = document.getElementById('water-widget');
-  if (el) el.innerHTML = waterHTML(wc, wg);
-}
 function waterHTML(cups, goal) {
   const isSeitan = isSeitanDay();
   const mlDrunk = cups * 250;
@@ -764,7 +765,7 @@ function mbSearch(q) {
   }).join('');
 }
 
-function mbSave() {
+async function mbSave() {
   S.mb.ings.forEach((ing, i) => {
     const el = document.getElementById('mb-g-'+i);
     if(el) { const v=parseFloat(el.value); ing.qty = isNaN(v)||v<0 ? 0 : v; }
@@ -794,6 +795,13 @@ function mbSave() {
   LS.set('sc_cu', S.custom);
   S.mb = {ings:[], name:'', cat:'Breakfast', notes:'', ingSearch:''};
   render();
+  /* Persist to cloud */
+  const cloudId = await cloudSaveCustomMeal(newMeal);
+  if (cloudId) {
+    const idx = S.custom.length - 1;
+    S.custom[idx]._id = cloudId;
+    LS.set('sc_cu', S.custom);
+  }
 }
 
 function mbRenderBuilder() {
@@ -833,16 +841,210 @@ function mbRenderBuilder() {
 </div>`;
 }
 
+/* ─── SUPABASE CONFIG ─────────────────────────────────────────────────────────
+   Your personal NutriSa project. Anon key is safe to expose in client code
+   because Row Level Security will be enabled when the app goes multi-user.    */
+const SB_URL = 'https://ajajsaquxmimsdxbueqb.supabase.co';
+const SB_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFqYWpzYXF1eG1pbXNkeGJ1ZXFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAyNjAxMDIsImV4cCI6MjA5NTgzNjEwMn0.KquYTRV1_MXTDpstfxO0eyfofjJb59T1baJDoUq1P1o';
+
+/* The CDN bundle exposes the client factory as window.supabase.createClient */
+let sb = null;
+try {
+  const factory = (window.supabase && window.supabase.createClient)
+    ? window.supabase.createClient
+    : (typeof createClient !== 'undefined' ? createClient : null);
+  if (factory) sb = factory(SB_URL, SB_KEY);
+} catch(e) { console.warn('Supabase init failed:', e); }
+
+/* ─── SYNC STATUS UI ──────────────────────────────────────────────────────── */
+function syncStatus(state, text) {
+  const bar = document.getElementById('sync-bar');
+  const txt = document.getElementById('sync-txt');
+  if (!bar || !txt) return;
+  bar.className = 'sync-bar ' + state;
+  txt.textContent = text;
+}
+
+/* ─── SUPABASE DATA LAYER ─────────────────────────────────────────────────── */
+
+/* Pull all data from Supabase and merge into S, then render */
+async function syncFromCloud() {
+  if (!sb) { syncStatus('offline', 'Local only'); render(); return; }
+  syncStatus('syncing', 'Syncing...');
+  try {
+    const [wRes, mRes, cRes, waRes] = await Promise.all([
+      sb.from('weight_logs').select('*').order('date', {ascending:true}),
+      sb.from('meal_logs').select('*').order('date').order('sort_order'),
+      sb.from('custom_meals').select('*').order('created_at'),
+      sb.from('water_logs').select('*'),
+    ]);
+
+    if (wRes.error)  throw wRes.error;
+    if (mRes.error)  throw mRes.error;
+    if (cRes.error)  throw cRes.error;
+    if (waRes.error) throw waRes.error;
+
+    /* Weight logs → array of {date, w} */
+    if (wRes.data.length > 0) {
+      S.weights = wRes.data.map(r => ({date: r.date, w: parseFloat(r.weight)}));
+      LS.set('sc_w', S.weights);
+    } else if (!S.weights.length) {
+      /* First ever load — seed historical data into Supabase */
+      await seedWeightsToCloud(SEED);
+    }
+
+    /* Meal logs → { 'YYYY-MM-DD': [{...}] } */
+    if (mRes.data.length > 0) {
+      const meals = {};
+      mRes.data.forEach(r => {
+        if (!meals[r.date]) meals[r.date] = [];
+        meals[r.date].push({
+          _id:   r.id,
+          name:  r.name,
+          kcal:  r.kcal,
+          pro:   parseFloat(r.pro),
+          carb:  parseFloat(r.carb),
+          fat:   parseFloat(r.fat),
+          time:  r.logged_time || '',
+        });
+      });
+      S.meals = meals;
+      LS.set('sc_m', S.meals);
+    }
+
+    /* Custom meals */
+    if (cRes.data.length > 0) {
+      S.custom = cRes.data.map(r => ({
+        _id:         r.id,
+        name:        r.name,
+        cat:         r.cat,
+        note:        r.note || '',
+        kcal:        r.kcal,
+        pro:         parseFloat(r.pro),
+        carb:        parseFloat(r.carb),
+        fat:         parseFloat(r.fat),
+        ingredients: r.ingredients || [],
+      }));
+      LS.set('sc_cu', S.custom);
+    }
+
+    /* Water logs */
+    if (waRes.data.length > 0) {
+      const water = {};
+      waRes.data.forEach(r => { water[r.date] = r.cups; });
+      S.water = water;
+      LS.set('sc_wa', S.water);
+    }
+
+    syncStatus('synced', 'Synced');
+    render();
+  } catch(e) {
+    console.error('Sync error:', e);
+    syncStatus('error', 'Sync failed — using local data');
+    render();
+  }
+}
+
+/* Seed SEED array into Supabase on first load */
+async function seedWeightsToCloud(entries) {
+  const rows = entries.map(e => ({date: e.date, weight: e.w}));
+  const {error} = await sb.from('weight_logs').upsert(rows, {onConflict:'date'});
+  if (!error) {
+    S.weights = entries;
+    LS.set('sc_w', S.weights);
+  }
+}
+
+/* ── Weight actions ── */
+async function cloudLogW(date, w) {
+  if (!sb) return false;
+  syncStatus('syncing', 'Saving...');
+  const {error} = await sb.from('weight_logs').upsert({date, weight: w}, {onConflict:'date'});
+  if (error) { syncStatus('error', 'Save failed'); return false; }
+  syncStatus('synced', 'Saved');
+  return true;
+}
+
+async function cloudDelW(date) {
+  if (!sb) return false;
+  syncStatus('syncing', 'Deleting...');
+  const {error} = await sb.from('weight_logs').delete().eq('date', date);
+  if (error) { syncStatus('error', 'Delete failed'); return false; }
+  syncStatus('synced', 'Synced');
+  return true;
+}
+
+/* ── Meal actions ── */
+async function cloudAddMeal(date, meal) {
+  if (!sb) return null;
+  syncStatus('syncing', 'Saving...');
+  const sortOrder = (S.meals[date]||[]).length;
+  const {data, error} = await sb.from('meal_logs').insert({
+    date, name:meal.name, kcal:meal.kcal,
+    pro:meal.pro, carb:meal.carb, fat:meal.fat,
+    logged_time: meal.time, sort_order: sortOrder,
+  }).select().single();
+  if (error) { syncStatus('error', 'Save failed'); return null; }
+  syncStatus('synced', 'Saved');
+  return data.id;
+}
+
+async function cloudDelMeal(mealId) {
+  if (!sb || !mealId) return true;
+  syncStatus('syncing', 'Deleting...');
+  const {error} = await sb.from('meal_logs').delete().eq('id', mealId);
+  if (error) { syncStatus('error', 'Delete failed'); return false; }
+  syncStatus('synced', 'Synced');
+  return true;
+}
+
+/* ── Custom meal actions ── */
+async function cloudSaveCustomMeal(meal) {
+  if (!sb) return null;
+  syncStatus('syncing', 'Saving...');
+  const {data, error} = await sb.from('custom_meals').upsert({
+    name: meal.name, cat: meal.cat, note: meal.note||'',
+    kcal: meal.kcal, pro: meal.pro, carb: meal.carb, fat: meal.fat,
+    ingredients: meal.ingredients || [],
+  }, {onConflict:'name'}).select().single();
+  if (error) { syncStatus('error', 'Save failed'); return null; }
+  syncStatus('synced', 'Saved');
+  return data.id;
+}
+
+async function cloudDelCustomMeal(mealId) {
+  if (!sb || !mealId) return true;
+  syncStatus('syncing', 'Deleting...');
+  const {error} = await sb.from('custom_meals').delete().eq('id', mealId);
+  if (error) { syncStatus('error', 'Delete failed'); return false; }
+  syncStatus('synced', 'Synced');
+  return true;
+}
+
+/* ── Water actions ── */
+async function cloudSetWater(date, cups) {
+  if (!sb) return;
+  const {error} = await sb.from('water_logs').upsert({date, cups}, {onConflict:'date'});
+  if (error) console.error('Water sync error:', error);
+}
+
 /* ─── BOOT & ROUTING ──────────────────────────────────────────────────────── */
 function boot() {
   document.addEventListener('click', e => {
     if (!e.target.closest('.mb-search-wrap')) { const dd=document.getElementById('mb-dd'); if(dd) dd.innerHTML=''; }
   });
+  /* Load from localStorage immediately — app is usable before cloud responds */
   S.weights = LS.get('sc_w') || SEED;
   S.meals   = LS.get('sc_m') || {};
   S.custom  = LS.get('sc_cu') || [];
   S.water   = LS.get('sc_wa') || {};
   render();
+  /* Sync from Supabase after render — don't block UI */
+  if (sb) {
+    setTimeout(syncFromCloud, 100);
+  } else {
+    syncStatus('offline', 'Local only');
+  }
 }
 
 function go(v) {
@@ -1161,7 +1363,7 @@ function vLib() {
           <span class="mb-badge">${m.cat}</span>
           <div style="font-size:11px;color:var(--text3);margin-top:2px">${m.kcal}kcal · <span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
         </div>
-        <button class="delbtn" onclick="S.custom.splice(${i},1);LS.set('sc_cu',S.custom);render()">✕</button>
+        <button class="delbtn" onclick="(async()=>{const m=S.custom[${i}];S.custom.splice(${i},1);LS.set('sc_cu',S.custom);render();await cloudDelCustomMeal(m&&m._id)})()">✕</button>
       </div>`).join('')}
   </div>` : ''}
 </div>
@@ -1205,24 +1407,63 @@ ${CATS.map(cat=>`
 
 /* ─── ACTIONS ─────────────────────────────────────────────────────────────── */
 function tc2(id) { S.openCards[id] = !S.openCards[id]; render(); }
-function qadd(id) {
+
+async function qadd(id) {
   const m = am().find(x=>(x.id||x.name)===id); if(!m) return;
   if (!S.meals[S.mdate]) S.meals[S.mdate] = [];
-  S.meals[S.mdate].push({name:m.name, kcal:m.kcal, pro:m.pro, carb:m.carb, fat:m.fat, time:now()});
+  const meal = {name:m.name, kcal:m.kcal, pro:m.pro, carb:m.carb, fat:m.fat, time:now()};
+  /* Optimistic local update first — app feels instant */
+  S.meals[S.mdate].push(meal);
   LS.set('sc_m', S.meals);
   render();
+  /* Then persist to cloud and store returned ID for future deletion */
+  const cloudId = await cloudAddMeal(S.mdate, meal);
+  if (cloudId) {
+    const idx = S.meals[S.mdate].length - 1;
+    S.meals[S.mdate][idx]._id = cloudId;
+    LS.set('sc_m', S.meals);
+  }
 }
+
 function qaddL(id) { S.mdate = td(); qadd(id); go('nutrition'); }
-function delM(i) { S.meals[S.mdate].splice(i,1); LS.set('sc_m',S.meals); render(); }
-function logW() {
+
+async function delM(i) {
+  const meal = (S.meals[S.mdate]||[])[i];
+  if (!meal) return;
+  const cloudId = meal._id || null;
+  S.meals[S.mdate].splice(i, 1);
+  LS.set('sc_m', S.meals);
+  render();
+  await cloudDelMeal(cloudId);
+}
+
+async function logW() {
   const date=document.getElementById('wd').value, w=parseFloat(document.getElementById('wv').value);
   if (!date||isNaN(w)) return;
   const i = S.weights.findIndex(x=>x.date===date);
   if (i>=0) S.weights[i].w = w; else S.weights.push({date,w});
   LS.set('sc_w', S.weights);
   render();
+  await cloudLogW(date, w);
 }
-function delW(date) { S.weights=S.weights.filter(x=>x.date!==date); LS.set('sc_w',S.weights); render(); }
+
+async function delW(date) {
+  S.weights = S.weights.filter(x=>x.date!==date);
+  LS.set('sc_w', S.weights);
+  render();
+  await cloudDelW(date);
+}
+
+/* Water toggle — also syncs to cloud */
+async function toggleWater(n) {
+  const cur = waterCups();
+  S.water[S.mdate] = cur === n ? n - 1 : n;
+  LS.set('sc_wa', S.water);
+  const wc = waterCups(), wg = waterGoal();
+  const el = document.getElementById('water-widget');
+  if (el) el.innerHTML = waterHTML(wc, wg);
+  await cloudSetWater(S.mdate, S.water[S.mdate]);
+}
 
 /* ─── CHARTS ──────────────────────────────────────────────────────────────── */
 function ic() { if(S.view==='dashboard') dC(); if(S.view==='weight') wC(); }
