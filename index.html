@@ -192,6 +192,49 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
 .sync-bar.offline .sync-dot{background:var(--text3)}
 .sync-bar.error .sync-dot{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+/* Quick Log */
+.ql-wrap{background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:16px;margin-bottom:12px}
+.ql-search-wrap{position:relative;margin-bottom:10px}
+.ql-search-wrap input{padding-left:34px}
+.ql-dd{position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rs);z-index:100;max-height:200px;overflow-y:auto;margin-top:3px;box-shadow:0 8px 24px #00000060}
+.ql-result{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;cursor:pointer;transition:background .12s;border-bottom:1px solid var(--border)}
+.ql-result:last-child{border-bottom:none}
+.ql-result:hover{background:var(--bg4)}
+.ql-result-name{font-size:13px;font-weight:600;color:var(--text)}
+.ql-result-cat{font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px}
+.ql-result-macros{font-size:11px;color:var(--text3);text-align:right}
+.ql-row{display:grid;grid-template-columns:1fr 80px 52px 52px 52px 52px 28px;gap:6px;align-items:center;padding:7px 0;border-bottom:1px solid var(--border)}
+.ql-row:last-child{border-bottom:none}
+.ql-ing-name{font-size:12px;font-weight:600;color:var(--text)}
+.ql-ing-cat{font-size:10px;color:var(--text3)}
+.ql-val{font-size:12px;color:var(--text2);text-align:right}
+.ql-val.pro{color:var(--protein)}.ql-val.carb{color:var(--carbs)}.ql-val.fat{color:var(--fats)}
+.ql-gram{width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;padding:5px 7px;text-align:right;outline:none;transition:border .15s;font-family:var(--fb)}
+.ql-gram:focus{border-color:var(--blue)}
+.ql-del{background:transparent;border:1px solid var(--border2);border-radius:5px;color:var(--text3);cursor:pointer;font-size:11px;padding:2px 6px;transition:all .15s;line-height:1}
+.ql-del:hover{border-color:var(--red);color:var(--red)}
+.ql-tot{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg5);border-radius:8px;margin-top:10px;flex-wrap:wrap;gap:8px}
+.ql-tot-lbl{font-family:var(--fh);font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
+.ql-tot-nums{display:flex;gap:12px}
+.ql-tn{font-size:13px;font-weight:700}
+.ql-actions{display:flex;gap:8px;margin-top:10px;justify-content:space-between;align-items:center;flex-wrap:wrap}
+
+.ql-search-wrap{position:relative;margin-bottom:8px}
+.ql-search-wrap input{padding-left:34px}
+.ql-dd{position:absolute;top:100%;left:0;right:0;background:var(--bg2);border:1px solid var(--border2);border-radius:var(--rs);z-index:200;max-height:200px;overflow-y:auto;margin-top:3px;box-shadow:0 8px 24px #00000060}
+.ql-result{display:flex;justify-content:space-between;align-items:center;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--border);transition:background .12s}
+.ql-result:last-child{border-bottom:none}
+.ql-result:hover{background:var(--bg4)}
+.ql-result-name{font-size:13px;font-weight:600;color:var(--text)}
+.ql-result-sub{font-size:10px;color:var(--text3);margin-top:1px}
+.ql-ing-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.ql-ing-row:last-child{border-bottom:none}
+.ql-ing-name{flex:1;font-size:12px;font-weight:600;color:var(--text)}
+.ql-ing-sub{font-size:10px;color:var(--text3);margin-top:1px}
+.ql-gram{width:62px;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:12px;padding:5px 7px;text-align:right;outline:none;transition:border .15s;font-family:var(--fb);flex-shrink:0}
+.ql-gram:focus{border-color:var(--blue)}
+.ql-macros{font-size:11px;color:var(--text3);text-align:right;min-width:110px;flex-shrink:0}
+.ql-total{display:flex;justify-content:space-between;align-items:center;padding:9px 12px;background:var(--bg5);border-radius:8px;margin-top:8px;flex-wrap:wrap;gap:8px}
 </style>
 </head>
 <body>
@@ -204,7 +247,7 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
       <button class="pill" onclick="go('weight')">Weight</button>
       <button class="pill" onclick="go('library')">Library</button>
     </div>
-    <div><div class="nwval"><span id="nw">97.3</span> kg</div><div class="nwlbl">Current weight</div><div class="sync-bar offline" id="sync-bar"><span class="sync-dot"></span><span id="sync-txt">Connecting...</span></div></div>
+    <div><div class="nwval"><span id="nw">--</span> kg</div><div class="nwlbl">Current weight</div><div class="sync-bar offline" id="sync-bar"><span class="sync-dot"></span><span id="sync-txt">Connecting...</span></div></div>
   </div>
   <div id="vc"></div>
 </div>
@@ -212,7 +255,7 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
 /* ─── CONSTANTS ──────────────────────────────────────────────────────────────
    FIX #3: single source of truth for all calorie / macro targets.
    Every reference in the app derives from these. */
-const GOAL = 88, START = 100.1, RATET = 0.5 / 7;
+const GOAL = 88, RATET = 0.5 / 7;
 const KCAL_MIN = 2200, KCAL_TARGET = 2300, KCAL_MAX = 2400;
 const PRO_MIN = 160, PRO_TARGET = 167, PRO_MAX = 175;
 const CARB_MIN = 180, CARB_MAX = 210;
@@ -221,19 +264,7 @@ const WATER_GOAL_NORMAL = 12;   // cups of 250ml = 3L
 const WATER_GOAL_SEITAN = 14;   // cups of 250ml = 3.5L
 
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-/* FIX: "Dinner" renamed to "Post-Workout" to match actual meal timing and role */
 const CATS = ['Breakfast','Lunch','Post-Workout','Pre-Workout','Pre-Sleep'];
-
-const SEED = [
-  {date:'2026-05-05',w:100.1},{date:'2026-05-07',w:97.9},{date:'2026-05-08',w:98.8},
-  {date:'2026-05-09',w:99.3},{date:'2026-05-12',w:99.3},{date:'2026-05-13',w:98.9},
-  {date:'2026-05-14',w:98.5},{date:'2026-05-15',w:99.0},{date:'2026-05-16',w:98.7},
-  {date:'2026-05-17',w:98.5},{date:'2026-05-18',w:98.8},{date:'2026-05-19',w:97.5},
-  {date:'2026-05-20',w:97.7},{date:'2026-05-21',w:97.8},{date:'2026-05-22',w:98.3},
-  {date:'2026-05-23',w:98.2},{date:'2026-05-24',w:98.5},{date:'2026-05-25',w:98.6},
-  {date:'2026-05-26',w:98.2},{date:'2026-05-27',w:98.0},{date:'2026-05-28',w:97.1},
-  {date:'2026-05-29',w:97.3},{date:'2026-05-30',w:98.1},
-];
 
 /* Meal ingredient detail — kept as-is, but category updated to match CATS */
 const MD = {
@@ -294,7 +325,8 @@ let S = {
   weights:[], meals:{}, custom:[], view:'dashboard',
   mdate: td(), wtab:'all', openCards:{}, gO:{},
   sQ:'', lsQ:'',
-  water:{},       // { 'YYYY-MM-DD': number_of_cups }
+  water:{},
+  ql: { ings:[] },   // quick log staging area
   mb:{ ings:[], name:'', cat:'Breakfast', notes:'', ingSearch:'' }
 };
 let CH = {};
@@ -303,10 +335,15 @@ function td() { return new Date().toISOString().split('T')[0]; }
 function now() { const d = new Date(); return `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; }
 function fd(d) { return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`; }
 function sW() { return [...S.weights].sort((a,b) => a.date.localeCompare(b.date)); }
-function lw() { const s = sW(); return s.length ? s[s.length-1].w : 97.3; }
-function lost() { return Math.max(0, START - lw()).toFixed(1); }
+function lw() { const s = sW(); return s.length ? s[s.length-1].w : 0; }
+function startW() { const s = sW(); return s.length ? s[0].w : 0; }
+function startDate() { const s = sW(); return s.length ? s[0].date.slice(5) : '--'; }
+function lost() { const s = sW(); return s.length ? Math.max(0, s[0].w - lw()).toFixed(1) : '0.0'; }
 function dm() { return S.meals[S.mdate] || []; }
-function tot(ms) { return ms.reduce((a,m) => ({kcal:a.kcal+m.kcal, pro:a.pro+m.pro, carb:a.carb+m.carb, fat:a.fat+m.fat}), {kcal:0,pro:0,carb:0,fat:0}); }
+function tot(ms) {
+  const r = ms.reduce((a,m) => ({kcal:a.kcal+m.kcal, pro:a.pro+m.pro, carb:a.carb+m.carb, fat:a.fat+m.fat}), {kcal:0,pro:0,carb:0,fat:0});
+  return {kcal: Math.round(r.kcal), pro: +r.pro.toFixed(1), carb: +r.carb.toFixed(1), fat: +r.fat.toFixed(1)};
+}
 function pct(v, mx) { return Math.min(100, Math.round(v/mx*100)); }
 function bc(v, mn, mx) { return v>mx?'var(--red)': v>=mn?'var(--green)':'var(--blue)'; }
 function am() { return [...LIB, ...S.custom]; }
@@ -468,7 +505,45 @@ function logCustomG(id) {
 }
 
 function ingEditor(id) {
-  const det = MD[id]; if (!det) return '<div class="empty">No data</div>';
+  const det = MD[id];
+
+  /* For custom meals — no MD entry, use stored ingredients array instead */
+  if (!det) {
+    const custom = S.custom.find(m => (m.id||m.name) === id);
+    if (!custom || !custom.ingredients || !custom.ingredients.length) {
+      return '<div class="empty" style="padding:16px;font-size:12px">No ingredient breakdown saved for this meal.</div>';
+    }
+    const t = { kcal: custom.kcal, pro: custom.pro, carb: custom.carb, fat: custom.fat };
+    if (custom.note) {
+      // render note strip if present
+    }
+    return `${custom.note ? `<div class="meal-note-strip">${custom.note}</div>` : ''}
+  <table class="ing-editor">
+    <thead><tr><th>Ingredient</th><th>Amount</th><th>Kcal</th><th style="color:var(--protein)">P</th><th style="color:var(--carbs)">C</th><th style="color:var(--fats)">F</th></tr></thead>
+    <tbody>${custom.ingredients.map(ing => `<tr>
+      <td><div class="ing-name">${ing.name}</div></td>
+      <td style="text-align:right;color:var(--text3);font-size:11px">${ing.qty}</td>
+      <td><span class="im-cell">${ing.kcal}</span></td>
+      <td><span class="im-cell" style="color:var(--protein)">${ing.pro}g</span></td>
+      <td><span class="im-cell" style="color:var(--carbs)">${ing.carb}g</span></td>
+      <td><span class="im-cell" style="color:var(--fats)">${ing.fat}g</span></td>
+    </tr>`).join('')}</tbody>
+  </table>
+  <div class="live-tot">
+    <span class="lt-lbl">Meal total</span>
+    <div class="lt-nums">
+      <span class="ltn2">${t.kcal} kcal</span>
+      <span class="ltn2" style="color:var(--protein)">${t.pro}g P</span>
+      <span class="ltn2" style="color:var(--carbs)">${t.carb}g C</span>
+      <span class="ltn2" style="color:var(--fats)">${t.fat}g F</span>
+    </div>
+  </div>
+  <div class="meal-act">
+    <button class="log-custom" onclick="qaddL('${id}')">+ Log Today</button>
+  </div>`;
+  }
+
+  /* Standard plan meals — full gram editor */
   const ings = calcIng(id, det.ingredients);
   const t = sumIngs(ings);
   return `<div class="meal-note-strip">${det.note}</div>
@@ -509,7 +584,14 @@ function doSearch(q, target) {
     const det = MD[m.id||m.name];
     let on = '';
     if (m.name.toLowerCase().includes(lower)) on = 'Meal name match';
-    if (!on && det) { const fi = det.ingredients.find(x => x.name.toLowerCase().includes(lower)); if (fi) on = fi.name; }
+    if (!on && det) {
+      const fi = det.ingredients.find(x => x.name.toLowerCase().includes(lower));
+      if (fi) on = fi.name;
+    }
+    if (!on && m.ingredients && m.ingredients.length) {
+      const fi = m.ingredients.find(x => x.name.toLowerCase().includes(lower));
+      if (fi) on = fi.name;
+    }
     if (on) hits.push({...m, on});
   });
   if (!hits.length) { el.innerHTML = `<div class="no-res">No meals found for "${q}"</div>`; return; }
@@ -552,20 +634,7 @@ function isSeitanDay() {
 }
 function waterGoal() { return isSeitanDay() ? WATER_GOAL_SEITAN : WATER_GOAL_NORMAL; }
 function waterCups() { return S.water[S.mdate] || 0; }
-function waterHTML(cups, goal) {
-  const isSeitan = isSeitanDay();
-  const mlDrunk = cups * 250;
-  return `
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
-    <span style="font-family:var(--fh);font-size:12px;font-weight:700;color:${cups>=goal?'var(--green)':'var(--text3)'};text-transform:uppercase;letter-spacing:.5px">
-      💧 Water — ${mlDrunk >= 1000 ? (mlDrunk/1000).toFixed(1)+'L' : mlDrunk+'ml'} / ${goal*250/1000}L${isSeitan?' ⚠️ Seitan day':''}
-    </span>
-    <span style="font-size:11px;color:var(--text3)">${cups}/${goal} cups</span>
-  </div>
-  <div class="water-track">
-    ${Array.from({length:goal},(_,i) => `<div class="water-cup ${i<cups?'filled':''} ${isSeitan&&i>=12?'seitan-req':''}" onclick="toggleWater(${i+1})" title="${(i+1)*250}ml">💧</div>`).join('')}
-  </div>`;
-}
+
 
 /* ─── FOOD DATABASE ───────────────────────────────────────────────────────── */
 const FOOD_DB = [
@@ -879,32 +948,33 @@ async function syncFromCloud() {
       sb.from('water_logs').select('*'),
     ]);
 
-    if (wRes.error)  throw wRes.error;
-    if (mRes.error)  throw mRes.error;
-    if (cRes.error)  throw cRes.error;
-    if (waRes.error) throw waRes.error;
+    if (wRes.error)  { console.error('weight_logs error:', wRes.error); throw wRes.error; }
+    if (mRes.error)  { console.error('meal_logs error:', mRes.error); throw mRes.error; }
+    if (cRes.error)  { console.error('custom_meals error:', cRes.error); throw cRes.error; }
+    if (waRes.error) { console.error('water_logs error:', waRes.error); throw waRes.error; }
 
     /* Weight logs → array of {date, w} */
     if (wRes.data.length > 0) {
-      S.weights = wRes.data.map(r => ({date: r.date, w: parseFloat(r.weight)}));
+      /* Strip time component — Supabase returns 'YYYY-MM-DDT00:00:00' for date columns */
+      S.weights = wRes.data.map(r => ({date: r.date.slice(0,10), w: parseFloat(r.weight)}));
       LS.set('sc_w', S.weights);
-    } else if (!S.weights.length) {
-      /* First ever load — seed historical data into Supabase */
-      await seedWeightsToCloud(SEED);
+    } else {
+      /* No weights in Supabase yet — will populate when user logs first weight */
     }
 
     /* Meal logs → { 'YYYY-MM-DD': [{...}] } */
     if (mRes.data.length > 0) {
       const meals = {};
       mRes.data.forEach(r => {
-        if (!meals[r.date]) meals[r.date] = [];
-        meals[r.date].push({
+        const date = r.date.slice(0,10);
+        if (!meals[date]) meals[date] = [];
+        meals[date].push({
           _id:   r.id,
           name:  r.name,
-          kcal:  r.kcal,
-          pro:   parseFloat(r.pro),
-          carb:  parseFloat(r.carb),
-          fat:   parseFloat(r.fat),
+          kcal:  Math.round(r.kcal),
+          pro:   +parseFloat(r.pro).toFixed(1),
+          carb:  +parseFloat(r.carb).toFixed(1),
+          fat:   +parseFloat(r.fat).toFixed(1),
           time:  r.logged_time || '',
         });
       });
@@ -919,10 +989,10 @@ async function syncFromCloud() {
         name:        r.name,
         cat:         r.cat,
         note:        r.note || '',
-        kcal:        r.kcal,
-        pro:         parseFloat(r.pro),
-        carb:        parseFloat(r.carb),
-        fat:         parseFloat(r.fat),
+        kcal:        Math.round(r.kcal),
+        pro:         +parseFloat(r.pro).toFixed(1),
+        carb:        +parseFloat(r.carb).toFixed(1),
+        fat:         +parseFloat(r.fat).toFixed(1),
         ingredients: r.ingredients || [],
       }));
       LS.set('sc_cu', S.custom);
@@ -931,7 +1001,7 @@ async function syncFromCloud() {
     /* Water logs */
     if (waRes.data.length > 0) {
       const water = {};
-      waRes.data.forEach(r => { water[r.date] = r.cups; });
+      waRes.data.forEach(r => { water[r.date.slice(0,10)] = r.cups; });
       S.water = water;
       LS.set('sc_wa', S.water);
     }
@@ -939,19 +1009,10 @@ async function syncFromCloud() {
     syncStatus('synced', 'Synced');
     render();
   } catch(e) {
-    console.error('Sync error:', e);
+    const msg = e?.message || e?.details || e?.hint || JSON.stringify(e) || 'Unknown error';
+    console.error('Sync error details:', msg, e);
     syncStatus('error', 'Sync failed — using local data');
     render();
-  }
-}
-
-/* Seed SEED array into Supabase on first load */
-async function seedWeightsToCloud(entries) {
-  const rows = entries.map(e => ({date: e.date, weight: e.w}));
-  const {error} = await sb.from('weight_logs').upsert(rows, {onConflict:'date'});
-  if (!error) {
-    S.weights = entries;
-    LS.set('sc_w', S.weights);
   }
 }
 
@@ -1028,13 +1089,175 @@ async function cloudSetWater(date, cups) {
   if (error) console.error('Water sync error:', error);
 }
 
+/* ─── QUICK LOG ───────────────────────────────────────────────────────────── */
+function qlSearch(q) {
+  const dd = document.getElementById('ql-dd'); if (!dd) return;
+  if (!q || q.trim().length < 1) { dd.innerHTML = ''; return; }
+  const results = searchFoodDB(q);
+  if (!results.length) {
+    dd.innerHTML = `<div class="ql-result"><span style="color:var(--text3);font-size:12px">No ingredients found for "${q}"</span></div>`;
+    return;
+  }
+  dd.innerHTML = results.map(f => {
+    const m = f.per100;
+    const isOil = !!FLAGGED_FOODS[f.name];
+    return `<div class="ql-result" onmousedown="event.preventDefault();qlAddIng(${JSON.stringify(f).replace(/"/g,'&quot;')})">
+      <div>
+        <div class="ql-result-name${isOil?' oil-warn':''}">${f.name}${isOil?' ⚠️':''}</div>
+        <div class="ql-result-cat">${f.cat} · per 100${f.unit}</div>
+      </div>
+      <div class="ql-result-macros">
+        <div>${m.kcal}kcal</div>
+        <div><span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function qlAddIng(food) {
+  const exists = S.ql.ings.find(i => i.f.name === food.name);
+  if (exists) { exists.qty += food.defaultQty || 100; }
+  else { S.ql.ings.push({ f: food, qty: food.defaultQty || 100 }); }
+  const dd = document.getElementById('ql-dd'); if (dd) dd.innerHTML = '';
+  const si = document.getElementById('ql-si'); if (si) { si.value = ''; si.focus(); }
+  qlRenderRows();
+}
+
+function qlRemoveIng(i) {
+  S.ql.ings.splice(i, 1);
+  qlRenderRows();
+}
+
+function qlCalcRow(ing) { return foodMacros(ing.f, ing.qty); }
+
+function qlTotals() {
+  return S.ql.ings.reduce((a, ing) => {
+    const v = qlCalcRow(ing);
+    return { kcal: a.kcal+v.kcal, pro: +(a.pro+v.pro).toFixed(1), carb: +(a.carb+v.carb).toFixed(1), fat: +(a.fat+v.fat).toFixed(1) };
+  }, {kcal:0, pro:0, carb:0, fat:0});
+}
+
+const _debouncedQlUpdate = debounce(() => {
+  S.ql.ings.forEach((ing, i) => {
+    const el = document.getElementById('ql-g-'+i);
+    if (el) { const v = parseFloat(el.value); ing.qty = isNaN(v)||v<0 ? 0 : v; }
+  });
+  S.ql.ings.forEach((ing, i) => {
+    const v = qlCalcRow(ing);
+    const set = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+    set('ql-k-'+i, v.kcal); set('ql-p-'+i, v.pro+'g'); set('ql-c-'+i, v.carb+'g'); set('ql-f-'+i, v.fat+'g');
+  });
+  const t = qlTotals();
+  const set = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+  set('ql-tot-k', t.kcal+' kcal'); set('ql-tot-p', t.pro+'g P'); set('ql-tot-c', t.carb+'g C'); set('ql-tot-f', t.fat+'g F');
+}, 300);
+
+function qlUpdateLive() { _debouncedQlUpdate(); }
+
+function qlRenderRows() {
+  const container = document.getElementById('ql-rows'); if (!container) return;
+  const footer = document.getElementById('ql-footer');
+  if (S.ql.ings.length === 0) {
+    container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px">Search and add ingredients above</div>';
+    if (footer) footer.style.display = 'none';
+    return;
+  }
+  if (footer) footer.style.display = '';
+  const t = qlTotals();
+  container.innerHTML = `
+    <div style="display:grid;grid-template-columns:1fr 80px 52px 52px 52px 52px 28px;gap:6px;padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:2px">
+      ${['Ingredient','Amount','Kcal','<span style="color:var(--protein)">P</span>','<span style="color:var(--carbs)">C</span>','<span style="color:var(--fats)">F</span>',''].map(h=>`<div style="font-family:var(--fh);font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;text-align:${h===''||h==='Ingredient'?'left':'right'}">${h}</div>`).join('')}
+    </div>
+    ${S.ql.ings.map((ing, i) => {
+      const v = qlCalcRow(ing);
+      return `<div class="ql-row">
+        <div><div class="ql-ing-name">${ing.f.name}</div><div class="ql-ing-cat">${ing.f.cat}</div></div>
+        <div style="display:flex;align-items:center;gap:3px;justify-content:flex-end">
+          <input class="ql-gram" id="ql-g-${i}" type="number" min="0" step="5" value="${ing.qty}" oninput="qlUpdateLive()" style="width:52px"/>
+          <span style="font-size:10px;color:var(--text3)">${ing.f.unit}</span>
+        </div>
+        <div class="ql-val" id="ql-k-${i}">${v.kcal}</div>
+        <div class="ql-val pro" id="ql-p-${i}">${v.pro}g</div>
+        <div class="ql-val carb" id="ql-c-${i}">${v.carb}g</div>
+        <div class="ql-val fat" id="ql-f-${i}">${v.fat}g</div>
+        <button class="ql-del" onclick="qlRemoveIng(${i})">✕</button>
+      </div>`;
+    }).join('')}`;
+  const set = (id, val) => { const e = document.getElementById(id); if(e) e.textContent = val; };
+  set('ql-tot-k', t.kcal+' kcal'); set('ql-tot-p', t.pro+'g P'); set('ql-tot-c', t.carb+'g C'); set('ql-tot-f', t.fat+'g F');
+}
+
+async function qlLogAll() {
+  if (!S.ql.ings.length) return;
+  // Sync quantities from inputs
+  S.ql.ings.forEach((ing, i) => {
+    const el = document.getElementById('ql-g-'+i);
+    if (el) { const v = parseFloat(el.value); ing.qty = isNaN(v)||v<0 ? 0 : v; }
+  });
+  const t = qlTotals();
+  // Build name: custom input or auto-generated from ingredients
+  const nameEl = document.getElementById('ql-name');
+  const customName = nameEl ? nameEl.value.trim() : '';
+  const autoName = S.ql.ings.length === 1
+    ? `${S.ql.ings[0].f.name} (${S.ql.ings[0].qty}${S.ql.ings[0].f.unit})`
+    : S.ql.ings.map(i => `${i.f.name.split(' ')[0]} ${i.qty}${i.f.unit}`).join(', ');
+  const name = customName || autoName;
+  const meal = { name, kcal: t.kcal, pro: t.pro, carb: t.carb, fat: t.fat, time: now() };
+  if (!S.meals[S.mdate]) S.meals[S.mdate] = [];
+  S.meals[S.mdate].push(meal);
+  LS.set('sc_m', S.meals);
+  S.ql.ings = [];
+  render();
+  const cloudId = await cloudAddMeal(S.mdate, meal);
+  if (cloudId) {
+    const idx = S.meals[S.mdate].length - 1;
+    if (S.meals[S.mdate][idx]) S.meals[S.mdate][idx]._id = cloudId;
+    LS.set('sc_m', S.meals);
+  }
+}
+
+function qlRenderWidget() {
+  return `
+<div class="ql-wrap">
+  <div style="font-family:var(--fh);font-size:14px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px">⚡ Quick Log — No meal name required</div>
+  <div class="ql-search-wrap">
+    <span class="search-icon">🔍</span>
+    <input id="ql-si" type="text" placeholder="Search ingredient (e.g. Greek yoghurt, banana, whey...)" style="padding-left:34px"
+      oninput="qlSearch(this.value)" onfocus="qlSearch(this.value)" autocomplete="off"
+      onkeydown="if(event.key==='Enter'){const f=document.querySelector('.ql-result');if(f)f.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}))}
+                 if(event.key==='Escape'){const d=document.getElementById('ql-dd');if(d)d.innerHTML=''}"/>
+    <div class="ql-dd" id="ql-dd"></div>
+  </div>
+  <div id="ql-rows"><div style="text-align:center;padding:16px;color:var(--text3);font-size:12px">Search and add ingredients above</div></div>
+  <div id="ql-footer" style="display:none">
+    <div class="ql-tot">
+      <span class="ql-tot-lbl">Total</span>
+      <div class="ql-tot-nums">
+        <span class="ql-tn" id="ql-tot-k">0 kcal</span>
+        <span class="ql-tn" style="color:var(--protein)" id="ql-tot-p">0g P</span>
+        <span class="ql-tn" style="color:var(--carbs)" id="ql-tot-c">0g C</span>
+        <span class="ql-tn" style="color:var(--fats)" id="ql-tot-f">0g F</span>
+      </div>
+    </div>
+    <div class="ql-actions">
+      <div style="flex:1;min-width:160px"><input id="ql-name" type="text" placeholder="Name this meal (optional)" style="font-size:12px;padding:7px 10px"/></div>
+      <div style="display:flex;gap:8px">
+        <button class="rst-btn" onclick="S.ql.ings=[];qlRenderRows()">✕ Clear</button>
+        <button class="log-custom" onclick="qlLogAll()">+ Log to Today</button>
+      </div>
+    </div>
+  </div>
+</div>`;
+}
+
 /* ─── BOOT & ROUTING ──────────────────────────────────────────────────────── */
 function boot() {
   document.addEventListener('click', e => {
     if (!e.target.closest('.mb-search-wrap')) { const dd=document.getElementById('mb-dd'); if(dd) dd.innerHTML=''; }
+    if (!e.target.closest('.ql-search-wrap')) { const dd=document.getElementById('ql-dd'); if(dd) dd.innerHTML=''; }
   });
   /* Load from localStorage immediately — app is usable before cloud responds */
-  S.weights = LS.get('sc_w') || SEED;
+  S.weights = LS.get('sc_w') || [];
   S.meals   = LS.get('sc_m') || {};
   S.custom  = LS.get('sc_cu') || [];
   S.water   = LS.get('sc_wa') || {};
@@ -1086,7 +1309,8 @@ const CG = {
 /* ─── DASHBOARD VIEW ──────────────────────────────────────────────────────── */
 function vD() {
   const ms=dm(), t=tot(ms), cw=lw();
-  const pctD = Math.min(100, Math.round((START-cw)/(START-GOAL)*100));
+  const sw   = startW();
+  const pctD = sw > GOAL ? Math.min(100, Math.round((sw-cw)/(sw-GOAL)*100)) : 0;
   const rate  = wr();
   const trendArr = tL(sW());
   const tc = trendArr.length ? trendArr[trendArr.length-1].tw.toFixed(1) : cw.toFixed(1);
@@ -1202,36 +1426,70 @@ function vN() {
 </div>
 <div class="card sg">${mac(t)}</div>
 
-<!-- Water Tracker -->
-<div class="card sg">
-  <div class="clbl">Water Intake</div>
-  <div id="water-widget">${waterHTML(wc, wg)}</div>
+<!-- Water Tracker — compact inline -->
+<div class="card sg" style="padding:14px 20px">
+  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:18px">💧</span>
+      <div>
+        <div style="font-family:var(--fh);font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px">Water Today</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:1px">${isSeitanDay()?'3.5L target — seitan day ⚠️':'3L daily target'}</div>
+      </div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <button onclick="adjustWater(-1)" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);background:var(--bg4);color:var(--text2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">−</button>
+      <div style="text-align:center;min-width:60px">
+        <div style="font-family:var(--fh);font-size:26px;font-weight:800;font-style:italic;color:${wc>=wg?'var(--green)':'var(--blue)'}">${(wc*0.25).toFixed(2).replace(/\.?0+$/,'')}L</div>
+        <div style="font-size:10px;color:var(--text3)">${wc} / ${wg} cups</div>
+      </div>
+      <button onclick="adjustWater(1)" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);background:var(--bg4);color:var(--text2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">+</button>
+    </div>
+    <div style="display:flex;gap:4px;align-items:center">
+      ${Array.from({length:wg},(_,i)=>`<div style="width:${Math.floor(200/wg)-2}px;height:6px;border-radius:3px;background:${i<wc?(wc>=wg?'var(--green)':'var(--blue)'):'var(--bg5)'}"></div>`).join('')}
+    </div>
+  </div>
 </div>
 
 <div class="g2">
-  <div class="card">
-    <div class="search-wrap">
+  <div class="card" style="display:flex;flex-direction:column;gap:0">
+    ${qlRenderWidget()}
+    <div style="border-top:1px solid var(--border);padding-top:14px;margin-top:4px">
+    <div class="search-wrap" style="margin-bottom:8px">
       <span class="search-icon">🔍</span>
-      <input id="si-n" type="text" placeholder="Search meals or ingredients... (e.g. tofu, paneer, oats)" oninput="doSearch(this.value,'n')"/>
+      <input id="si-n" type="text" placeholder="Search saved meals..." oninput="doSearch(this.value,'n')"/>
     </div>
     <div id="sr-n" style="margin-bottom:8px"></div>
-    <div class="clbl">Library — Drag or Tap + to Log</div>
-    <div style="max-height:440px;overflow-y:auto">
-      ${CATS.map(cat=>`
-        <div class="cathead">${cat}</div>
-        ${am().filter(m=>m.cat===cat).map(m=>`
-          <div class="drag-meal" draggable="true" data-id="${m.id||m.name}"
-            ondragstart="dragStart(event,'${m.id||m.name}')"
-            ondragend="dragEnd(event)">
-            <div class="drag-meal-info">
-              <div class="qaname">${m.name}${vt(m.v)}</div>
-              <div class="qasub">${m.kcal}kcal · <span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
+    <div class="clbl">Saved Meals — Tap to expand · + to log</div>
+    <div style="max-height:380px;overflow-y:auto">
+      ${CATS.map(cat => {
+        const meals = am().filter(m => m.cat===cat);
+        if (!meals.length) return '';
+        return `<div class="cathead">${cat}</div>
+        ${meals.map(m => {
+          const id = m.id||m.name;
+          const isO = !!S.openCards['n_'+id];
+          return `<div class="meal-card" style="margin-bottom:5px">
+            <div class="meal-card-header" style="padding:10px 12px" onclick="toggleNCard('${id}')">
+              <div style="flex:1;min-width:0">
+                <div class="meal-card-name" style="font-size:14px">${m.name}${vt(m.v)}</div>
+                <div style="display:flex;gap:8px;margin-top:2px;flex-wrap:wrap">
+                  <span class="mcm">${m.kcal} kcal</span>
+                  <span class="mcm pro">${m.pro}g P</span>
+                  <span class="mcm carb">${m.carb}g C</span>
+                  <span class="mcm fat">${m.fat}g F</span>
+                </div>
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                <button class="qaplus" style="width:28px;height:28px;font-size:16px" onclick="event.stopPropagation();qadd('${id}')">+</button>
+                <span class="chevron" style="transform:${isO?'rotate(180deg)':'rotate(0deg)'}">▼</span>
+              </div>
             </div>
-            <div class="drag-meal-actions">
-              <button class="qaplus" onclick="event.stopPropagation();qadd('${m.id||m.name}')">+</button>
-            </div>
-          </div>`).join('')}`).join('')}
+            <div class="meal-card-body ${isO?'open':''}">${isO ? ingEditor(id) : ''}</div>
+          </div>`;
+        }).join('')}`;
+      }).join('')}
     </div>
+    </div><!-- end saved meals section -->
   </div>
   <div class="card" id="drop-zone" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropMeal(event)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
@@ -1265,7 +1523,7 @@ function vW() {
 <div class="g4">
   <div class="tile tb"><div class="tlbl">Current</div><div class="tval">${cw.toFixed(1)}<span class="tunit"> kg</span></div></div>
   <div class="tile tb"><div class="tlbl">Trend Weight</div><div class="tval cb">${tc}<span class="tunit"> kg</span></div><div class="tsub">Smoothed avg</div></div>
-  <div class="tile ${+chg<0?'tg':'tr'}"><div class="tlbl">Change</div><div class="tval ${+chg<0?'cg':'cr'}">${+chg<0?'▼ ':'▲ '}${Math.abs(+chg)}<span class="tunit"> kg</span></div><div class="tsub">since May 5</div></div>
+  <div class="tile ${chg!=='--'&&+chg<0?'tg':'tr'}"><div class="tlbl">Change</div><div class="tval ${chg!=='--'&&+chg<0?'cg':'cr'}">${chg==='--'?'--':((+chg<0?'▼ ':'▲ ')+Math.abs(+chg))}<span class="tunit"> kg</span></div><div class="tsub">since ${startDate()}</div></div>
   <div class="tile ${rate!==null&&rate<0?'tg':'ta'}">
     <div class="tlbl">Weekly Rate</div>
     <div class="tval ${rate!==null&&rate<0?'cg':'ca'}">${rate!==null?(rate<0?'▼ ':'▲ ')+Math.abs(rate).toFixed(2):'--'}<span style="font-size:11px;font-style:normal;color:var(--text3)"> kg/wk</span></div>
@@ -1407,6 +1665,8 @@ ${CATS.map(cat=>`
 
 /* ─── ACTIONS ─────────────────────────────────────────────────────────────── */
 function tc2(id) { S.openCards[id] = !S.openCards[id]; render(); }
+/* Nutrition page meal card toggle — uses 'n_' prefix to avoid clash with library */
+function toggleNCard(id) { S.openCards['n_'+id] = !S.openCards['n_'+id]; render(); }
 
 async function qadd(id) {
   const m = am().find(x=>(x.id||x.name)===id); if(!m) return;
@@ -1455,15 +1715,17 @@ async function delW(date) {
 }
 
 /* Water toggle — also syncs to cloud */
-async function toggleWater(n) {
+/* Water — +/- buttons call this */
+function adjustWater(delta) {
+  const wg = waterGoal();
   const cur = waterCups();
-  S.water[S.mdate] = cur === n ? n - 1 : n;
+  const next = Math.max(0, Math.min(wg, cur + delta));
+  S.water[S.mdate] = next;
   LS.set('sc_wa', S.water);
-  const wc = waterCups(), wg = waterGoal();
-  const el = document.getElementById('water-widget');
-  if (el) el.innerHTML = waterHTML(wc, wg);
-  await cloudSetWater(S.mdate, S.water[S.mdate]);
+  render();
+  cloudSetWater(S.mdate, next);
 }
+
 
 /* ─── CHARTS ──────────────────────────────────────────────────────────────── */
 function ic() { if(S.view==='dashboard') dC(); if(S.view==='weight') wC(); }
