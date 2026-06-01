@@ -691,8 +691,9 @@ const FOOD_DB = [
   {name:'Clover Low Fat Milk',      cat:'Dairy',      unit:'ml',    defaultQty:250, per100:{kcal:47, pro:3.2, carb:4.8, fat:1}},
   {name:'Clover Gouda Cheese',      cat:'Dairy',      unit:'g',     defaultQty:20,  per100:{kcal:383,pro:25,  carb:0,   fat:31}},
   {name:'Clover Cottage Cheese',    cat:'Dairy',      unit:'g',     defaultQty:100, per100:{kcal:72, pro:12,  carb:3,   fat:1}},
-  {name:'Vanilla Whey Protein',     cat:'Supplement', unit:'g',     defaultQty:30,  per100:{kcal:400,pro:80,  carb:10,  fat:6.7}},
-  {name:'Choc Mint Whey Protein',   cat:'Supplement', unit:'g',     defaultQty:30,  per100:{kcal:400,pro:80,  carb:10,  fat:6.7}},
+  {name:'Vanilla Whey Protein',          cat:'Supplement', unit:'g', defaultQty:30, per100:{kcal:400,pro:80,carb:10,fat:6.7}},
+  {name:'Choc Mint Whey Protein',        cat:'Supplement', unit:'g', defaultQty:30, per100:{kcal:400,pro:80,carb:10,fat:6.7}},
+  {name:'Peanut Butter Cup Whey Protein',cat:'Supplement', unit:'g', defaultQty:30, per100:{kcal:400,pro:80,carb:10,fat:6.7}},
   {name:'Nutritional Yeast',        cat:'Supplement', unit:'g',     defaultQty:13,  per100:{kcal:346,pro:53,  carb:40,  fat:3.8}},
   {name:'Creatine',                 cat:'Supplement', unit:'g',     defaultQty:5,   per100:{kcal:0,  pro:0,   carb:0,   fat:0}},
   {name:'Rolled Oats',              cat:'Carb',       unit:'g',     defaultQty:80,  per100:{kcal:380,pro:12.5,carb:67.5,fat:6.25}},
@@ -703,8 +704,9 @@ const FOOD_DB = [
   {name:'Quinoa (dry)',             cat:'Carb',       unit:'g',     defaultQty:75,  per100:{kcal:368,pro:14,  carb:64,  fat:6}},
   {name:'Sweet Potato',             cat:'Carb',       unit:'g',     defaultQty:150, per100:{kcal:86, pro:1.6, carb:20,  fat:0.1}},
   {name:'Whole Wheat Bread',        cat:'Carb',       unit:'g',     defaultQty:56,  per100:{kcal:246,pro:12.9,carb:40.7,fat:3.2}},
-  {name:'Corn Tortilla',            cat:'Carb',       unit:'g',     defaultQty:54,  per100:{kcal:218,pro:5.7, carb:45.4,fat:2.5}},
-  {name:'Rice Cake',                cat:'Carb',       unit:'g',     defaultQty:18,  per100:{kcal:387,pro:7.5, carb:81.1,fat:2.8}},
+  {name:'Corn Tortilla',              cat:'Carb', unit:'g', defaultQty:54,  per100:{kcal:218,pro:5.7, carb:45.4,fat:2.5}},
+  {name:'Rice Cake',                  cat:'Carb', unit:'g', defaultQty:18,  per100:{kcal:387,pro:7.5, carb:81.1,fat:2.8}},
+  {name:"Kellogg's Coco Pops",        cat:'Carb', unit:'g', defaultQty:30,  per100:{kcal:347,pro:7,   carb:76.7,fat:1.7}},
   {name:'Capsicum (Bell Pepper)',   cat:'Vegetable',  unit:'g',     defaultQty:100, per100:{kcal:31, pro:1,   carb:6,   fat:0.3}},
   {name:'Tomato',                   cat:'Vegetable',  unit:'g',     defaultQty:120, per100:{kcal:18, pro:0.9, carb:3.9, fat:0.2}},
   {name:'Cherry Tomatoes',          cat:'Vegetable',  unit:'g',     defaultQty:100, per100:{kcal:18, pro:0.9, carb:3.9, fat:0.2}},
@@ -1009,11 +1011,11 @@ async function syncFromCloud() {
 
     /* Meal logs → { 'YYYY-MM-DD': [{...}] } */
     if (mRes.data.length > 0) {
-      const meals = {};
+      const cloudMeals = {};
       mRes.data.forEach(r => {
         const date = r.date.slice(0,10);
-        if (!meals[date]) meals[date] = [];
-        meals[date].push({
+        if (!cloudMeals[date]) cloudMeals[date] = [];
+        cloudMeals[date].push({
           _id:    r.id,
           _libId: r.lib_id || null,
           name:   r.name,
@@ -1024,7 +1026,20 @@ async function syncFromCloud() {
           time:   r.logged_time || '',
         });
       });
-      S.meals = meals;
+      /* Merge strategy: for each date, use whichever source has MORE entries.
+         This prevents a delayed cloud sync from wiping locally-logged meals
+         that haven't finished saving to Supabase yet. */
+      const localMeals = S.meals || {};
+      const allDates = new Set([...Object.keys(cloudMeals), ...Object.keys(localMeals)]);
+      const merged = {};
+      allDates.forEach(date => {
+        const cloud = cloudMeals[date] || [];
+        const local = localMeals[date] || [];
+        /* Use cloud if it has entries — it's the source of truth.
+           Fall back to local only if cloud has nothing for that date. */
+        merged[date] = cloud.length >= local.length ? cloud : local;
+      });
+      S.meals = merged;
       LS.set('sc_m', S.meals);
     }
 
@@ -1249,7 +1264,18 @@ async function qlLogAll() {
     ? `${S.ql.ings[0].f.name} (${S.ql.ings[0].qty}${S.ql.ings[0].f.unit})`
     : S.ql.ings.map(i => `${i.f.name.split(' ')[0]} ${i.qty}${i.f.unit}`).join(', ');
   const name = customName || autoName;
-  const meal = { name, kcal: t.kcal, pro: t.pro, carb: t.carb, fat: t.fat, time: now() };
+  const meal = {
+    name, kcal: t.kcal, pro: t.pro, carb: t.carb, fat: t.fat, time: now(),
+    /* Store ingredients so the logged entry dropdown can show/edit them */
+    _ings: S.ql.ings.map(i => ({
+      name: i.f.name,
+      qty:  String(i.qty),
+      kcal: qlCalcRow(i).kcal,
+      pro:  qlCalcRow(i).pro,
+      carb: qlCalcRow(i).carb,
+      fat:  qlCalcRow(i).fat,
+    }))
+  };
   if (!S.meals[S.mdate]) S.meals[S.mdate] = [];
   S.meals[S.mdate].push(meal);
   LS.set('sc_m', S.meals);
@@ -1450,8 +1476,7 @@ function vN() {
        </div>`
     : ms.map((m,i) => {
         const isO = !!S.openCards['log_'+i];
-        const hasDetail = (m._libId && (MD[m._libId] || S.custom.find(c=>(c.id||c.name)===m._libId)));
-        return `<div style="border-bottom:1px solid var(--border)">
+        return `<div id="log-entry-${i}" style="border-bottom:1px solid var(--border)">
           <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;cursor:pointer" onclick="toggleLogCard(${i})">
             <div style="flex:1">
               <div class="mname">${m.name}</div>
@@ -1463,10 +1488,10 @@ function vN() {
                 <div class="mmsub"><span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
               </div>
               <button class="delbtn" onclick="event.stopPropagation();delM(${i})">✕</button>
-              <span style="font-size:11px;color:var(--text3);transition:transform .2s;display:inline-block;transform:${isO?'rotate(180deg)':'rotate(0deg)'}">▼</span>
+              <span class="log-chevron" style="font-size:11px;color:var(--text3);transition:transform .2s;display:inline-block;transform:${isO?'rotate(180deg)':'rotate(0deg)'}">▼</span>
             </div>
           </div>
-          ${isO ? loggedItemEditor(m, i) : ''}
+          <div class="log-entry-body">${isO ? loggedItemEditor(m, i) : ''}</div>
         </div>`;
       }).join('');
 
@@ -1726,35 +1751,61 @@ ${CATS.map(cat=>`
 
 /* ─── ACTIONS ─────────────────────────────────────────────────────────────── */
 function tc2(id) { S.openCards[id] = !S.openCards[id]; render(); }
-/* Nutrition page meal card toggle — uses 'n_' prefix to avoid clash with library */
-function toggleLogCard(i) { S.openCards['log_'+i] = !S.openCards['log_'+i]; render(); }
-function toggleNCard(id) { S.openCards['n_'+id] = !S.openCards['n_'+id]; render(); }
 
-function loggedItemEditor(m, idx) {
-  /* Find source meal — by _libId first, then by name match as fallback */
-  const libId = m._libId;
-  const det = libId ? MD[libId] : null;
-  let custom = libId ? S.custom.find(c => (c.id||c.name) === libId) : null;
-  /* Name fallback — catches meals logged before _libId was stored */
-  if (!det && !custom) {
-    custom = S.custom.find(c => c.name === m.name);
-    const mdKey = Object.keys(MD).find(k => {
-      const l = LIB.find(x => x.id === k);
-      return l && l.name === m.name;
-    });
-    if (mdKey && !custom) {
-      return loggedItemEditorWithDet(m, idx, mdKey, MD[mdKey]);
-    }
+function toggleNCard(id) {
+  S.openCards['n_'+id] = !S.openCards['n_'+id];
+  const isO = S.openCards['n_'+id];
+  const card = document.querySelector('[data-id="' + id + '"]');
+  if (!card) { render(); return; }
+  const body = card.querySelector('.meal-card-body');
+  const chevron = card.querySelector('.chevron');
+  if (body) {
+    body.innerHTML = isO ? ingEditor(id) : '';
+    body.classList.toggle('open', isO);
   }
-  if (det) return loggedItemEditorWithDet(m, idx, libId, det);
-
-  const baseIngs = custom ? custom.ingredients.map(i => ({...i, qty: String(parseFloat(i.qty)||100)})) : null;
-  if (!baseIngs) return loggedItemMacroEditor(m, idx);
-  return loggedItemEditorWithIngs(m, idx, baseIngs);
+  if (chevron) chevron.style.transform = isO ? 'rotate(180deg)' : 'rotate(0deg)';
 }
 
-function loggedItemEditorWithDet(m, idx, id, det) {
-  return loggedItemEditorWithIngs(m, idx, det.ingredients, det.note);
+function toggleLogCard(i) {
+  S.openCards['log_'+i] = !S.openCards['log_'+i];
+  const isO = S.openCards['log_'+i];
+  const m = (S.meals[S.mdate]||[])[i];
+  const container = document.getElementById('log-entry-'+i);
+  if (!container || !m) { render(); return; }
+  const body = container.querySelector('.log-entry-body');
+  const chevron = container.querySelector('.log-chevron');
+  if (body) body.innerHTML = isO ? loggedItemEditor(m, i) : '';
+  if (chevron) chevron.style.transform = isO ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+function loggedItemEditor(m, idx) {
+  /* 1. Try _libId → MD (plan meals) */
+  const libId = m._libId;
+  const det = libId ? MD[libId] : null;
+  if (det) return loggedItemEditorWithIngs(m, idx, det.ingredients, det.note);
+
+  /* 2. Try _libId → custom meals */
+  let custom = libId ? S.custom.find(c => (c.id||c.name) === libId) : null;
+  if (!custom) custom = S.custom.find(c => c.name === m.name);
+  if (custom && custom.ingredients && custom.ingredients.length) {
+    const baseIngs = custom.ingredients.map(i => ({...i, qty: String(parseFloat(i.qty)||100)}));
+    return loggedItemEditorWithIngs(m, idx, baseIngs, custom.note);
+  }
+
+  /* 3. Quick log entries — ingredients stored directly on the meal */
+  if (m._ings && m._ings.length) {
+    return loggedItemEditorWithIngs(m, idx, m._ings);
+  }
+
+  /* 4. Name fallback for old plan meal entries logged before _libId existed */
+  const mdKey = Object.keys(MD).find(k => {
+    const l = LIB.find(x => x.id === k);
+    return l && l.name === m.name;
+  });
+  if (mdKey) return loggedItemEditorWithIngs(m, idx, MD[mdKey].ingredients, MD[mdKey].note);
+
+  /* 5. No ingredient data at all — raw macro editor */
+  return loggedItemMacroEditor(m, idx);
 }
 
 function loggedItemEditorWithIngs(m, idx, baseIngs, note) {
@@ -1853,16 +1904,13 @@ async function qadd(id) {
   const m = am().find(x=>(x.id||x.name)===id); if(!m) return;
   if (!S.meals[S.mdate]) S.meals[S.mdate] = [];
   const meal = {name:m.name, kcal:m.kcal, pro:m.pro, carb:m.carb, fat:m.fat, time:now(), _libId:id};
-  S.meals[S.mdate].push(meal);
-  /* Optimistic local update first — app feels instant */
+  const mealIdx = S.meals[S.mdate].length; // capture index BEFORE push
   S.meals[S.mdate].push(meal);
   LS.set('sc_m', S.meals);
   render();
-  /* Then persist to cloud and store returned ID for future deletion */
   const cloudId = await cloudAddMeal(S.mdate, meal);
-  if (cloudId) {
-    const idx = S.meals[S.mdate].length - 1;
-    S.meals[S.mdate][idx]._id = cloudId;
+  if (cloudId && S.meals[S.mdate][mealIdx]) {
+    S.meals[S.mdate][mealIdx]._id = cloudId;
     LS.set('sc_m', S.meals);
   }
 }
