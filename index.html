@@ -1648,6 +1648,17 @@ function pickRangeDate(date) {
   render();
 }
 
+function calSwipe(e) {
+  const dx = e.changedTouches[0].clientX - (S.wpick._tx || 0);
+  if (Math.abs(dx) < 40) return;
+  const n = new Date(); const cym = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+  const vm = S.wpick.viewMonth || (S.wpick.from ? S.wpick.from.slice(0,7) : cym);
+  const [vy, vmn] = vm.split('-').map(Number);
+  const target = dx < 0 ? new Date(vy, vmn, 1) : new Date(vy, vmn-2, 1);
+  S.wpick.viewMonth = `${target.getFullYear()}-${String(target.getMonth()+1).padStart(2,'0')}`;
+  render();
+}
+
 function renderRangePicker() {
   const n = new Date();
   const cym = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
@@ -1678,7 +1689,7 @@ function renderRangePicker() {
     : !to ? `<span style="color:var(--blue)">${from}</span> &rarr; tap end date`
     :       `<span style="color:var(--blue)">${lo}</span> &rarr; <span style="color:var(--blue)">${hi}</span>`;
   return `<div style="margin:0 0 14px;width:100%">
-  <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rs);padding:12px;width:100%;box-sizing:border-box">
+  <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rs);padding:12px;width:100%;box-sizing:border-box" ontouchstart="S.wpick._tx=event.touches[0].clientX" ontouchend="calSwipe(event)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
       <button onclick="S.wpick.viewMonth='${pMo}';render()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:22px;line-height:1;padding:6px 10px;touch-action:manipulation">‹</button>
       <span style="font-family:var(--fh);font-size:13px;font-weight:700">${MN[vmn-1]} ${vy}</span>
