@@ -2253,7 +2253,7 @@ function initDashChartTouch(el, s) {
     if(e.touches.length===1 && !isPinch && t0){
       const dx=e.touches[0].clientX-t0.x;
       const ppe=el.offsetWidth/S.dashView.range;
-      const delta=Math.round(-dx/ppe);
+      const delta=Math.round(dx/ppe);
       const maxOff=Math.max(0,s.length-S.dashView.range);
       const newOff=Math.max(0,Math.min(maxOff,startOffset+delta));
       if(newOff!==S.dashView.offset){S.dashView.offset=newOff; updateDashChart();}
