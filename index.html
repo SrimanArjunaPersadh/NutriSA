@@ -369,7 +369,7 @@ function debounce(fn, ms) {
 
 let S = {
   weights:[], meals:{}, custom:[], view:'dashboard',
-  mdate: td(), wtab:'all', wfrom:'', wto:'', openCards:{}, gO:{},
+  mdate: td(), wtab:'all', wfrom:'', wto:'', wmonth:'', wpick:{from:'',to:'',viewMonth:''}, wpickOpen:false, openCards:{}, gO:{},
   sQ:'', lsQ:'',
   water:{},
   ql: { ings:[] },
@@ -445,15 +445,30 @@ function fW() {
     return s.filter(x => new Date(x.date) >= d);
   }
   if (S.wtab === 'month') {
-    const d = new Date(); d.setMonth(d.getMonth() - 1);
-    return s.filter(x => new Date(x.date) >= d);
+    const now = new Date();
+    const ym = S.wmonth || `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const [yr, mo] = ym.split('-').map(Number);
+    const first = new Date(yr, mo-1, 1);
+    const last  = new Date(yr, mo, 0);
+    return s.filter(x => new Date(x.date) >= first && new Date(x.date) <= last);
   }
   if (S.wtab === 'custom') {
-    return s.filter(x => {
-      if (S.wfrom && x.date < S.wfrom) return false;
-      if (S.wto   && x.date > S.wto)   return false;
-      return true;
-    });
+    // Applied range takes priority
+    if (S.wfrom || S.wto) {
+      return s.filter(x => {
+        if (S.wfrom && x.date < S.wfrom) return false;
+        if (S.wto   && x.date > S.wto)   return false;
+        return true;
+      });
+    }
+    // No range set yet — auto-filter by the month currently shown in the picker
+    if (S.wpick.viewMonth) {
+      const [yr, mo] = S.wpick.viewMonth.split('-').map(Number);
+      const first = `${yr}-${String(mo).padStart(2,'0')}-01`;
+      const last  = `${yr}-${String(mo).padStart(2,'0')}-${String(new Date(yr,mo,0).getDate()).padStart(2,'0')}`;
+      return s.filter(x => x.date >= first && x.date <= last);
+    }
+    return s;
   }
   return s;
 }
@@ -1626,17 +1641,92 @@ function vN() {
 </div>`;
 }
 
+/* ─── RANGE PICKER ────────────────────────────────────────────────────────── */
+function pickRangeDate(date) {
+  if (!S.wpick.from || S.wpick.to) { S.wpick.from = date; S.wpick.to = ''; }
+  else                              { S.wpick.to   = date; }
+  render();
+}
+
+function renderRangePicker() {
+  const n = new Date();
+  const cym = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+  const vm  = S.wpick.viewMonth || (S.wpick.from ? S.wpick.from.slice(0,7) : cym);
+  const [vy, vmn] = vm.split('-').map(Number);
+  const pMo = (()=>{ const d=new Date(vy,vmn-2,1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
+  const nMo = (()=>{ const d=new Date(vy,vmn,1);   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
+  const dim  = new Date(vy, vmn, 0).getDate();
+  const sdow = (new Date(vy,vmn-1,1).getDay()+6)%7;
+  const from = S.wpick.from, to = S.wpick.to;
+  const lo = from&&to ? (from<to?from:to) : from;
+  const hi = from&&to ? (from<to?to:from) : '';
+  const MN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const cell = (content, extra='') => `<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;${extra}">${content}</div>`;
+  let cells = Array(sdow).fill(cell('')).join('');
+  for (let d=1; d<=dim; d++) {
+    const date = `${vy}-${String(vmn).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const isLo = date===lo, isHi = date===hi;
+    const inRng = lo&&hi && date>lo && date<hi;
+    const hasRange = !!(lo&&hi);
+    const br = hasRange ? (isLo?'50% 0 0 50%':isHi?'0 50% 50% 0':inRng?'0':'50%') : (isLo?'50%':'50%');
+    const bg = isLo||isHi ? 'var(--blue)' : inRng ? '#22C55E33' : 'transparent';
+    const col = isLo||isHi ? '#fff' : inRng ? '#22C55E' : 'var(--text)';
+    const fw = isLo||isHi ? '700' : '400';
+    cells += `<div onclick="pickRangeDate('${date}')" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:${br};background:${bg};color:${col};cursor:pointer;font-size:clamp(11px,3.5vw,13px);font-weight:${fw};touch-action:manipulation">${d}</div>`;
+  }
+  const status = !from ? 'Tap a start date'
+    : !to ? `<span style="color:var(--blue)">${from}</span> &rarr; tap end date`
+    :       `<span style="color:var(--blue)">${lo}</span> &rarr; <span style="color:var(--blue)">${hi}</span>`;
+  return `<div style="margin:0 0 14px;width:100%">
+  <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rs);padding:12px;width:100%;box-sizing:border-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <button onclick="S.wpick.viewMonth='${pMo}';render()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:22px;line-height:1;padding:6px 10px;touch-action:manipulation">‹</button>
+      <span style="font-family:var(--fh);font-size:13px;font-weight:700">${MN[vmn-1]} ${vy}</span>
+      <button onclick="S.wpick.viewMonth='${nMo}';render()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:22px;line-height:1;padding:6px 10px;touch-action:manipulation">›</button>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:0;width:100%">
+      ${['M','T','W','T','F','S','S'].map(h=>`<div style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);padding-bottom:6px">${h}</div>`).join('')}
+      ${cells}
+    </div>
+    <div style="margin-top:10px;font-size:11px;color:var(--text3);min-height:14px">${status}</div>
+    ${from&&to?`<div style="display:flex;gap:8px;margin-top:10px">
+      <button onclick="S.wfrom='${lo}';S.wto='${hi}';S.wpickOpen=false;render()" class="btn bb" style="flex:1;padding:8px 0;font-size:13px">Set Range</button>
+      <button onclick="S.wpick.from='';S.wpick.to='';S.wfrom='';S.wto='';render()" style="padding:8px 14px;background:none;border:1px solid var(--border2);border-radius:var(--rs);color:var(--text3);cursor:pointer;font-size:12px;touch-action:manipulation">Reset</button>
+    </div>`:''}
+  </div>
+</div>`;
+}
+
 /* ─── WEIGHT VIEW ─────────────────────────────────────────────────────────── */
 function vW() {
-  const s=sW(), trendArr=tL(s), cw=lw(), rate=wr();
-  const tc = trendArr.length ? trendArr[trendArr.length-1].tw.toFixed(1) : cw.toFixed(1);
-  const aW = s.map(x=>x.w);
-  const avg = aW.length ? (aW.reduce((a,b)=>a+b,0)/aW.length).toFixed(1) : '--';
-  const minW= aW.length ? Math.min(...aW).toFixed(1) : '--';
-  const maxW= aW.length ? Math.max(...aW).toFixed(1) : '--';
-  const chg = s.length>=2 ? (s[s.length-1].w - s[0].w).toFixed(1) : '--';
-  /* FIX #6 — use calendar-week grouping */
-  const wka = weeklyAverages(s);
+  const all = sW();
+  const f   = fW();                          // filtered entries — drives all tiles + chart
+  const fullTrend = tL(all);                 // full EMA history (smoothing needs all past data)
+  const cw  = lw();                          // current weight — always the latest log entry
+
+  // trend weight: look up last filtered date in the full trend array
+  const lastF = f.length ? f[f.length-1] : null;
+  const trendLast = lastF ? fullTrend.find(t => t.date === lastF.date) : null;
+  const tc = trendLast ? trendLast.tw.toFixed(1) : (lastF ? lastF.w.toFixed(1) : '--');
+
+  // weekly rate: same algorithm as wr() but anchored to the last date in the filtered period
+  let rate = null;
+  if (f.length >= 2 && trendLast) {
+    const cutoffMs = new Date(trendLast.date).getTime() - 7 * 864e5;
+    const ref = fullTrend.filter(t => new Date(t.date).getTime() <= cutoffMs).pop();
+    if (ref) {
+      const days = (new Date(trendLast.date).getTime() - new Date(ref.date).getTime()) / 864e5;
+      if (days > 0) rate = +((trendLast.tw - ref.tw) / days * 7).toFixed(2);
+    }
+  }
+
+  const aW  = f.map(x => x.w);
+  const avg  = aW.length ? (aW.reduce((a,b)=>a+b,0)/aW.length).toFixed(1) : '--';
+  const minW = aW.length ? Math.min(...aW).toFixed(1) : '--';
+  const maxW = aW.length ? Math.max(...aW).toFixed(1) : '--';
+  const chg  = f.length >= 2 ? (f[f.length-1].w - f[0].w).toFixed(1) : '--';
+  const startLbl = f.length ? f[0].date.slice(5) : '--';
+  const wka  = weeklyAverages(f);
 
   return `
 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px">
@@ -1648,7 +1738,7 @@ function vW() {
 <div class="g4">
   <div class="tile tb"><div class="tlbl">Current</div><div class="tval">${cw.toFixed(1)}<span class="tunit"> kg</span></div></div>
   <div class="tile tb"><div class="tlbl">Trend Weight</div><div class="tval cb">${tc}<span class="tunit"> kg</span></div><div class="tsub">Smoothed avg</div></div>
-  <div class="tile ${chg!=='--'&&+chg<0?'tg':'tr'}"><div class="tlbl">Change</div><div class="tval ${chg!=='--'&&+chg<0?'cg':'cr'}">${chg==='--'?'--':((+chg<0?'▼ ':'▲ ')+Math.abs(+chg))}<span class="tunit"> kg</span></div><div class="tsub">since ${startDate()}</div></div>
+  <div class="tile ${chg!=='--'&&+chg<0?'tg':'tr'}"><div class="tlbl">Change</div><div class="tval ${chg!=='--'&&+chg<0?'cg':'cr'}">${chg==='--'?'--':((+chg<0?'▼ ':'▲ ')+Math.abs(+chg))}<span class="tunit"> kg</span></div><div class="tsub">since ${startLbl}</div></div>
   <div class="tile ${rate!==null&&rate<0?'tg':'ta'}">
     <div class="tlbl">Weekly Rate</div>
     <div class="tval ${rate!==null&&rate<0?'cg':'ca'}">${rate!==null?(rate<0?'▼ ':'▲ ')+Math.abs(rate).toFixed(2):'--'}<span style="font-size:11px;font-style:normal;color:var(--text3)"> kg/wk</span></div>
@@ -1662,15 +1752,15 @@ function vW() {
         <button class="ttab ${S.wtab==='week'?'on':''}"   onclick="S.wtab='week';render()">Week</button>
         <button class="ttab ${S.wtab==='month'?'on':''}"  onclick="S.wtab='month';render()">Month</button>
         <button class="ttab ${S.wtab==='all'?'on':''}"    onclick="S.wtab='all';render()">All</button>
-        <button class="ttab ${S.wtab==='custom'?'on':''}" onclick="S.wtab='custom';render()">Custom</button>
+        <button class="ttab ${S.wtab==='custom'?'on':''}" onclick="S.wtab='custom';S.wpick={from:S.wfrom,to:S.wto,viewMonth:''};S.wpickOpen=true;render()">Custom</button>
       </div>
-      ${S.wtab==='custom'?`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
-        <input type="date" value="${S.wfrom}" onchange="S.wfrom=this.value;render()" style="width:140px;font-size:12px" placeholder="From"/>
-        <span style="font-size:11px;color:var(--text3)">to</span>
-        <input type="date" value="${S.wto}" onchange="S.wto=this.value;render()" style="width:140px;font-size:12px" placeholder="To"/>
-      </div>`:''}
+      ${S.wtab==='month'?`<input type="month" value="${S.wmonth||(()=>{const n=new Date();return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')})()}" onchange="S.wmonth=this.value;render()" style="width:130px;font-size:12px" title="View a different month"/>`:''}
     </div>
   </div>
+  ${S.wtab==='custom' ? (S.wpickOpen ? renderRangePicker() : `<div style="display:flex;align-items:center;gap:8px;margin:0 0 14px;flex-wrap:wrap">
+    ${S.wfrom&&S.wto ? `<span style="font-size:12px;color:var(--text2)">${S.wfrom} &rarr; ${S.wto}</span>` : `<span style="font-size:12px;color:var(--text3)">No range set</span>`}
+    <button onclick="S.wpickOpen=true;render()" style="background:none;border:1px solid var(--border2);border-radius:6px;color:var(--text2);cursor:pointer;font-size:11px;padding:3px 10px;touch-action:manipulation">Edit</button>
+  </div>`) : ''}
   <div style="height:260px"><canvas id="ch-w"></canvas></div>
   <div class="lgnd" style="margin-top:10px">
     <div class="li"><div class="ld" style="background:#0066FF"></div>Daily weight</div>
@@ -1679,7 +1769,7 @@ function vW() {
   </div>
 </div>
 <div class="g4">
-  <div class="tile"><div class="tlbl">Average</div><div class="tval">${avg}<span class="tunit"> kg</span></div><div class="tsub">${s.length} entries</div></div>
+  <div class="tile"><div class="tlbl">Average</div><div class="tval">${avg}<span class="tunit"> kg</span></div><div class="tsub">${f.length} entries</div></div>
   <div class="tile tg"><div class="tlbl">Minimum</div><div class="tval cg">${minW}<span class="tunit"> kg</span></div></div>
   <div class="tile tr"><div class="tlbl">Maximum</div><div class="tval cr">${maxW}<span class="tunit"> kg</span></div></div>
   <div class="tile ta"><div class="tlbl">To Goal</div><div class="tval ca">${Math.max(0,cw-GOAL).toFixed(1)}<span class="tunit"> kg</span></div><div class="tsub">${eta()}</div></div>
@@ -1709,13 +1799,13 @@ function vW() {
       </div>`).join('')}` : ''}
   </div>
   <div class="card">
-    <div class="clbl">History — ${s.length} entries</div>
+    <div class="clbl">History — ${f.length} entries</div>
     <div style="max-height:500px;overflow-y:auto">
-      ${s.length===0 ? '<div class="empty">No entries yet</div>'
-        : [...s].reverse().map((e,i,arr) => {
+      ${f.length===0 ? '<div class="empty">No entries yet</div>'
+        : [...f].reverse().map((e,i,arr) => {
             const prev = arr[i+1];
             const delta = prev ? (e.w - prev.w).toFixed(1) : null;
-            const tO = trendArr.find(t => t.date===e.date);
+            const tO = fullTrend.find(t => t.date===e.date);
             return `<div class="wrow">
               <div>
                 <div class="wdate">${e.date.slice(5)}</div>
