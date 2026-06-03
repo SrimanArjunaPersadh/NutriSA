@@ -142,6 +142,10 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
 .logged-item{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border);animation:slideIn .2s ease}
 .logged-item:last-child{border-bottom:none}
 @keyframes slideIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes calNext{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:translateX(0)}}
+@keyframes calPrev{from{opacity:0;transform:translateX(-18px)}to{opacity:1;transform:translateX(0)}}
+.cal-next{animation:calNext .2s ease-out both}
+.cal-prev{animation:calPrev .2s ease-out both}
 /* Water tracker */
 .water-track{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
 .water-cup{width:32px;height:32px;border-radius:6px;border:2px solid var(--border2);background:var(--bg4);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .15s}
@@ -1504,7 +1508,54 @@ function vD() {
       <div class="li"><div class="ld" style="background:#22C55E"></div>88kg goal</div>
     </div>
   </div>
-  <div class="card"><div class="clbl">Today's Macros</div>${mac(t)}</div>
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="card"><div class="clbl">Today's Macros</div>${mac(t)}</div>
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="clbl" style="margin-bottom:0">Today's Meals</div>
+        <span style="font-size:11px;color:var(--text3)">${S.mdate}</span>
+      </div>
+      ${ms.length === 0
+        ? `<div style="text-align:center;padding:24px 0">
+            <div style="font-size:28px;margin-bottom:8px">🍽️</div>
+            <div style="font-family:var(--fh);font-size:14px;font-weight:700;color:var(--text2);margin-bottom:4px">No meals logged yet</div>
+            <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Start tracking your nutrition</div>
+            <button class="btn bb" onclick="showView('vN')" style="padding:8px 20px;font-size:13px">Log a meal</button>
+           </div>`
+        : ms.map((m,i) => {
+            const ings = m._ings && m._ings.length ? m._ings : null;
+            const hasDetail = !!ings;
+            return `<div style="border-bottom:1px solid var(--border)">
+              <div style="display:flex;justify-content:space-between;align-items:center;padding:10px 0;cursor:${hasDetail?'pointer':'default'}" ${hasDetail?`onclick="toggleDashMeal(${i})"`:''}>
+                <div style="flex:1;min-width:0">
+                  <div class="mname" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${m.name}</div>
+                  <div class="mtime">${m.time||''}</div>
+                </div>
+                <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
+                  <div style="text-align:right">
+                    <div class="mkcal">${m.kcal} kcal</div>
+                    <div class="mmsub"><span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
+                  </div>
+                  ${hasDetail?`<span id="dm-chev-${i}" style="font-size:11px;color:var(--text3);transition:transform .2s;display:inline-block">▼</span>`:''}
+                </div>
+              </div>
+              <div id="dm-body-${i}" style="display:none;padding-bottom:10px">
+                ${ings.map(ing=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0 4px 10px;border-left:2px solid var(--border2)">
+                  <span style="font-size:12px;color:var(--text2)">${ing.name} <span style="color:var(--text3)">${ing.qty}${ing.unit||'g'}</span></span>
+                  <span style="font-size:11px;color:var(--text3)">${Math.round(ing.kcal||0)} kcal · <span style="color:var(--protein)">${(+ing.pro||0).toFixed(1)}g P</span></span>
+                </div>`).join('')}
+              </div>
+            </div>`;
+          }).join('')}
+      ${ms.length > 0 ? `<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border2);margin-top:2px">
+        <span style="font-family:var(--fh);font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Total</span>
+        <div style="text-align:right">
+          <div style="font-family:var(--fh);font-size:15px;font-weight:800">${t.kcal} kcal</div>
+          <div class="mmsub"><span style="color:var(--protein)">${t.pro}g P</span> · ${t.carb}g C · ${t.fat}g F</div>
+        </div>
+      </div>` : ''}
+    </div>
+  </div>
 </div>`;
 }
 
@@ -1656,6 +1707,7 @@ function calSwipe(e) {
   const [vy, vmn] = vm.split('-').map(Number);
   const target = dx < 0 ? new Date(vy, vmn, 1) : new Date(vy, vmn-2, 1);
   S.wpick.viewMonth = `${target.getFullYear()}-${String(target.getMonth()+1).padStart(2,'0')}`;
+  S.wpick._dir = dx < 0 ? 'next' : 'prev';
   render();
 }
 
@@ -1672,6 +1724,8 @@ function renderRangePicker() {
   const lo = from&&to ? (from<to?from:to) : from;
   const hi = from&&to ? (from<to?to:from) : '';
   const MN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+  const animClass = S.wpick._dir === 'next' ? 'cal-next' : S.wpick._dir === 'prev' ? 'cal-prev' : '';
+  S.wpick._dir = '';
   const cell = (content, extra='') => `<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;${extra}">${content}</div>`;
   let cells = Array(sdow).fill(cell('')).join('');
   for (let d=1; d<=dim; d++) {
@@ -1691,11 +1745,11 @@ function renderRangePicker() {
   return `<div style="margin:0 0 14px;width:100%">
   <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rs);padding:12px;width:100%;box-sizing:border-box" ontouchstart="S.wpick._tx=event.touches[0].clientX" ontouchend="calSwipe(event)">
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <button onclick="S.wpick.viewMonth='${pMo}';render()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:22px;line-height:1;padding:6px 10px;touch-action:manipulation">‹</button>
+      <button onclick="S.wpick._dir='prev';S.wpick.viewMonth='${pMo}';render()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:22px;line-height:1;padding:6px 10px;touch-action:manipulation">‹</button>
       <span style="font-family:var(--fh);font-size:13px;font-weight:700">${MN[vmn-1]} ${vy}</span>
-      <button onclick="S.wpick.viewMonth='${nMo}';render()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:22px;line-height:1;padding:6px 10px;touch-action:manipulation">›</button>
+      <button onclick="S.wpick._dir='next';S.wpick.viewMonth='${nMo}';render()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:22px;line-height:1;padding:6px 10px;touch-action:manipulation">›</button>
     </div>
-    <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:0;width:100%">
+    <div class="${animClass}" style="display:grid;grid-template-columns:repeat(7,1fr);gap:0;width:100%">
       ${['M','T','W','T','F','S','S'].map(h=>`<div style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);padding-bottom:6px">${h}</div>`).join('')}
       ${cells}
     </div>
@@ -1916,6 +1970,15 @@ function toggleNCard(id) {
     body.classList.toggle('open', isO);
   }
   if (chevron) chevron.style.transform = isO ? 'rotate(180deg)' : 'rotate(0deg)';
+}
+
+function toggleDashMeal(i) {
+  const body = document.getElementById('dm-body-'+i);
+  const chev = document.getElementById('dm-chev-'+i);
+  if (!body) return;
+  const open = body.style.display === 'block';
+  body.style.display = open ? 'none' : 'block';
+  if (chev) chev.style.transform = open ? 'rotate(0deg)' : 'rotate(180deg)';
 }
 
 function toggleLogCard(i) {
