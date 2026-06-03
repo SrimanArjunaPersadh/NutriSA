@@ -1452,9 +1452,6 @@ function vD() {
   const ms=dm(), t=tot(ms), cw=lw();
   const sw   = startW();
   const pctD = sw > GOAL ? Math.min(100, Math.round((sw-cw)/(sw-GOAL)*100)) : 0;
-  const rate  = wr();
-  const trendArr = tL(sW());
-  const tc = trendArr.length ? trendArr[trendArr.length-1].tw.toFixed(1) : cw.toFixed(1);
   /* FIX #3 — using KCAL_TARGET constant throughout */
   return `
 <div class="goal-strip">
@@ -1482,22 +1479,22 @@ function vD() {
     </div>
   </div>
 </div>
-<div class="g4">
-  <div class="tile tb"><div class="tlbl">Trend Weight</div><div class="tval cb">${tc}<span class="tunit"> kg</span></div><div class="tsub">Smoothed avg (α=0.1)</div></div>
-  <div class="tile ${rate!==null&&rate<0?'tg':'ta'}">
-    <div class="tlbl">Weekly Rate</div>
-    <div class="tval ${rate!==null&&rate<0?'cg':'ca'}">${rate!==null?(rate<0?'▼ ':'▲ ')+Math.abs(rate).toFixed(2):'—'}<span class="tunit"> kg</span></div>
-    <div class="tsub">${rate!==null&&rate<0?'On track':'Check intake'}</div>
+<div style="display:flex;flex-direction:column;gap:10px">
+  <div class="tile tb" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:24px">⚡</span>
+      <div><div style="font-family:var(--fh);font-size:13px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Calories Left</div>
+      <div style="font-size:11px;color:var(--text3)">${t.kcal} / ${KCAL_TARGET} eaten</div></div>
+    </div>
+    <div style="font-family:var(--fh);font-size:36px;font-weight:800;font-style:italic;color:${t.kcal>KCAL_MAX?'var(--red)':'var(--blue)'}">${Math.max(0,KCAL_TARGET-t.kcal)}</div>
   </div>
-  <div class="tile tb">
-    <div class="tlbl">Calories Left</div>
-    <div class="tval ${t.kcal>KCAL_MAX?'cr':''}">${Math.max(0,KCAL_TARGET-t.kcal)}</div>
-    <div class="tsub">${t.kcal} / ${KCAL_TARGET} eaten</div>
-  </div>
-  <div class="tile tg">
-    <div class="tlbl">Protein Left</div>
-    <div class="tval ${t.pro>=PRO_TARGET?'cg':'ca'}">${Math.max(0,+(PRO_TARGET-t.pro).toFixed(1))}<span class="tunit"> g</span></div>
-    <div class="tsub">${t.pro}g / ${PRO_TARGET}g</div>
+  <div class="tile tg" style="display:flex;align-items:center;justify-content:space-between;padding:16px 20px">
+    <div style="display:flex;align-items:center;gap:10px">
+      <span style="font-size:24px">💪</span>
+      <div><div style="font-family:var(--fh);font-size:13px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Protein Left</div>
+      <div style="font-size:11px;color:var(--text3)">${t.pro}g / ${PRO_TARGET}g eaten</div></div>
+    </div>
+    <div style="font-family:var(--fh);font-size:36px;font-weight:800;font-style:italic;color:${t.pro>=PRO_TARGET?'var(--green)':'var(--amber)'}">${Math.max(0,+(PRO_TARGET-t.pro).toFixed(1))}<span style="font-size:16px;color:var(--text3)">g</span></div>
   </div>
 </div>
 <div class="g2">
@@ -1547,13 +1544,6 @@ function vD() {
               </div>
             </div>`;
           }).join('')}
-      ${ms.length > 0 ? `<div style="display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px solid var(--border2);margin-top:2px">
-        <span style="font-family:var(--fh);font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px">Total</span>
-        <div style="text-align:right">
-          <div style="font-family:var(--fh);font-size:15px;font-weight:800">${t.kcal} kcal</div>
-          <div class="mmsub"><span style="color:var(--protein)">${t.pro}g P</span> · ${t.carb}g C · ${t.fat}g F</div>
-        </div>
-      </div>` : ''}
     </div>
   </div>
 </div>`;
