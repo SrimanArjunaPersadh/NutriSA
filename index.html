@@ -369,7 +369,7 @@ function debounce(fn, ms) {
 
 let S = {
   weights:[], meals:{}, custom:[], view:'dashboard',
-  mdate: td(), wtab:'all', openCards:{}, gO:{},
+  mdate: td(), wtab:'all', wfrom:'', wto:'', openCards:{}, gO:{},
   sQ:'', lsQ:'',
   water:{},
   ql: { ings:[] },
@@ -447,6 +447,13 @@ function fW() {
   if (S.wtab === 'month') {
     const d = new Date(); d.setMonth(d.getMonth() - 1);
     return s.filter(x => new Date(x.date) >= d);
+  }
+  if (S.wtab === 'custom') {
+    return s.filter(x => {
+      if (S.wfrom && x.date < S.wfrom) return false;
+      if (S.wto   && x.date > S.wto)   return false;
+      return true;
+    });
   }
   return s;
 }
@@ -1509,7 +1516,6 @@ ${rows.map(r=>`
 /* ─── NUTRITION VIEW ──────────────────────────────────────────────────────── */
 function vN() {
   const ms=dm(), t=tot(ms);
-  const wc=waterCups(), wg=waterGoal();
   const loggedRows = ms.length===0
     ? `<div id="drop-empty" style="border:2px dashed var(--border2);border-radius:var(--rs);padding:36px 20px;text-align:center;color:var(--text3);transition:all .2s">
         <div style="font-size:32px;margin-bottom:10px">🍽️</div>
@@ -1553,29 +1559,6 @@ function vN() {
 </div>
 <div class="card sg">${mac(t)}</div>
 
-<!-- Water Tracker — compact inline -->
-<div class="card sg" style="padding:14px 20px">
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
-    <div style="display:flex;align-items:center;gap:10px">
-      <span style="font-size:18px">💧</span>
-      <div>
-        <div style="font-family:var(--fh);font-size:13px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.8px">Water Today</div>
-        <div style="font-size:11px;color:var(--text3);margin-top:1px">${isSeitanDay()?'3.5L target — seitan day ⚠️':'3L daily target'}</div>
-      </div>
-    </div>
-    <div style="display:flex;align-items:center;gap:8px">
-      <button onclick="adjustWater(-1)" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);background:var(--bg4);color:var(--text2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">−</button>
-      <div style="text-align:center;min-width:60px">
-        <div style="font-family:var(--fh);font-size:26px;font-weight:800;font-style:italic;color:${wc>=wg?'var(--green)':'var(--blue)'}">${(wc*0.25).toFixed(2).replace(/\.?0+$/,'')}L</div>
-        <div style="font-size:10px;color:var(--text3)">${wc} / ${wg} cups</div>
-      </div>
-      <button onclick="adjustWater(1)" style="width:28px;height:28px;border-radius:6px;border:1px solid var(--border2);background:var(--bg4);color:var(--text2);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">+</button>
-    </div>
-    <div style="display:flex;gap:4px;align-items:center">
-      ${Array.from({length:wg},(_,i)=>`<div style="width:${Math.floor(200/wg)-2}px;height:6px;border-radius:3px;background:${i<wc?(wc>=wg?'var(--green)':'var(--blue)'):'var(--bg5)'}"></div>`).join('')}
-    </div>
-  </div>
-</div>
 
 <div class="g2">
   <div style="display:flex;flex-direction:column;gap:12px">
@@ -1674,10 +1657,18 @@ function vW() {
 <div class="card sg">
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:8px">
     <div class="clbl" style="margin-bottom:0">Daily Weight — Hover for reading</div>
-    <div class="ttabs">
-      <button class="ttab ${S.wtab==='week'?'on':''}"  onclick="S.wtab='week';render()">Week</button>
-      <button class="ttab ${S.wtab==='month'?'on':''}" onclick="S.wtab='month';render()">Month</button>
-      <button class="ttab ${S.wtab==='all'?'on':''}"   onclick="S.wtab='all';render()">All</button>
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+      <div class="ttabs">
+        <button class="ttab ${S.wtab==='week'?'on':''}"   onclick="S.wtab='week';render()">Week</button>
+        <button class="ttab ${S.wtab==='month'?'on':''}"  onclick="S.wtab='month';render()">Month</button>
+        <button class="ttab ${S.wtab==='all'?'on':''}"    onclick="S.wtab='all';render()">All</button>
+        <button class="ttab ${S.wtab==='custom'?'on':''}" onclick="S.wtab='custom';render()">Custom</button>
+      </div>
+      ${S.wtab==='custom'?`<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <input type="date" value="${S.wfrom}" onchange="S.wfrom=this.value;render()" style="width:140px;font-size:12px" placeholder="From"/>
+        <span style="font-size:11px;color:var(--text3)">to</span>
+        <input type="date" value="${S.wto}" onchange="S.wto=this.value;render()" style="width:140px;font-size:12px" placeholder="To"/>
+      </div>`:''}
     </div>
   </div>
   <div style="height:260px"><canvas id="ch-w"></canvas></div>
