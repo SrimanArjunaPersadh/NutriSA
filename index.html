@@ -1281,7 +1281,7 @@ function qlRenderRows() {
   const container = document.getElementById('ql-rows'); if (!container) return;
   const footer = document.getElementById('ql-footer');
   if (S.ql.ings.length === 0) {
-    container.innerHTML = '<div style="text-align:center;padding:16px;color:var(--text3);font-size:12px">Search and add ingredients above</div>';
+    container.innerHTML = '';
     if (footer) footer.style.display = 'none';
     return;
   }
@@ -1353,7 +1353,7 @@ async function qlLogAll() {
 
 function qlRenderWidget() {
   return `
-<div style="margin-bottom:4px">
+<div>
   <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
     <div style="width:28px;height:28px;background:linear-gradient(135deg,#0066FF,#33A1FF);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">⚡</div>
     <div>
@@ -1369,7 +1369,7 @@ function qlRenderWidget() {
                  if(event.key==='Escape'){const d=document.getElementById('ql-dd');if(d)d.innerHTML=''}"/>
     <div class="ql-dd" id="ql-dd"></div>
   </div>
-  <div id="ql-rows"><div style="text-align:center;padding:14px 0 6px;color:var(--text3);font-size:12px">Add ingredients above to build your entry</div></div>
+  <div id="ql-rows"></div>
   <div id="ql-footer" style="display:none">
     <div class="ql-tot">
       <span class="ql-tot-lbl">Total</span>
@@ -1396,6 +1396,7 @@ function boot() {
   document.addEventListener('click', e => {
     if (!e.target.closest('.mb-search-wrap')) { const dd=document.getElementById('mb-dd'); if(dd) dd.innerHTML=''; }
     if (!e.target.closest('.ql-search-wrap')) { const dd=document.getElementById('ql-dd'); if(dd) dd.innerHTML=''; }
+    if (!e.target.closest('.la-search-wrap')) { document.querySelectorAll('[id^="la-dd-"]').forEach(dd => { dd.innerHTML=''; }); }
   });
   /* Load from localStorage immediately — app is usable before cloud responds */
   S.weights = LS.get('sc_w') || [];
@@ -1616,68 +1617,63 @@ function vN() {
 <div class="card sg">${mac(t)}</div>
 
 
-<div class="g2">
-  <div style="display:flex;flex-direction:column;gap:12px">
-
-    <!-- Quick Log card -->
-    <div class="card">
-      ${qlRenderWidget()}
+<div class="g2" style="margin-top:12px">
+  <div class="card" style="margin-bottom:0">
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+      <div style="width:28px;height:28px;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">📋</div>
+      <div>
+        <div style="font-family:var(--fh);font-size:15px;font-weight:800;font-style:italic;color:var(--text)">Saved Meals</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:1px">Tap to expand ingredients · drag or + to log</div>
+      </div>
     </div>
-
-    <!-- Saved Meals card -->
-    <div class="card">
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
-        <div style="width:28px;height:28px;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">📋</div>
-        <div>
-          <div style="font-family:var(--fh);font-size:15px;font-weight:800;font-style:italic;color:var(--text)">Saved Meals</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:1px">Tap to expand ingredients · drag or + to log</div>
-        </div>
-      </div>
-      <div class="search-wrap" style="margin-bottom:10px">
-        <span class="search-icon">🔍</span>
-        <input id="si-n" type="text" placeholder="Search saved meals..." oninput="doSearch(this.value,'n')"/>
-      </div>
-      <div id="sr-n" style="margin-bottom:6px"></div>
-      <div style="max-height:420px;overflow-y:auto">
-        ${CATS.map(cat => {
-          const meals = am().filter(m => m.cat===cat);
-          if (!meals.length) return '';
-          return `<div class="cathead">${cat}</div>
-          ${meals.map(m => {
-            const id = m.name;
-            const isO = !!S.openCards['n_'+id];
-            return `<div class="meal-card" style="margin-bottom:5px" draggable="true" data-id="${id}"
-              ondragstart="dragStart(event,'${id}')" ondragend="dragEnd(event)">
-              <div class="meal-card-header" style="padding:10px 12px;cursor:grab" onclick="toggleNCard('${id}')">
-                <div style="flex:1;min-width:0">
-                  <div class="meal-card-name" style="font-size:14px">${m.name}${vt(m.v)}</div>
-                  <div style="display:flex;gap:8px;margin-top:2px;flex-wrap:wrap">
-                    <span class="mcm">${m.kcal} kcal</span>
-                    <span class="mcm pro">${m.pro}g P</span>
-                    <span class="mcm carb">${m.carb}g C</span>
-                    <span class="mcm fat">${m.fat}g F</span>
-                  </div>
-                </div>
-                <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-                  <button class="qaplus" style="width:28px;height:28px;font-size:16px" onclick="event.stopPropagation();qadd('${id}')">+</button>
-                  <button onclick="event.stopPropagation();confirmDeleteMeal('${id}')" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-size:12px;transition:all .15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">🗑</button>
-                  <span class="chevron" style="transform:${isO?'rotate(180deg)':'rotate(0deg)'}">▼</span>
+    <div class="search-wrap" style="margin-bottom:10px">
+      <span class="search-icon">🔍</span>
+      <input id="si-n" type="text" placeholder="Search saved meals..." oninput="doSearch(this.value,'n')"/>
+    </div>
+    <div id="sr-n" style="margin-bottom:6px"></div>
+    <div style="max-height:420px;overflow-y:auto">
+      ${CATS.map(cat => {
+        const meals = am().filter(m => m.cat===cat);
+        if (!meals.length) return '';
+        return `<div class="cathead">${cat}</div>
+        ${meals.map(m => {
+          const id = m.name;
+          const isO = !!S.openCards['n_'+id];
+          return `<div class="meal-card" style="margin-bottom:5px" draggable="true" data-id="${id}"
+            ondragstart="dragStart(event,'${id}')" ondragend="dragEnd(event)">
+            <div class="meal-card-header" style="padding:10px 12px;cursor:grab" onclick="toggleNCard('${id}')">
+              <div style="flex:1;min-width:0">
+                <div class="meal-card-name" style="font-size:14px">${m.name}${vt(m.v)}</div>
+                <div style="display:flex;gap:8px;margin-top:2px;flex-wrap:wrap">
+                  <span class="mcm">${m.kcal} kcal</span>
+                  <span class="mcm pro">${m.pro}g P</span>
+                  <span class="mcm carb">${m.carb}g C</span>
+                  <span class="mcm fat">${m.fat}g F</span>
                 </div>
               </div>
-              <div class="meal-card-body ${isO?'open':''}">${isO ? ingEditor(id) : ''}</div>
-            </div>`;
-          }).join('')}`;
-        }).join('')}
-      </div>
+              <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
+                <button class="qaplus" style="width:28px;height:28px;font-size:16px" onclick="event.stopPropagation();qadd('${id}')">+</button>
+                <button onclick="event.stopPropagation();confirmDeleteMeal('${id}')" style="width:26px;height:26px;border-radius:6px;border:1px solid var(--border2);background:transparent;color:var(--text3);cursor:pointer;font-size:12px;transition:all .15s" onmouseover="this.style.borderColor='var(--red)';this.style.color='var(--red)'" onmouseout="this.style.borderColor='var(--border2)';this.style.color='var(--text3)'">🗑</button>
+                <span class="chevron" style="transform:${isO?'rotate(180deg)':'rotate(0deg)'}">▼</span>
+              </div>
+            </div>
+            <div class="meal-card-body ${isO?'open':''}">${isO ? ingEditor(id) : ''}</div>
+          </div>`;
+        }).join('')}`;
+      }).join('')}
     </div>
-
   </div>
-  <div class="card" id="drop-zone" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropMeal(event)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-      <div class="clbl" style="margin-bottom:0">Logged — ${S.mdate}</div>
-      ${ms.length>0?`<span style="font-family:var(--fh);font-size:11px;color:var(--text3)">${ms.length} meal${ms.length!==1?'s':''} · ${t.kcal} kcal</span>`:''}
+  <div style="display:flex;flex-direction:column;gap:12px">
+    <div class="card" style="margin-bottom:0">
+      ${qlRenderWidget()}
     </div>
-    <div id="logged-list">${loggedRows}</div>
+    <div class="card" style="margin-bottom:0" id="drop-zone" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropMeal(event)">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
+        <div class="clbl" style="margin-bottom:0">Logged — ${S.mdate}</div>
+        ${ms.length>0?`<span style="font-family:var(--fh);font-size:11px;color:var(--text3)">${ms.length} meal${ms.length!==1?'s':''} · ${t.kcal} kcal</span>`:''}
+      </div>
+      <div id="logged-list">${loggedRows}</div>
+    </div>
   </div>
 </div>`;
 }
@@ -1972,8 +1968,16 @@ function toggleDashMeal(i) {
 }
 
 function toggleLogCard(i) {
+  const wasOpen = !!S.openCards['log_'+i];
   S.openCards['log_'+i] = !S.openCards['log_'+i];
   const isO = S.openCards['log_'+i];
+  if (wasOpen && !isO) {
+    const edId = 'logged_'+i;
+    if (S._logEditorIngs) delete S._logEditorIngs[edId];
+    if (S._logAddedIngs)  delete S._logAddedIngs[edId];
+    if (S._logAllIngs)    delete S._logAllIngs[edId];
+    if (S._logMacroBase)  delete S._logMacroBase[edId];
+  }
   const m = (S.meals[S.mdate]||[])[i];
   const container = document.getElementById('log-entry-'+i);
   if (!container || !m) { render(); return; }
@@ -1984,42 +1988,44 @@ function toggleLogCard(i) {
 }
 
 function loggedItemEditor(m, idx) {
-  /* Path 1 — meal logged from library: find by _libId or name in custom meals.
-     _libId stores the meal name string (set when logging via qadd/logCustomG).
-     Match by name since custom meal IDs from Supabase are UUIDs, not names. */
   const libLookup = m._libId || m.name;
   const custom = S.custom.find(c => c.name === libLookup || c.id === libLookup || c._id === libLookup);
+  /* Prefer stored _ings — post-edit state takes priority over library definition */
+  if (m._ings && m._ings.length) {
+    return loggedItemEditorWithIngs(m, idx, m._ings, custom ? custom.note : undefined);
+  }
+  /* Fall back to library ingredient structure for entries not yet edited */
   if (custom && custom.ingredients && custom.ingredients.length) {
     const baseIngs = custom.ingredients.map(i => ({...i, qty: String(parseFloat(i.qty)||100)}));
     return loggedItemEditorWithIngs(m, idx, baseIngs, custom.note);
   }
-  /* Path 2 — quick log or any entry with stored ingredients */
-  if (m._ings && m._ings.length) {
-    return loggedItemEditorWithIngs(m, idx, m._ings);
-  }
-  /* Path 3 — no ingredient data: raw macro editor */
   return loggedItemMacroEditor(m, idx);
 }
 
 function loggedItemEditorWithIngs(m, idx, baseIngs, note) {
   const edId = 'logged_'+idx;
-  const ings = calcIng(edId, baseIngs);
-  const t = sumIngs(ings);
-  /* Store baseIngs in state keyed by edId so onclick handlers can access
-     without embedding JSON in HTML attributes — avoids quote-escaping bugs */
   S._logEditorIngs = S._logEditorIngs || {};
-  S._logEditorIngs[edId] = baseIngs;
+  if (!S._logEditorIngs[edId]) S._logEditorIngs[edId] = baseIngs;
+  const curBase = S._logEditorIngs[edId];
+  S._logAddedIngs = S._logAddedIngs || {};
+  if (!S._logAddedIngs[edId]) S._logAddedIngs[edId] = [];
+  const allIngs = [...curBase, ...S._logAddedIngs[edId]];
+  S._logAllIngs = S._logAllIngs || {};
+  S._logAllIngs[edId] = allIngs;
+  const ings = calcIng(edId, allIngs);
+  const t = sumIngs(ings);
   return `<div style="background:var(--bg4);border-radius:var(--rs);padding:12px;margin-bottom:10px">
     ${note ? `<div class="meal-note-strip" style="margin-top:0;margin-bottom:8px">${note}</div>` : ''}
     <table class="ing-editor" style="margin-top:0">
-      <thead><tr><th>Ingredient</th><th>g</th><th>Kcal</th><th style="color:var(--protein)">P</th><th style="color:var(--carbs)">C</th><th style="color:var(--fats)">F</th></tr></thead>
-      <tbody>${baseIngs.map((ing,i) => `<tr>
-        <td><div class="ing-name" style="font-size:11px">${ing.name}</div></td>
-        <td><input class="gram-inp" id="gi-${edId}-${i}" type="number" min="0" step="5" value="${ings[i].g}" oninput="updateGCustom('${edId}',${i},this.value,S._logEditorIngs['${edId}'])"/></td>
+      <thead><tr><th>Ingredient</th><th>g</th><th>Kcal</th><th style="color:var(--protein)">P</th><th style="color:var(--carbs)">C</th><th style="color:var(--fats)">F</th><th></th></tr></thead>
+      <tbody>${allIngs.map((ing,i) => `<tr${i>=curBase.length?' style="background:var(--bg3)"':''}>
+        <td><div class="ing-name" style="font-size:11px">${ing.name}${i>=curBase.length?' <span style="font-size:9px;color:var(--blue);font-weight:700">NEW</span>':''}</div></td>
+        <td><input class="gram-inp" id="gi-${edId}-${i}" type="number" min="0" step="${isNaN(+ing.qty)||!Number.isInteger(+ing.qty)?'0.5':'5'}" value="${ings[i].g}" oninput="updateGCustom('${edId}',${i},this.value,S._logAllIngs['${edId}'])"/></td>
         <td><span class="im-cell" id="imc-${edId}-${i}-k">${ings[i].kcal}</span></td>
         <td><span class="im-cell" style="color:var(--protein)" id="imc-${edId}-${i}-p">${ings[i].pro}g</span></td>
         <td><span class="im-cell" style="color:var(--carbs)" id="imc-${edId}-${i}-c">${ings[i].carb}g</span></td>
         <td><span class="im-cell" style="color:var(--fats)" id="imc-${edId}-${i}-f">${ings[i].fat}g</span></td>
+        <td><button class="ql-del" style="color:var(--red);border-color:var(--red);opacity:.7" onclick="logRemoveIng(${idx},${i})" title="Remove">✕</button></td>
       </tr>`).join('')}</tbody>
     </table>
     <div class="live-tot" style="margin-top:8px">
@@ -2031,14 +2037,59 @@ function loggedItemEditorWithIngs(m, idx, baseIngs, note) {
         <span class="ltn2" style="color:var(--fats)" id="itot-${edId}-f">${t.fat}g F</span>
       </div>
     </div>
+    ${logAddSearchWidget(edId)}
     <div style="display:flex;gap:8px;margin-top:10px;justify-content:space-between">
-      <button class="rst-btn" onclick="resetGCustom('${edId}',S._logEditorIngs['${edId}'])">↺ Reset</button>
+      <button class="rst-btn" onclick="resetGCustom('${edId}',S._logAllIngs['${edId}'])">↺ Reset</button>
       <button class="log-custom" onclick="updateLoggedEntry(${idx},'${edId}',S._logEditorIngs['${edId}'])">✓ Update Log</button>
     </div>
   </div>`;
 }
 
 function loggedItemMacroEditor(m, idx) {
+  const edId = 'logged_'+idx;
+  S._logAddedIngs = S._logAddedIngs || {};
+  if (!S._logAddedIngs[edId]) S._logAddedIngs[edId] = [];
+  S._logMacroBase = S._logMacroBase || {};
+  S._logMacroBase[edId] = {kcal: m.kcal, pro: m.pro, carb: m.carb, fat: m.fat};
+  const addedIngs = S._logAddedIngs[edId];
+
+  if (addedIngs.length) {
+    S._logAllIngs = S._logAllIngs || {};
+    S._logAllIngs[edId] = addedIngs;
+    const ings = calcIng(edId, addedIngs);
+    const addedTot = sumIngs(ings);
+    const combKcal = Math.round(m.kcal + addedTot.kcal);
+    const combPro  = +(m.pro  + addedTot.pro ).toFixed(1);
+    const combCarb = +(m.carb + addedTot.carb).toFixed(1);
+    const combFat  = +(m.fat  + addedTot.fat ).toFixed(1);
+    return `<div style="background:var(--bg4);border-radius:var(--rs);padding:12px;margin-bottom:10px">
+      <div style="font-size:11px;color:var(--text3);margin-bottom:8px">Original: ${m.kcal} kcal · ${m.pro}g P · ${m.carb}g C · ${m.fat}g F</div>
+      <table class="ing-editor" style="margin-top:0">
+        <thead><tr><th>Added item</th><th>g</th><th>Kcal</th><th style="color:var(--protein)">P</th><th style="color:var(--carbs)">C</th><th style="color:var(--fats)">F</th><th></th></tr></thead>
+        <tbody>${addedIngs.map((ing,i) => `<tr>
+          <td><div class="ing-name" style="font-size:11px">${ing.name}</div></td>
+          <td><input class="gram-inp" id="gi-${edId}-${i}" type="number" min="0" step="5" value="${ings[i].g}" oninput="updateLogAddedLive('${edId}')"/></td>
+          <td><span class="im-cell" id="imc-${edId}-${i}-k">${ings[i].kcal}</span></td>
+          <td><span class="im-cell" style="color:var(--protein)" id="imc-${edId}-${i}-p">${ings[i].pro}g</span></td>
+          <td><span class="im-cell" style="color:var(--carbs)" id="imc-${edId}-${i}-c">${ings[i].carb}g</span></td>
+          <td><span class="im-cell" style="color:var(--fats)" id="imc-${edId}-${i}-f">${ings[i].fat}g</span></td>
+          <td><button class="ql-del" style="color:var(--red);border-color:var(--red);opacity:.7" onclick="logRemoveIng(${idx},${i})" title="Remove">✕</button></td>
+        </tr>`).join('')}</tbody>
+      </table>
+      <div class="live-tot" style="margin-top:8px">
+        <span class="lt-lbl">New total</span>
+        <div class="lt-nums">
+          <span class="ltn2" id="itot-${edId}-k">${combKcal} kcal</span>
+          <span class="ltn2" style="color:var(--protein)" id="itot-${edId}-p">${combPro}g P</span>
+          <span class="ltn2" style="color:var(--carbs)" id="itot-${edId}-c">${combCarb}g C</span>
+          <span class="ltn2" style="color:var(--fats)" id="itot-${edId}-f">${combFat}g F</span>
+        </div>
+      </div>
+      ${logAddSearchWidget(edId)}
+      <button class="log-custom" style="width:100%;margin-top:10px" onclick="updateLoggedMacroEntry(${idx})">✓ Update Entry</button>
+    </div>`;
+  }
+
   return `<div style="background:var(--bg4);border-radius:var(--rs);padding:12px;margin-bottom:10px">
     <div style="font-size:11px;color:var(--text3);margin-bottom:10px">No ingredient breakdown available — edit totals directly:</div>
     <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px">
@@ -2047,32 +2098,42 @@ function loggedItemMacroEditor(m, idx) {
       <div><label class="fl">Carbs g</label><input type="number" id="le-c-${idx}" value="${m.carb}" step="0.1" style="font-size:12px;padding:6px 8px"/></div>
       <div><label class="fl">Fat g</label><input type="number" id="le-f-${idx}" value="${m.fat}" step="0.1" style="font-size:12px;padding:6px 8px"/></div>
     </div>
-    <button class="log-custom" style="width:100%" onclick="updateLoggedMacros(${idx})">✓ Update Entry</button>
+    ${logAddSearchWidget(edId)}
+    <button class="log-custom" style="width:100%;margin-top:10px" onclick="updateLoggedMacroEntry(${idx})">✓ Update Entry</button>
   </div>`;
 }
 
 
 async function updateLoggedEntry(idx, edId, baseIngs) {
-  /* Read current gram values from inputs */
-  baseIngs.forEach((ing, i) => {
+  const addedIngs = (S._logAddedIngs && S._logAddedIngs[edId]) || [];
+  const allIngs = S._logAllIngs && S._logAllIngs[edId] ? S._logAllIngs[edId] : [...baseIngs, ...addedIngs];
+  allIngs.forEach((ing, i) => {
     const el = document.getElementById('gi-'+edId+'-'+i);
     if (el) S.gO[edId+'_'+i] = parseFloat(el.value) || 0;
   });
-  const ings = calcIng(edId, baseIngs);
+  const ings = calcIng(edId, allIngs);
   const t = sumIngs(ings);
   const meal = S.meals[S.mdate][idx];
   if (!meal) return;
   const cloudId = meal._id;
   meal.kcal = t.kcal; meal.pro = t.pro; meal.carb = t.carb; meal.fat = t.fat;
+  meal._ings = allIngs.map((ing, i) => ({
+    name: ing.name,
+    qty:  String(S.gO[edId+'_'+i] !== undefined ? S.gO[edId+'_'+i] : parseFloat(ing.qty)||0),
+    kcal: ings[i].kcal, pro: ings[i].pro, carb: ings[i].carb, fat: ings[i].fat
+  }));
   LS.set('sc_m', S.meals);
-  baseIngs.forEach((_,i) => delete S.gO[edId+'_'+i]);
+  allIngs.forEach((_,i) => delete S.gO[edId+'_'+i]);
+  if (S._logEditorIngs) delete S._logEditorIngs[edId];
+  if (S._logAddedIngs)  delete S._logAddedIngs[edId];
+  if (S._logAllIngs)    delete S._logAllIngs[edId];
   S.openCards['log_'+idx] = false;
   render();
-  /* Update in Supabase */
   if (sb && cloudId) {
     syncStatus('syncing', 'Saving...');
     const {error} = await sb.from('meal_logs').update({
-      kcal: t.kcal, pro: t.pro, carb: t.carb, fat: t.fat
+      kcal: t.kcal, pro: t.pro, carb: t.carb, fat: t.fat,
+      ings_json: JSON.stringify(meal._ings)
     }).eq('id', cloudId);
     syncStatus(error ? 'error' : 'synced', error ? 'Save failed' : 'Saved');
   }
@@ -2094,6 +2155,165 @@ async function updateLoggedMacros(idx) {
     const {error} = await sb.from('meal_logs').update({
       kcal: meal.kcal, pro: meal.pro, carb: meal.carb, fat: meal.fat
     }).eq('id', cloudId);
+    syncStatus(error ? 'error' : 'synced', error ? 'Save failed' : 'Saved');
+  }
+}
+
+/* ─── LOG EDITOR ADD ITEM ─────────────────────────────────────────────────── */
+function logAddSearchWidget(edId) {
+  return `<div class="la-search-wrap" style="border-top:1px solid var(--border);padding-top:10px;margin-top:10px">
+    <div style="font-family:var(--fh);font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:6px">Add Item</div>
+    <div class="ql-search-wrap" style="margin-bottom:0">
+      <span class="search-icon">🔍</span>
+      <input id="la-si-${edId}" type="text" placeholder="Search ingredient to add..." autocomplete="off"
+        style="font-size:12px"
+        oninput="logAddSearch('${edId}',this.value)"
+        onfocus="logAddSearch('${edId}',this.value)"
+        onkeydown="if(event.key==='Enter'){const f=document.querySelector('#la-dd-${edId} .ql-result');if(f)f.dispatchEvent(new MouseEvent('mousedown',{bubbles:true}))}if(event.key==='Escape'){logAddClose('${edId}');this.value=''}"/>
+      <div class="ql-dd" id="la-dd-${edId}"></div>
+    </div>
+  </div>`;
+}
+
+function logAddSearch(edId, q) {
+  const dd = document.getElementById('la-dd-'+edId); if (!dd) return;
+  if (!q || q.trim().length < 1) { dd.innerHTML = ''; return; }
+  const results = searchFoodDB(q);
+  if (!results.length) {
+    dd.innerHTML = `<div class="ql-result" style="cursor:default"><span style="color:var(--text3);font-size:12px">No ingredients found for "${q}"</span></div>`;
+    return;
+  }
+  dd.innerHTML = results.map(f => {
+    const mv = isGramUnit(f) ? f.per100 : f.perUnit;
+    const perLabel = isGramUnit(f) ? `per 100${f.unit}` : `per ${f.unitLabel||f.unit}`;
+    const isOil = !!FLAGGED_FOODS[f.name];
+    return `<div class="ql-result" onmousedown="event.preventDefault();logAddFood('${edId}',${JSON.stringify(f).replace(/"/g,'&quot;')})">
+      <div>
+        <div class="ql-result-name${isOil?' oil-warn':''}">${f.name}${isOil?' ⚠️':''}</div>
+        <div class="ql-result-cat">${f.cat} · ${perLabel}</div>
+      </div>
+      <div class="ql-result-macros">
+        <div>${mv.kcal}kcal</div><div><span style="color:var(--protein)">${mv.pro}g P</span> · ${mv.carb}g C · ${mv.fat}g F</div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function logAddFood(edId, food) {
+  S._logAddedIngs = S._logAddedIngs || {};
+  if (!S._logAddedIngs[edId]) S._logAddedIngs[edId] = [];
+  const qty = food.defaultQty || (isGramUnit(food) ? 100 : 1);
+  const macros = foodMacros(food, qty);
+  S._logAddedIngs[edId].push({name: food.name, qty: String(qty), kcal: macros.kcal, pro: macros.pro, carb: macros.carb, fat: macros.fat});
+  const dd = document.getElementById('la-dd-'+edId); if (dd) dd.innerHTML = '';
+  const si = document.getElementById('la-si-'+edId); if (si) si.value = '';
+  const idx = parseInt(edId.replace('logged_',''), 10);
+  refreshLogEditor(idx);
+}
+
+function logAddClose(edId) {
+  const dd = document.getElementById('la-dd-'+edId); if (dd) dd.innerHTML = '';
+}
+
+function logRemoveIng(logIdx, ingIdx) {
+  const edId = 'logged_' + logIdx;
+  S._logEditorIngs = S._logEditorIngs || {};
+  S._logAddedIngs  = S._logAddedIngs  || {};
+  const baseIngs  = S._logEditorIngs[edId] || [];
+  const addedIngs = S._logAddedIngs[edId]  || [];
+  const total = baseIngs.length + addedIngs.length;
+  /* Shift S.gO entries down so indices stay aligned after the splice */
+  for (let j = ingIdx; j < total - 1; j++) {
+    const v = S.gO[edId + '_' + (j + 1)];
+    if (v !== undefined) S.gO[edId + '_' + j] = v;
+    else delete S.gO[edId + '_' + j];
+  }
+  delete S.gO[edId + '_' + (total - 1)];
+  const allIngs = [...baseIngs, ...addedIngs];
+  allIngs.splice(ingIdx, 1);
+  const newBase = ingIdx < baseIngs.length ? baseIngs.length - 1 : baseIngs.length;
+  S._logEditorIngs[edId] = allIngs.slice(0, newBase);
+  S._logAddedIngs[edId]  = allIngs.slice(newBase);
+  refreshLogEditor(logIdx);
+}
+
+function refreshLogEditor(idx) {
+  const m = (S.meals[S.mdate]||[])[idx];
+  const container = document.getElementById('log-entry-'+idx);
+  if (!container || !m || !S.openCards['log_'+idx]) return;
+  const body = container.querySelector('.log-entry-body');
+  if (body) body.innerHTML = loggedItemEditor(m, idx);
+}
+
+const _debouncedLogAddUpdate = debounce((edId) => {
+  S._logAddedIngs = S._logAddedIngs || {};
+  const addedIngs = S._logAddedIngs[edId] || [];
+  if (!addedIngs.length) return;
+  addedIngs.forEach((ing, i) => {
+    const el = document.getElementById('gi-'+edId+'-'+i);
+    if (el) S.gO[edId+'_'+i] = parseFloat(el.value) || 0;
+  });
+  const calced = calcIng(edId, addedIngs);
+  calced.forEach((ing, j) => {
+    const sv = (sfx, v) => { const e = document.getElementById(`imc-${edId}-${j}-${sfx}`); if(e) e.textContent = v; };
+    sv('k', ing.kcal); sv('p', ing.pro+'g'); sv('c', ing.carb+'g'); sv('f', ing.fat+'g');
+  });
+  const addedTot = sumIngs(calced);
+  const base = S._logMacroBase && S._logMacroBase[edId];
+  const cK = Math.round((base ? base.kcal : 0) + addedTot.kcal);
+  const cP = +((base ? base.pro  : 0) + addedTot.pro ).toFixed(1);
+  const cC = +((base ? base.carb : 0) + addedTot.carb).toFixed(1);
+  const cF = +((base ? base.fat  : 0) + addedTot.fat ).toFixed(1);
+  const st = (sfx, v) => { const e = document.getElementById(`itot-${edId}-${sfx}`); if(e) e.textContent = v; };
+  st('k', cK+' kcal'); st('p', cP+'g P'); st('c', cC+'g C'); st('f', cF+'g F');
+}, 300);
+
+function updateLogAddedLive(edId) { _debouncedLogAddUpdate(edId); }
+
+async function updateLoggedMacroEntry(idx) {
+  const edId = 'logged_'+idx;
+  const addedIngs = (S._logAddedIngs && S._logAddedIngs[edId]) || [];
+  const meal = S.meals[S.mdate][idx]; if (!meal) return;
+  const cloudId = meal._id;
+  let kcal, pro, carb, fat, newIngs = null;
+
+  if (addedIngs.length) {
+    addedIngs.forEach((ing, i) => {
+      const el = document.getElementById('gi-'+edId+'-'+i);
+      if (el) S.gO[edId+'_'+i] = parseFloat(el.value) || 0;
+    });
+    const calced = calcIng(edId, addedIngs);
+    const addedTot = sumIngs(calced);
+    const base = S._logMacroBase && S._logMacroBase[edId];
+    kcal = Math.round((base ? base.kcal : meal.kcal) + addedTot.kcal);
+    pro  = +((base ? base.pro  : meal.pro)  + addedTot.pro ).toFixed(1);
+    carb = +((base ? base.carb : meal.carb) + addedTot.carb).toFixed(1);
+    fat  = +((base ? base.fat  : meal.fat)  + addedTot.fat ).toFixed(1);
+    newIngs = addedIngs.map((ing, i) => ({
+      name: ing.name,
+      qty:  String(S.gO[edId+'_'+i] !== undefined ? S.gO[edId+'_'+i] : parseFloat(ing.qty)||0),
+      kcal: calced[i].kcal, pro: calced[i].pro, carb: calced[i].carb, fat: calced[i].fat
+    }));
+    addedIngs.forEach((_,i) => delete S.gO[edId+'_'+i]);
+    if (S._logAddedIngs) delete S._logAddedIngs[edId];
+    if (S._logMacroBase) delete S._logMacroBase[edId];
+  } else {
+    kcal = Math.round(parseFloat(document.getElementById('le-k-'+idx)?.value)||0);
+    pro  = +(parseFloat(document.getElementById('le-p-'+idx)?.value)||0).toFixed(1);
+    carb = +(parseFloat(document.getElementById('le-c-'+idx)?.value)||0).toFixed(1);
+    fat  = +(parseFloat(document.getElementById('le-f-'+idx)?.value)||0).toFixed(1);
+  }
+
+  meal.kcal = kcal; meal.pro = pro; meal.carb = carb; meal.fat = fat;
+  if (newIngs) meal._ings = newIngs;
+  LS.set('sc_m', S.meals);
+  S.openCards['log_'+idx] = false;
+  render();
+  if (sb && cloudId) {
+    syncStatus('syncing', 'Saving...');
+    const upd = {kcal, pro, carb, fat};
+    if (newIngs) upd.ings_json = JSON.stringify(newIngs);
+    const {error} = await sb.from('meal_logs').update(upd).eq('id', cloudId);
     syncStatus(error ? 'error' : 'synced', error ? 'Save failed' : 'Saved');
   }
 }
