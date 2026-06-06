@@ -665,18 +665,18 @@ function ingEditor(id) {
       <td><div class="ing-name">${ing.name}</div></td>
       <td><input class="gram-inp" id="gi-${id}-${i}" type="number" min="0" step="5" value="${ings[i].g}" oninput="updateGCustom('${id}',${i},this.value,${JSON.stringify(baseIngs).replace(/"/g,'&quot;')})"/></td>
       <td><span class="im-cell" id="imc-${id}-${i}-k">${ings[i].kcal}</span></td>
-      <td><span class="im-cell" style="color:var(--protein)" id="imc-${id}-${i}-p">${ings[i].pro}g</span></td>
-      <td><span class="im-cell" style="color:var(--carbs)" id="imc-${id}-${i}-c">${ings[i].carb}g</span></td>
-      <td><span class="im-cell" style="color:var(--fats)" id="imc-${id}-${i}-f">${ings[i].fat}g</span></td>
+      <td><span class="im-cell" style="color:var(--protein)" id="imc-${id}-${i}-p">${Math.round(ings[i].pro)}g</span></td>
+      <td><span class="im-cell" style="color:var(--carbs)" id="imc-${id}-${i}-c">${Math.round(ings[i].carb)}g</span></td>
+      <td><span class="im-cell" style="color:var(--fats)" id="imc-${id}-${i}-f">${Math.round(ings[i].fat)}g</span></td>
     </tr>`).join('')}</tbody>
   </table>
   <div class="live-tot">
     <span class="lt-lbl">Meal total</span>
     <div class="lt-nums">
       <span class="ltn2" id="itot-${id}-k">${t.kcal} kcal</span>
-      <span class="ltn2" style="color:var(--protein)" id="itot-${id}-p">${t.pro}g P</span>
-      <span class="ltn2" style="color:var(--carbs)" id="itot-${id}-c">${t.carb}g C</span>
-      <span class="ltn2" style="color:var(--fats)" id="itot-${id}-f">${t.fat}g F</span>
+      <span class="ltn2" style="color:var(--protein)" id="itot-${id}-p">${Math.round(t.pro)}g P</span>
+      <span class="ltn2" style="color:var(--carbs)" id="itot-${id}-c">${Math.round(t.carb)}g C</span>
+      <span class="ltn2" style="color:var(--fats)" id="itot-${id}-f">${Math.round(t.fat)}g F</span>
     </div>
   </div>
   <div class="meal-act">
@@ -1670,7 +1670,7 @@ function vN() {
             <div style="display:flex;align-items:center;gap:8px">
               <div style="text-align:right">
                 <div class="mkcal">${m.kcal} kcal</div>
-                <div class="mmsub"><span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
+                <div class="mmsub"><span style="color:var(--protein)">${Math.round(m.pro)}g P</span> · ${Math.round(m.carb)}g C · ${Math.round(m.fat)}g F</div>
               </div>
               <button class="delbtn" onclick="event.stopPropagation();delM(${i})" title="Delete entry">${TRASH_SVG}</button>
               <span class="log-chevron" style="font-size:11px;color:var(--text3);transition:transform .2s;display:inline-block;transform:${isO?'rotate(180deg)':'rotate(0deg)'}">▼</span>
@@ -1725,10 +1725,10 @@ function vN() {
               <div style="flex:1;min-width:0">
                 <div class="meal-card-name">${m.name}${vt(m.v)}</div>
                 <div style="display:flex;gap:8px;margin-top:2px;flex-wrap:wrap">
-                  <span class="mcm">${m.kcal} kcal</span>
-                  <span class="mcm pro">${m.pro}g P</span>
-                  <span class="mcm carb">${m.carb}g C</span>
-                  <span class="mcm fat">${m.fat}g F</span>
+                  <span class="mcm">${Math.round(m.kcal)} kcal</span>
+                  <span class="mcm pro">${Math.round(m.pro)}g P</span>
+                  <span class="mcm carb">${Math.round(m.carb)}g C</span>
+                  <span class="mcm fat">${Math.round(m.fat)}g F</span>
                 </div>
               </div>
               <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
@@ -2055,10 +2055,10 @@ ${CATS.map(cat=>`
           <div>
             <div class="meal-card-name">${m.name}${vt(m.v)}</div>
             <div style="display:flex;gap:10px;margin-top:3px">
-              <span class="mcm">${m.kcal} kcal</span>
-              <span class="mcm pro">${m.pro}g P</span>
-              <span class="mcm carb">${m.carb}g C</span>
-              <span class="mcm fat">${m.fat}g F</span>
+              <span class="mcm">${Math.round(m.kcal)} kcal</span>
+              <span class="mcm pro">${Math.round(m.pro)}g P</span>
+              <span class="mcm carb">${Math.round(m.carb)}g C</span>
+              <span class="mcm fat">${Math.round(m.fat)}g F</span>
             </div>
           </div>
           <div style="display:flex;align-items:center;gap:8px">
