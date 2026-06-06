@@ -48,8 +48,8 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:15px
 .tunit{font-size:14px;font-style:normal;color:var(--text3)}.tsub{font-size:13px;color:var(--text3);margin-top:4px}
 .mbar{margin-bottom:12px}.mbar:last-child{margin-bottom:0}
 .mbhdr{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px}
-.mbname{font-family:var(--fh);font-size:14px;font-weight:700;text-transform:uppercase;letter-spacing:.5px}
-.mbnums{font-size:14px;color:var(--text3)}.mbnums b{color:var(--text);font-weight:600}
+.mbname{font-family:var(--fh);font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.mbnums{font-size:14px;color:var(--text2)}.mbnums b{color:var(--text);font-weight:800;font-size:15px}
 .track{height:6px;background:var(--bg5);border-radius:3px;overflow:hidden}
 .fill{height:100%;border-radius:3px;transition:width .5s cubic-bezier(.4,0,.2,1)}
 input,select{background:var(--bg4);border:1px solid var(--border2);border-radius:var(--rs);color:var(--text);font-family:var(--fb);font-size:15px;padding:9px 12px;outline:none;transition:border .15s;width:100%}
@@ -71,8 +71,8 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
 .wdate{font-size:14px;color:var(--text2)}.wtw{font-family:var(--fh);font-size:12px;font-weight:700;color:var(--blue);margin-top:1px}
 .wval2{font-family:var(--fh);font-size:20px;font-weight:800;font-style:italic}
 .wd2{font-family:var(--fh);font-size:15px;font-weight:700}.dn{color:var(--green)}.up{color:var(--red)}
-.delbtn{background:transparent;border:1px solid var(--border2);border-radius:6px;color:var(--text3);cursor:pointer;font-size:12px;padding:3px 8px;margin-left:6px;transition:all .15s}
-.delbtn:hover{border-color:var(--red);color:var(--red)}
+.delbtn{background:transparent;border:1px solid #FF3B3044;border-radius:6px;color:var(--red);cursor:pointer;font-size:12px;padding:3px 8px;margin-left:6px;transition:all .15s}
+.delbtn:hover{border-color:var(--red);background:#FF3B3015}
 .mitem{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}.mitem:last-child{border-bottom:none}
 .mname{font-weight:700;font-size:19px;font-family:var(--fh);font-style:italic}.mtime{font-size:12px;color:var(--text3);margin-top:1px}
 .mkcal{font-family:var(--fh);font-size:15px;font-weight:700}.mmsub{font-size:11px;color:var(--text3);text-align:right;margin-top:1px}
@@ -86,8 +86,8 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
 .meal-card:hover{border-color:var(--border2)}
 .meal-card-header{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;cursor:pointer;transition:background .15s}
 .meal-card-header:hover{background:var(--bg4)}
-.meal-card-name{font-family:var(--fh);font-size:18px;font-weight:800;font-style:italic}
-.mcm{font-size:13px;color:var(--text3)}.mcm.pro{color:var(--protein)}.mcm.carb{color:var(--carbs)}.mcm.fat{color:var(--fats)}
+.meal-card-name{font-family:var(--fh);font-size:20px;font-weight:800;font-style:italic}
+.mcm{font-size:14px;color:var(--text3)}.mcm.pro{color:var(--protein)}.mcm.carb{color:var(--carbs)}.mcm.fat{color:var(--fats)}
 .addmeal-btn{background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 12px;font-family:var(--fh);font-size:14px;font-weight:700;cursor:pointer;transition:all .15s;white-space:nowrap}
 .addmeal-btn:hover{background:var(--blue2)}.chevron{font-size:14px;color:var(--text3);transition:transform .2s;margin-left:8px;display:inline-block}
 .meal-card-body{display:none;padding:0 14px 14px;border-top:1px solid var(--border)}.meal-card-body.open{display:block}
@@ -175,8 +175,8 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
 .mb-ing-val.oil-warn{color:var(--red)}
 .mb-gram{width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:14px;padding:5px 7px;text-align:right;outline:none;transition:border .15s;font-family:var(--fb)}
 .mb-gram:focus{border-color:var(--blue)}
-.mb-del{background:transparent;border:1px solid var(--border2);border-radius:5px;color:var(--text3);cursor:pointer;font-size:13px;padding:3px 7px;transition:all .15s;line-height:1}
-.mb-del:hover{border-color:var(--red);color:var(--red)}
+.mb-del{background:transparent;border:1px solid #FF3B3044;border-radius:5px;color:var(--red);cursor:pointer;font-size:13px;padding:3px 7px;transition:all .15s;line-height:1}
+.mb-del:hover{border-color:var(--red);background:#FF3B3015}
 .mb-col-hdr{display:grid;grid-template-columns:1fr 100px 52px 52px 52px 52px 32px;gap:6px;padding:4px 0;border-bottom:1px solid var(--border);margin-bottom:4px}
 .mb-col-h{font-family:var(--fh);font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px;text-align:right}
 .mb-col-h:first-child{text-align:left}
@@ -215,8 +215,8 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
 .ql-val.pro{color:var(--protein)}.ql-val.carb{color:var(--carbs)}.ql-val.fat{color:var(--fats)}
 .ql-gram{width:100%;background:var(--bg4);border:1px solid var(--border2);border-radius:6px;color:var(--text);font-size:14px;padding:5px 7px;text-align:right;outline:none;transition:border .15s;font-family:var(--fb)}
 .ql-gram:focus{border-color:var(--blue)}
-.ql-del{background:transparent;border:1px solid var(--border2);border-radius:5px;color:var(--text3);cursor:pointer;font-size:13px;padding:2px 6px;transition:all .15s;line-height:1}
-.ql-del:hover{border-color:var(--red);color:var(--red)}
+.ql-del{background:transparent;border:1px solid #FF3B3044;border-radius:5px;color:var(--red);cursor:pointer;font-size:13px;padding:2px 6px;transition:all .15s;line-height:1}
+.ql-del:hover{border-color:var(--red);background:#FF3B3015}
 .ql-tot{display:flex;justify-content:space-between;align-items:center;padding:10px 12px;background:var(--bg5);border-radius:8px;margin-top:10px;flex-wrap:wrap;gap:8px}
 .ql-tot-lbl{font-family:var(--fh);font-size:13px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.6px}
 .ql-tot-nums{display:flex;gap:12px}
@@ -434,6 +434,7 @@ let S = {
   weights:[], meals:{}, custom:[], view:'dashboard',
   mdate: td(), wtab:'all', wfrom:'', wto:'', wmonth:'', wpick:{from:'',to:'',viewMonth:''}, wpickOpen:false, dashView:{offset:0,range:30}, openCards:{}, gO:{},
   dpOpen:false, dpViewMonth:'', dpDir:'',
+  wdDate: td(), wdOpen:false, wdViewMonth:'', wdDir:'',
   sQ:'', lsQ:'',
   water:{},
   ql: { ings:[] },
@@ -595,11 +596,11 @@ const _debouncedUpdateGCustom = debounce((id, i, val, ings) => {
   const calculated = calcIng(id, ings);
   calculated.forEach((ing, j) => {
     const setT = (sfx, v) => { const e = document.getElementById(`imc-${id}-${j}-${sfx}`); if(e) e.textContent = v; };
-    setT('k', ing.kcal); setT('p', ing.pro+'g'); setT('c', ing.carb+'g'); setT('f', ing.fat+'g');
+    setT('k', ing.kcal); setT('p', Math.round(ing.pro)+'g'); setT('c', Math.round(ing.carb)+'g'); setT('f', Math.round(ing.fat)+'g');
   });
   const t = sumIngs(calculated);
   const setT = (sfx, v) => { const e = document.getElementById(`itot-${id}-${sfx}`); if(e) e.textContent = v; };
-  setT('k', t.kcal+' kcal'); setT('p', t.pro+'g P'); setT('c', t.carb+'g C'); setT('f', t.fat+'g F');
+  setT('k', t.kcal+' kcal'); setT('p', Math.round(t.pro)+'g P'); setT('c', Math.round(t.carb)+'g C'); setT('f', Math.round(t.fat)+'g F');
 }, 300);
 
 function updateGCustom(id, i, val, ings) { _debouncedUpdateGCustom(id, i, val, ings); }
@@ -613,11 +614,11 @@ function resetGCustom(id, ings) {
   const calculated = calcIng(id, ings);
   calculated.forEach((ing, j) => {
     const setT = (sfx, v) => { const e = document.getElementById(`imc-${id}-${j}-${sfx}`); if(e) e.textContent = v; };
-    setT('k', ing.kcal); setT('p', ing.pro+'g'); setT('c', ing.carb+'g'); setT('f', ing.fat+'g');
+    setT('k', ing.kcal); setT('p', Math.round(ing.pro)+'g'); setT('c', Math.round(ing.carb)+'g'); setT('f', Math.round(ing.fat)+'g');
   });
   const t = sumIngs(calculated);
   const setT = (sfx, v) => { const e = document.getElementById(`itot-${id}-${sfx}`); if(e) e.textContent = v; };
-  setT('k', t.kcal+' kcal'); setT('p', t.pro+'g P'); setT('c', t.carb+'g C'); setT('f', t.fat+'g F');
+  setT('k', t.kcal+' kcal'); setT('p', Math.round(t.pro)+'g P'); setT('c', Math.round(t.carb)+'g C'); setT('f', Math.round(t.fat)+'g F');
 }
 
 
@@ -1458,6 +1459,7 @@ function boot() {
     if (!e.target.closest('.ql-search-wrap')) { const dd=document.getElementById('ql-dd'); if(dd) dd.innerHTML=''; }
     if (!e.target.closest('.la-search-wrap')) { document.querySelectorAll('[id^="la-dd-"]').forEach(dd => { dd.innerHTML=''; }); }
     if (!e.target.closest('#dp-wrap') && S.dpOpen) { S.dpOpen=false; render(); }
+    if (!e.target.closest('#wd-wrap') && S.wdOpen) { S.wdOpen=false; render(); }
   });
   /* Load from localStorage immediately — app is usable before cloud responds */
   S.weights = LS.get('sc_w') || [];
@@ -1593,15 +1595,32 @@ function vD() {
                 <div style="display:flex;align-items:center;gap:8px;flex-shrink:0">
                   <div style="text-align:right">
                     <div class="mkcal">${m.kcal} kcal</div>
-                    <div class="mmsub"><span style="color:var(--protein)">${m.pro}g P</span> · ${m.carb}g C · ${m.fat}g F</div>
                   </div>
                   ${hasDetail?`<span id="dm-chev-${i}" style="font-size:11px;color:var(--text3);transition:transform .2s;display:inline-block">▼</span>`:''}
                 </div>
               </div>
               <div id="dm-body-${i}" style="display:none;padding-bottom:10px">
+                <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:10px 0 12px;border-bottom:1px solid var(--border);margin-bottom:8px">
+                  <div style="background:var(--bg4);border-radius:8px;padding:8px 6px;text-align:center">
+                    <div style="font-family:var(--fh);font-size:16px;font-weight:800">${Math.round(m.kcal)}</div>
+                    <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">kcal</div>
+                  </div>
+                  <div style="background:var(--bg4);border-radius:8px;padding:8px 6px;text-align:center">
+                    <div style="font-family:var(--fh);font-size:16px;font-weight:800;color:var(--protein)">${Math.round(+m.pro||0)}g</div>
+                    <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Protein</div>
+                  </div>
+                  <div style="background:var(--bg4);border-radius:8px;padding:8px 6px;text-align:center">
+                    <div style="font-family:var(--fh);font-size:16px;font-weight:800;color:var(--carbs)">${Math.round(+m.carb||0)}g</div>
+                    <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Carbs</div>
+                  </div>
+                  <div style="background:var(--bg4);border-radius:8px;padding:8px 6px;text-align:center">
+                    <div style="font-family:var(--fh);font-size:16px;font-weight:800;color:var(--fats)">${Math.round(+m.fat||0)}g</div>
+                    <div style="font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:.5px">Fat</div>
+                  </div>
+                </div>
                 ${ings.map(ing=>`<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0 4px 10px;border-left:2px solid var(--border2)">
                   <span style="font-size:12px;color:var(--text2)">${ing.name} <span style="color:var(--text3)">${ing.qty}${ing.unit||'g'}</span></span>
-                  <span style="font-size:11px;color:var(--text3)">${Math.round(ing.kcal||0)} kcal · <span style="color:var(--protein)">${(+ing.pro||0).toFixed(1)}g P</span></span>
+                  <span style="font-size:11px;color:var(--text3)">${Math.round(ing.kcal||0)} kcal · <span style="color:var(--protein)">${Math.round(+ing.pro||0)}g P</span></span>
                 </div>`).join('')}
               </div>
             </div>`;
@@ -1683,7 +1702,7 @@ function vN() {
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
       <div style="width:28px;height:28px;background:var(--bg4);border:1px solid var(--border2);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">📋</div>
       <div>
-        <div style="font-family:var(--fh);font-size:15px;font-weight:800;font-style:italic;color:var(--text)">Saved Meals</div>
+        <div style="font-family:var(--fh);font-size:19px;font-weight:800;font-style:italic;color:var(--text)">Saved Meals</div>
         <div style="font-size:11px;color:var(--text3);margin-top:1px">Tap to expand ingredients · drag or + to log</div>
       </div>
     </div>
@@ -1704,7 +1723,7 @@ function vN() {
             ondragstart="dragStart(event,'${id}')" ondragend="dragEnd(event)">
             <div class="meal-card-header" style="padding:10px 12px;cursor:grab" onclick="toggleNCard('${id}')">
               <div style="flex:1;min-width:0">
-                <div class="meal-card-name" style="font-size:14px">${m.name}${vt(m.v)}</div>
+                <div class="meal-card-name">${m.name}${vt(m.v)}</div>
                 <div style="display:flex;gap:8px;margin-top:2px;flex-wrap:wrap">
                   <span class="mcm">${m.kcal} kcal</span>
                   <span class="mcm pro">${m.pro}g P</span>
@@ -1761,32 +1780,35 @@ function calBuildGrid(vy, vmn, todayStr, cellFn) {
   return cells;
 }
 
-/* ─── DATE PICKER (single-select, nutrition page) ────────────────────────── */
-function renderDatePicker(date) {
+/* ─── DATE PICKER (single-select, reusable) ──────────────────────────────── */
+function renderDatePicker(date, cfg) {
+  const c = Object.assign({
+    dateExpr:'S.mdate', openKey:'dpOpen', vmKey:'dpViewMonth', dirKey:'dpDir', wrapId:'dp-wrap'
+  }, cfg || {});
   const todayStr = td();
-  const vm  = S.dpViewMonth || date.slice(0,7);
+  const vm  = S[c.vmKey] || date.slice(0,7);
   const [vy, vmn] = vm.split('-').map(Number);
   const pMo = calMonthOffset(vm, -1), nMo = calMonthOffset(vm, 1);
-  const animClass = S.dpDir==='next'?'cal-next':S.dpDir==='prev'?'cal-prev':'';
-  S.dpDir = '';
+  const animClass = S[c.dirKey]==='next'?'cal-next':S[c.dirKey]==='prev'?'cal-prev':'';
+  S[c.dirKey] = '';
   const cells = calBuildGrid(vy, vmn, todayStr, (d, dt, isToday) => {
     const cls = ['dp-day', dt===date?'sel':'', isToday?'today':''].filter(Boolean).join(' ');
-    return `<div class="dp-cell"><button class="${cls}" onclick="event.stopPropagation();S.mdate='${dt}';S.dpOpen=false;render()">${d}</button></div>`;
+    return `<div class="dp-cell"><button class="${cls}" onclick="event.stopPropagation();${c.dateExpr}='${dt}';S.${c.openKey}=false;render()">${d}</button></div>`;
   });
   const dObj = new Date(date+'T00:00:00');
   const dispDate = dObj.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
   return `
-<div class="dp-wrap" id="dp-wrap">
-  <button class="dp-btn${S.dpOpen?' open':''}" onclick="S.dpOpen=!S.dpOpen;S.dpViewMonth=S.dpOpen?'${date.slice(0,7)}':'';render()">
+<div class="dp-wrap" id="${c.wrapId}">
+  <button class="dp-btn${S[c.openKey]?' open':''}" onclick="S.${c.openKey}=!S.${c.openKey};S.${c.vmKey}=S.${c.openKey}?'${date.slice(0,7)}':'';render()">
     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
     ${dispDate}
   </button>
-  ${S.dpOpen ? `<div class="dp-popup" id="dp-popup">
+  ${S[c.openKey] ? `<div class="dp-popup" id="${c.wrapId}-popup">
     <div class="dp-cal">
       <div class="dp-hdr">
-        <button class="dp-nav" onclick="event.stopPropagation();S.dpDir='prev';S.dpViewMonth='${pMo}';render()">${CHEVL}</button>
+        <button class="dp-nav" onclick="event.stopPropagation();S.${c.dirKey}='prev';S.${c.vmKey}='${pMo}';render()">${CHEVL}</button>
         <span class="dp-hdr-lbl">${CAL_MN[vmn-1]} ${vy}</span>
-        <button class="dp-nav" onclick="event.stopPropagation();S.dpDir='next';S.dpViewMonth='${nMo}';render()">${CHEVR}</button>
+        <button class="dp-nav" onclick="event.stopPropagation();S.${c.dirKey}='next';S.${c.vmKey}='${nMo}';render()">${CHEVR}</button>
       </div>
       <div class="dp-grid ${animClass}">
         ${CAL_WD.map(d=>`<div class="dp-wday">${d}</div>`).join('')}
@@ -1939,7 +1961,7 @@ function vW() {
   <div class="card">
     <div class="clbl">Log Weight</div>
     <div class="fr fr2">
-      <div><label class="fl">Date</label><input type="date" id="wd" value="${td()}"/></div>
+      <div><label class="fl">Date</label>${renderDatePicker(S.wdDate,{dateExpr:'S.wdDate',openKey:'wdOpen',vmKey:'wdViewMonth',dirKey:'wdDir',wrapId:'wd-wrap'})}</div>
       <div><label class="fl">Weight (kg)</label><input type="number" id="wv" step="0.1" placeholder="e.g. 96.8"/></div>
     </div>
     <button class="btn bb bfw" onclick="logW()" style="margin-bottom:14px">Log Weight</button>
@@ -2132,9 +2154,9 @@ function loggedItemEditorWithIngs(m, idx, baseIngs, note) {
         <td><div class="ing-name" style="font-size:11px">${ing.name}${i>=curBase.length?' <span style="font-size:9px;color:var(--blue);font-weight:700">NEW</span>':''}</div></td>
         <td><input class="gram-inp" id="gi-${edId}-${i}" type="number" min="0" step="${isNaN(+ing.qty)||!Number.isInteger(+ing.qty)?'0.5':'5'}" value="${ings[i].g}" oninput="updateGCustom('${edId}',${i},this.value,S._logAllIngs['${edId}'])"/></td>
         <td><span class="im-cell" id="imc-${edId}-${i}-k">${ings[i].kcal}</span></td>
-        <td><span class="im-cell" style="color:var(--protein)" id="imc-${edId}-${i}-p">${ings[i].pro}g</span></td>
-        <td><span class="im-cell" style="color:var(--carbs)" id="imc-${edId}-${i}-c">${ings[i].carb}g</span></td>
-        <td><span class="im-cell" style="color:var(--fats)" id="imc-${edId}-${i}-f">${ings[i].fat}g</span></td>
+        <td><span class="im-cell" style="color:var(--protein)" id="imc-${edId}-${i}-p">${Math.round(ings[i].pro)}g</span></td>
+        <td><span class="im-cell" style="color:var(--carbs)" id="imc-${edId}-${i}-c">${Math.round(ings[i].carb)}g</span></td>
+        <td><span class="im-cell" style="color:var(--fats)" id="imc-${edId}-${i}-f">${Math.round(ings[i].fat)}g</span></td>
         <td><button class="ql-del" style="color:var(--red);border-color:var(--red);opacity:.7" onclick="logRemoveIng(${idx},${i})" title="Remove">${TRASH_SVG}</button></td>
       </tr>`).join('')}</tbody>
     </table>
@@ -2142,9 +2164,9 @@ function loggedItemEditorWithIngs(m, idx, baseIngs, note) {
       <span class="lt-lbl">New total</span>
       <div class="lt-nums">
         <span class="ltn2" id="itot-${edId}-k">${t.kcal} kcal</span>
-        <span class="ltn2" style="color:var(--protein)" id="itot-${edId}-p">${t.pro}g P</span>
-        <span class="ltn2" style="color:var(--carbs)" id="itot-${edId}-c">${t.carb}g C</span>
-        <span class="ltn2" style="color:var(--fats)" id="itot-${edId}-f">${t.fat}g F</span>
+        <span class="ltn2" style="color:var(--protein)" id="itot-${edId}-p">${Math.round(t.pro)}g P</span>
+        <span class="ltn2" style="color:var(--carbs)" id="itot-${edId}-c">${Math.round(t.carb)}g C</span>
+        <span class="ltn2" style="color:var(--fats)" id="itot-${edId}-f">${Math.round(t.fat)}g F</span>
       </div>
     </div>
     ${logAddSearchWidget(edId)}
@@ -2180,9 +2202,9 @@ function loggedItemMacroEditor(m, idx) {
           <td><div class="ing-name" style="font-size:11px">${ing.name}</div></td>
           <td><input class="gram-inp" id="gi-${edId}-${i}" type="number" min="0" step="5" value="${ings[i].g}" oninput="updateLogAddedLive('${edId}')"/></td>
           <td><span class="im-cell" id="imc-${edId}-${i}-k">${ings[i].kcal}</span></td>
-          <td><span class="im-cell" style="color:var(--protein)" id="imc-${edId}-${i}-p">${ings[i].pro}g</span></td>
-          <td><span class="im-cell" style="color:var(--carbs)" id="imc-${edId}-${i}-c">${ings[i].carb}g</span></td>
-          <td><span class="im-cell" style="color:var(--fats)" id="imc-${edId}-${i}-f">${ings[i].fat}g</span></td>
+          <td><span class="im-cell" style="color:var(--protein)" id="imc-${edId}-${i}-p">${Math.round(ings[i].pro)}g</span></td>
+          <td><span class="im-cell" style="color:var(--carbs)" id="imc-${edId}-${i}-c">${Math.round(ings[i].carb)}g</span></td>
+          <td><span class="im-cell" style="color:var(--fats)" id="imc-${edId}-${i}-f">${Math.round(ings[i].fat)}g</span></td>
           <td><button class="ql-del" style="color:var(--red);border-color:var(--red);opacity:.7" onclick="logRemoveIng(${idx},${i})" title="Remove">${TRASH_SVG}</button></td>
         </tr>`).join('')}</tbody>
       </table>
@@ -2190,9 +2212,9 @@ function loggedItemMacroEditor(m, idx) {
         <span class="lt-lbl">New total</span>
         <div class="lt-nums">
           <span class="ltn2" id="itot-${edId}-k">${combKcal} kcal</span>
-          <span class="ltn2" style="color:var(--protein)" id="itot-${edId}-p">${combPro}g P</span>
-          <span class="ltn2" style="color:var(--carbs)" id="itot-${edId}-c">${combCarb}g C</span>
-          <span class="ltn2" style="color:var(--fats)" id="itot-${edId}-f">${combFat}g F</span>
+          <span class="ltn2" style="color:var(--protein)" id="itot-${edId}-p">${Math.round(combPro)}g P</span>
+          <span class="ltn2" style="color:var(--carbs)" id="itot-${edId}-c">${Math.round(combCarb)}g C</span>
+          <span class="ltn2" style="color:var(--fats)" id="itot-${edId}-f">${Math.round(combFat)}g F</span>
         </div>
       </div>
       ${logAddSearchWidget(edId)}
@@ -2366,7 +2388,7 @@ const _debouncedLogAddUpdate = debounce((edId) => {
   const calced = calcIng(edId, addedIngs);
   calced.forEach((ing, j) => {
     const sv = (sfx, v) => { const e = document.getElementById(`imc-${edId}-${j}-${sfx}`); if(e) e.textContent = v; };
-    sv('k', ing.kcal); sv('p', ing.pro+'g'); sv('c', ing.carb+'g'); sv('f', ing.fat+'g');
+    sv('k', ing.kcal); sv('p', Math.round(ing.pro)+'g'); sv('c', Math.round(ing.carb)+'g'); sv('f', Math.round(ing.fat)+'g');
   });
   const addedTot = sumIngs(calced);
   const base = S._logMacroBase && S._logMacroBase[edId];
@@ -2375,7 +2397,7 @@ const _debouncedLogAddUpdate = debounce((edId) => {
   const cC = +((base ? base.carb : 0) + addedTot.carb).toFixed(1);
   const cF = +((base ? base.fat  : 0) + addedTot.fat ).toFixed(1);
   const st = (sfx, v) => { const e = document.getElementById(`itot-${edId}-${sfx}`); if(e) e.textContent = v; };
-  st('k', cK+' kcal'); st('p', cP+'g P'); st('c', cC+'g C'); st('f', cF+'g F');
+  st('k', cK+' kcal'); st('p', Math.round(cP)+'g P'); st('c', Math.round(cC)+'g C'); st('f', Math.round(cF)+'g F');
 }, 300);
 
 function updateLogAddedLive(edId) { _debouncedLogAddUpdate(edId); }
@@ -2490,7 +2512,7 @@ async function delM(i) {
 }
 
 async function logW() {
-  const date=document.getElementById('wd').value, w=parseFloat(document.getElementById('wv').value);
+  const date=S.wdDate||td(), w=parseFloat(document.getElementById('wv').value);
   if (!date||isNaN(w)) return;
   const i = S.weights.findIndex(x=>x.date===date);
   if (i>=0) S.weights[i].w = w; else S.weights.push({date,w});
