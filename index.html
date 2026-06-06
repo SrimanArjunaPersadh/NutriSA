@@ -323,6 +323,30 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
     padding: 8px 12px;
   }
 }
+/* ── Date Picker / Calendar ─────────────────────────────────────── */
+.dp-wrap{position:relative;display:inline-block}
+.dp-btn{background:var(--bg4);border:1px solid var(--border2);border-radius:var(--rs);color:var(--text);font-family:var(--fb);font-size:14px;padding:8px 14px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:border .15s;white-space:nowrap;line-height:1}
+.dp-btn:hover,.dp-btn.open{border-color:var(--blue)}
+.dp-popup{position:absolute;top:calc(100% + 6px);right:0;z-index:500;animation:slideIn .12s ease-out}
+.dp-cal{background:var(--bg2);border:1px solid var(--border2);border-radius:var(--r);padding:16px;box-shadow:0 8px 32px #00000099}
+.dp-popup .dp-cal{width:252px}
+.dp-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;height:36px}
+.dp-hdr-lbl{font-family:var(--fh);font-size:15px;font-weight:700;color:var(--text);text-align:center;flex:1}
+.dp-nav{width:36px;height:36px;border:none;background:transparent;color:var(--text2);cursor:pointer;border-radius:9px;display:flex;align-items:center;justify-content:center;transition:background .15s;padding:0;flex-shrink:0}
+.dp-nav:hover{background:var(--bg4);color:var(--text)}
+.dp-grid{display:grid;grid-template-columns:repeat(7,1fr)}
+.dp-wday{display:flex;align-items:center;justify-content:center;aspect-ratio:1;font-family:var(--fh);font-size:12px;font-weight:700;color:var(--text3)}
+.dp-cell{display:flex;align-items:center;justify-content:center;aspect-ratio:1}
+.dp-day{width:100%;aspect-ratio:1;border:none;border-radius:9px;cursor:pointer;font-size:14px;font-family:var(--fb);display:flex;align-items:center;justify-content:center;background:transparent;color:var(--text);transition:background .12s,color .12s;position:relative;padding:0;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.dp-day:hover{background:var(--bg4)}
+.dp-day.sel,.dp-day.range-lo,.dp-day.range-hi{background:var(--blue);color:#fff}
+.dp-day.range-lo:not(.range-hi){border-radius:9px 0 0 9px}
+.dp-day.range-hi:not(.range-lo){border-radius:0 9px 9px 0}
+.dp-day.in-range{background:#0066FF22;color:var(--text);border-radius:0}
+.dp-day.today::after{content:'';position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:3px;height:3px;border-radius:50%;background:var(--blue);pointer-events:none}
+.dp-day.sel.today::after,.dp-day.range-lo.today::after,.dp-day.range-hi.today::after{background:#fff}
+.dp-day.outside{color:var(--text3);opacity:.35;pointer-events:none}
+.dp-status{font-size:13px;color:var(--text3);margin-top:8px;min-height:18px}
 /* Aurora background */
 @keyframes aurora {
   from { background-position: 50% 50%, 50% 50%; }
@@ -409,6 +433,7 @@ function debounce(fn, ms) {
 let S = {
   weights:[], meals:{}, custom:[], view:'dashboard',
   mdate: td(), wtab:'all', wfrom:'', wto:'', wmonth:'', wpick:{from:'',to:'',viewMonth:''}, wpickOpen:false, dashView:{offset:0,range:30}, openCards:{}, gO:{},
+  dpOpen:false, dpViewMonth:'', dpDir:'',
   sQ:'', lsQ:'',
   water:{},
   ql: { ings:[] },
@@ -1432,6 +1457,7 @@ function boot() {
     if (!e.target.closest('.mb-search-wrap')) { const dd=document.getElementById('mb-dd'); if(dd) dd.innerHTML=''; }
     if (!e.target.closest('.ql-search-wrap')) { const dd=document.getElementById('ql-dd'); if(dd) dd.innerHTML=''; }
     if (!e.target.closest('.la-search-wrap')) { document.querySelectorAll('[id^="la-dd-"]').forEach(dd => { dd.innerHTML=''; }); }
+    if (!e.target.closest('#dp-wrap') && S.dpOpen) { S.dpOpen=false; render(); }
   });
   /* Load from localStorage immediately — app is usable before cloud responds */
   S.weights = LS.get('sc_w') || [];
@@ -1641,7 +1667,7 @@ function vN() {
     <div style="font-family:var(--fh);font-size:22px;font-weight:800;font-style:italic">Nutrition Log</div>
     <div style="font-size:12px;color:var(--text3)">Search ingredients · drag or tap + to log</div>
   </div>
-  <input type="date" value="${S.mdate}" onchange="S.mdate=this.value;render()" style="width:155px"/>
+  ${renderDatePicker(S.mdate)}
 </div>
 <div class="g4">
   <div class="tile tb"><div class="tlbl">Calories</div><div class="tval ${t.kcal>KCAL_MAX?'cr':t.kcal>=KCAL_MIN?'cg':''}">${t.kcal}</div><div class="tsub">${KCAL_MIN}–${KCAL_MAX}</div></div>
@@ -1713,7 +1739,64 @@ function vN() {
 </div>`;
 }
 
-/* ─── RANGE PICKER ────────────────────────────────────────────────────────── */
+/* ─── CALENDAR HELPERS ────────────────────────────────────────────────────── */
+const CHEVL = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>`;
+const CHEVR = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>`;
+const CAL_MN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+const CAL_WD = ['Mo','Tu','We','Th','Fr','Sa','Su'];
+function calMonthOffset(ym, delta) {
+  const [y,m] = ym.split('-').map(Number);
+  const d = new Date(y, m-1+delta, 1);
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+}
+function calBuildGrid(vy, vmn, todayStr, cellFn) {
+  const dim  = new Date(vy, vmn, 0).getDate();
+  const sdow = (new Date(vy, vmn-1, 1).getDay()+6) % 7;
+  let cells  = Array(sdow).fill('<div class="dp-cell"></div>').join('');
+  for (let d = 1; d <= dim; d++) {
+    const date = `${vy}-${String(vmn).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    cells += cellFn(d, date, date === todayStr);
+  }
+  return cells;
+}
+
+/* ─── DATE PICKER (single-select, nutrition page) ────────────────────────── */
+function renderDatePicker(date) {
+  const todayStr = td();
+  const vm  = S.dpViewMonth || date.slice(0,7);
+  const [vy, vmn] = vm.split('-').map(Number);
+  const pMo = calMonthOffset(vm, -1), nMo = calMonthOffset(vm, 1);
+  const animClass = S.dpDir==='next'?'cal-next':S.dpDir==='prev'?'cal-prev':'';
+  S.dpDir = '';
+  const cells = calBuildGrid(vy, vmn, todayStr, (d, dt, isToday) => {
+    const cls = ['dp-day', dt===date?'sel':'', isToday?'today':''].filter(Boolean).join(' ');
+    return `<div class="dp-cell"><button class="${cls}" onclick="event.stopPropagation();S.mdate='${dt}';S.dpOpen=false;render()">${d}</button></div>`;
+  });
+  const dObj = new Date(date+'T00:00:00');
+  const dispDate = dObj.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'});
+  return `
+<div class="dp-wrap" id="dp-wrap">
+  <button class="dp-btn${S.dpOpen?' open':''}" onclick="S.dpOpen=!S.dpOpen;S.dpViewMonth=S.dpOpen?'${date.slice(0,7)}':'';render()">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    ${dispDate}
+  </button>
+  ${S.dpOpen ? `<div class="dp-popup" id="dp-popup">
+    <div class="dp-cal">
+      <div class="dp-hdr">
+        <button class="dp-nav" onclick="event.stopPropagation();S.dpDir='prev';S.dpViewMonth='${pMo}';render()">${CHEVL}</button>
+        <span class="dp-hdr-lbl">${CAL_MN[vmn-1]} ${vy}</span>
+        <button class="dp-nav" onclick="event.stopPropagation();S.dpDir='next';S.dpViewMonth='${nMo}';render()">${CHEVR}</button>
+      </div>
+      <div class="dp-grid ${animClass}">
+        ${CAL_WD.map(d=>`<div class="dp-wday">${d}</div>`).join('')}
+        ${cells}
+      </div>
+    </div>
+  </div>` : ''}
+</div>`;
+}
+
+/* ─── RANGE PICKER (weight page) ─────────────────────────────────────────── */
 function pickRangeDate(date) {
   if (!S.wpick.from || S.wpick.to) { S.wpick.from = date; S.wpick.to = ''; }
   else                              { S.wpick.to   = date; }
@@ -1723,61 +1806,52 @@ function pickRangeDate(date) {
 function calSwipe(e) {
   const dx = e.changedTouches[0].clientX - (S.wpick._tx || 0);
   if (Math.abs(dx) < 40) return;
-  const n = new Date(); const cym = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
-  const vm = S.wpick.viewMonth || (S.wpick.from ? S.wpick.from.slice(0,7) : cym);
-  const [vy, vmn] = vm.split('-').map(Number);
-  const target = dx < 0 ? new Date(vy, vmn, 1) : new Date(vy, vmn-2, 1);
-  S.wpick.viewMonth = `${target.getFullYear()}-${String(target.getMonth()+1).padStart(2,'0')}`;
+  const cym = td().slice(0,7);
+  const vm  = S.wpick.viewMonth || (S.wpick.from ? S.wpick.from.slice(0,7) : cym);
+  S.wpick.viewMonth = calMonthOffset(vm, dx < 0 ? 1 : -1);
   S.wpick._dir = dx < 0 ? 'next' : 'prev';
   render();
 }
 
 function renderRangePicker() {
-  const n = new Date();
-  const cym = `${n.getFullYear()}-${String(n.getMonth()+1).padStart(2,'0')}`;
+  const todayStr = td();
+  const cym = todayStr.slice(0,7);
   const vm  = S.wpick.viewMonth || (S.wpick.from ? S.wpick.from.slice(0,7) : cym);
   const [vy, vmn] = vm.split('-').map(Number);
-  const pMo = (()=>{ const d=new Date(vy,vmn-2,1); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
-  const nMo = (()=>{ const d=new Date(vy,vmn,1);   return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`; })();
-  const dim  = new Date(vy, vmn, 0).getDate();
-  const sdow = (new Date(vy,vmn-1,1).getDay()+6)%7;
+  const pMo = calMonthOffset(vm, -1), nMo = calMonthOffset(vm, 1);
   const from = S.wpick.from, to = S.wpick.to;
   const lo = from&&to ? (from<to?from:to) : from;
   const hi = from&&to ? (from<to?to:from) : '';
-  const MN = ['January','February','March','April','May','June','July','August','September','October','November','December'];
   const animClass = S.wpick._dir === 'next' ? 'cal-next' : S.wpick._dir === 'prev' ? 'cal-prev' : '';
   S.wpick._dir = '';
-  const cell = (content, extra='') => `<div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;${extra}">${content}</div>`;
-  let cells = Array(sdow).fill(cell('')).join('');
-  for (let d=1; d<=dim; d++) {
-    const date = `${vy}-${String(vmn).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  const cells = calBuildGrid(vy, vmn, todayStr, (d, date, isToday) => {
     const isLo = date===lo, isHi = date===hi;
     const inRng = lo&&hi && date>lo && date<hi;
-    const hasRange = !!(lo&&hi);
-    const br = hasRange ? (isLo?'50% 0 0 50%':isHi?'0 50% 50% 0':inRng?'0':'50%') : (isLo?'50%':'50%');
-    const bg = isLo||isHi ? 'var(--blue)' : inRng ? '#22C55E33' : 'transparent';
-    const col = isLo||isHi ? '#fff' : inRng ? '#22C55E' : 'var(--text)';
-    const fw = isLo||isHi ? '700' : '400';
-    cells += `<div onclick="pickRangeDate('${date}')" style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:${br};background:${bg};color:${col};cursor:pointer;font-size:clamp(11px,3.5vw,13px);font-weight:${fw};touch-action:manipulation">${d}</div>`;
-  }
+    const cls = ['dp-day',
+      isLo?'range-lo':'', isHi?'range-hi':'',
+      (!isLo&&!isHi&&inRng)?'in-range':'',
+      isToday?'today':''
+    ].filter(Boolean).join(' ');
+    return `<div class="dp-cell"><button class="${cls}" onclick="pickRangeDate('${date}')">${d}</button></div>`;
+  });
   const status = !from ? 'Tap a start date'
     : !to ? `<span style="color:var(--blue)">${from}</span> &rarr; tap end date`
     :       `<span style="color:var(--blue)">${lo}</span> &rarr; <span style="color:var(--blue)">${hi}</span>`;
-  return `<div style="margin:0 0 14px;width:100%">
-  <div style="background:var(--bg3);border:1px solid var(--border2);border-radius:var(--rs);padding:12px;width:100%;box-sizing:border-box" ontouchstart="S.wpick._tx=event.touches[0].clientX" ontouchend="calSwipe(event)">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
-      <button onclick="S.wpick._dir='prev';S.wpick.viewMonth='${pMo}';render()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:22px;line-height:1;padding:6px 10px;touch-action:manipulation">‹</button>
-      <span style="font-family:var(--fh);font-size:13px;font-weight:700">${MN[vmn-1]} ${vy}</span>
-      <button onclick="S.wpick._dir='next';S.wpick.viewMonth='${nMo}';render()" style="background:none;border:none;color:var(--text2);cursor:pointer;font-size:22px;line-height:1;padding:6px 10px;touch-action:manipulation">›</button>
+  return `<div style="margin:0 0 14px;width:100%" ontouchstart="S.wpick._tx=event.touches[0].clientX" ontouchend="calSwipe(event)">
+  <div class="dp-cal" style="width:100%;box-sizing:border-box">
+    <div class="dp-hdr">
+      <button class="dp-nav" onclick="S.wpick._dir='prev';S.wpick.viewMonth='${pMo}';render()">${CHEVL}</button>
+      <span class="dp-hdr-lbl">${CAL_MN[vmn-1]} ${vy}</span>
+      <button class="dp-nav" onclick="S.wpick._dir='next';S.wpick.viewMonth='${nMo}';render()">${CHEVR}</button>
     </div>
-    <div class="${animClass}" style="display:grid;grid-template-columns:repeat(7,1fr);gap:0;width:100%">
-      ${['M','T','W','T','F','S','S'].map(h=>`<div style="text-align:center;font-size:10px;font-weight:700;color:var(--text3);padding-bottom:6px">${h}</div>`).join('')}
+    <div class="dp-grid ${animClass}">
+      ${CAL_WD.map(h=>`<div class="dp-wday">${h}</div>`).join('')}
       ${cells}
     </div>
-    <div style="margin-top:10px;font-size:11px;color:var(--text3);min-height:14px">${status}</div>
+    <div class="dp-status">${status}</div>
     ${from&&to?`<div style="display:flex;gap:8px;margin-top:10px">
-      <button onclick="S.wfrom='${lo}';S.wto='${hi}';S.wpickOpen=false;render()" class="btn bb" style="flex:1;padding:8px 0;font-size:13px">Set Range</button>
-      <button onclick="S.wpick.from='';S.wpick.to='';S.wfrom='';S.wto='';render()" style="padding:8px 14px;background:none;border:1px solid var(--border2);border-radius:var(--rs);color:var(--text3);cursor:pointer;font-size:12px;touch-action:manipulation">Reset</button>
+      <button onclick="S.wfrom='${lo}';S.wto='${hi}';S.wpickOpen=false;render()" class="btn bb" style="flex:1;padding:8px 0">Set Range</button>
+      <button onclick="S.wpick.from='';S.wpick.to='';S.wfrom='';S.wto='';render()" style="padding:8px 14px;background:none;border:1px solid var(--border2);border-radius:var(--rs);color:var(--text3);cursor:pointer;font-size:14px;touch-action:manipulation">Reset</button>
     </div>`:''}
   </div>
 </div>`;
