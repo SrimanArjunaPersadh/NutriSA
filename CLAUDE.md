@@ -151,7 +151,7 @@ Key routing rules:
 - QA/testing site behavior → invoke /qa or /qa-only
 - Code review/diff check → invoke /review
 - Visual polish → invoke /design-review
-- Ship/deploy/PR → invoke /ship or /land-and-deploy
+- Ship/deploy/PR → invoke /ship or /land-and-deploy (destructive skills — only invoke on explicit instruction,     never on ambiguous prompts; the Git/GitHub no-auto-commit rule takes precedence)
 - Save progress → invoke /context-save
 - Resume context → invoke /context-restore
 - Author a backlog-ready spec/issue → invoke /spec
