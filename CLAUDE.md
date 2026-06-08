@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-SRIMAN.CUTS is a single-page nutrition & weight management web app. The entire app lives in **`index.html`** — one file containing all HTML, CSS, and JavaScript (~2000+ lines). There is no build step, no bundler, no framework.
+**NutriSA** (formerly SRIMAN.CUTS) is a single-page nutrition & weight management web app. The entire app lives in **`index.html`** — one file containing all HTML, CSS, and JavaScript (~2500+ lines). There is no build step, no bundler, no framework.
+
+GitHub repo: `https://github.com/SrimanArjunaPersadh/NutriSA`
 
 ## Development
 
@@ -81,3 +83,52 @@ Library meals can be dragged onto the meal log. The drop handler calls `cloudAdd
 - **Seitan-day detection** — water logging has a special path when seitan is logged that day.
 - **Sync status indicator** — update the sync badge (`synced` / `syncing` / `offline` / `error`) on every cloud operation.
 - **iOS zoom prevention** — meta viewport and font-size rules are intentional; don't remove them.
+- **Math.round() at display time** — always round macros to whole numbers when rendering (not in `calcIng`/`sumIngs`) to avoid cumulative rounding errors.
+
+## UI Components & Patterns
+
+### `renderDatePicker(date, cfg)`
+Reusable popup calendar. Accepts a `cfg` object to configure which state keys it uses:
+```javascript
+renderDatePicker(S.wdDate, {
+  dateExpr: 'S.wdDate',
+  openKey: 'wdOpen',
+  vmKey: 'wdViewMonth',
+  dirKey: 'wdDir',
+  wrapId: 'wd-wrap'
+})
+```
+Used on both the Nutrition page (`S.mdate`) and the Weight log page (`S.wdDate`). The boot click-outside handler must close both: check `#dp-wrap` and `#wd-wrap`.
+
+### `mac(t)` — Macro Progress Bars
+Renders Calories + Protein/Carbs/Fat as labelled progress bars using `.mbar` / `.mbhdr` / `.mbname` / `.mbnums` / `.track` / `.fill` CSS classes. Colors come from CSS vars: `var(--protein)`, `var(--carbs)`, `var(--fats)`. Do not redesign without Sriman's approval — multiple alternatives (ring charts, stat cards) were tried and rejected in favour of this original design.
+
+### Dashboard — Today's Meals
+- **Collapsed**: shows meal name + `kcal` only (no macro sub-line)
+- **Expanded**: 4-tile macro grid (kcal / protein / carbs / fat) above an ingredient list
+
+### Saved Meals (Library page)
+- `.meal-card-name` — font-size 20px, Barlow Condensed 800 italic
+- `.mcm` — 14px, `var(--text3)` — macro summary chips (rounded whole numbers)
+- "Saved Meals" heading — Barlow Condensed 19px 800 italic
+
+### Delete buttons
+`.delbtn`, `.mb-del`, `.ql-del` are all red (`var(--red)`) by default with a subtle border. Do not make them grey.
+
+### CSS Variables (key ones)
+```
+--blue: #0066FF
+--red: #FF3B30
+--protein: (blue-ish)
+--carbs: (yellow-ish)
+--fats: (orange-ish)
+--text, --text2, --text3
+--bg4, --border
+--fh: 'Barlow Condensed' (headings/labels)
+```
+
+## Known Issues / Historical Fixes
+
+- **SVG CSS variables**: `stroke="var(--blue)"` does NOT work as an SVG presentation attribute — CSS custom properties don't resolve there. Use `style="stroke:var(--blue)"` inline instead.
+- **`_ings` sync race condition**: fixed previously — always include `_libId` and `_ings` in drag-and-drop drop handler.
+- **Duplicate string in debounce blocks**: `_debouncedUpdateGCustom` and `resetGCustom` had identical surrounding patterns; always target with enough context to be unique when editing.

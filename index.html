@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
-<title>SRIMAN.CUTS — Nutrition & Weight Tracker</title>
+<title>NutriSA — Nutrition & Weight Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,700;1,800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
@@ -387,7 +387,7 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
 <div id="aurora-bg"><div id="aurora-inner"></div></div>
 <div class="app">
   <div class="nav">
-    <div><div class="logo-main">SRIMAN.CUTS</div><div class="logo-sub">Nutrition &amp; Weight Tracker</div></div>
+    <div><div class="logo-main">NutriSA</div><div class="logo-sub">Nutrition &amp; Weight Tracker</div></div>
     <div class="nav-pills">
       <button class="pill on" onclick="go('dashboard')">Dashboard</button>
       <button class="pill" onclick="go('nutrition')">Nutrition</button>
@@ -1632,7 +1632,6 @@ function vD() {
 
 /* ─── MACRO BARS ──────────────────────────────────────────────────────────── */
 function mac(t) {
-  /* FIX #3 — all numbers from constants */
   const rows = [
     {n:'Protein', v:t.pro,  mn:PRO_MIN,  mx:PRO_MAX,  u:'g', c:'var(--protein)'},
     {n:'Carbs',   v:t.carb, mn:CARB_MIN, mx:CARB_MAX, u:'g', c:'var(--carbs)'},
