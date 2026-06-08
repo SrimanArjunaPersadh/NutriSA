@@ -441,8 +441,9 @@ let S = {
   mb:{ ings:[], name:'', cat:'Breakfast', notes:'', ingSearch:'' }
 };
 let CH = {};
+let _copyInFlight = false;
 
-function td() { return new Date().toISOString().split('T')[0]; }
+function td() { const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
 function now() { const d = new Date(); return `${d.getHours()}:${String(d.getMinutes()).padStart(2,'0')}`; }
 function fd(d) { return `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}`; }
 function sW() { return [...S.weights].sort((a,b) => a.date.localeCompare(b.date)); }
@@ -1242,6 +1243,35 @@ async function cloudDelMeal(mealId) {
   return true;
 }
 
+async function copyYesterdayMeals() {
+  if (_copyInFlight) return;
+  _copyInFlight = true;
+  const targetDate = S.mdate;
+  try {
+    const [y, mo, day] = targetDate.split('-').map(Number);
+    const d = new Date(y, mo - 1, day - 1);
+    const yest = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    const src = S.meals[yest] || [];
+    if (!src.length) { alert('No meals logged yesterday'); return; }
+    if (!confirm(`Copy ${src.length} meal${src.length!==1?'s':''} from ${yest} into ${targetDate}?`)) return;
+    if (!S.meals[targetDate]) S.meals[targetDate] = [];
+    for (const m of src) {
+      const c = {
+        name: m.name, kcal: m.kcal, pro: m.pro, carb: m.carb, fat: m.fat,
+        time: now(), _libId: m._libId || null,
+        _ings: m._ings ? JSON.parse(JSON.stringify(m._ings)) : null,
+      };
+      S.meals[targetDate].push(c);
+      LS.set('sc_m', S.meals);
+      render();
+      const cloudId = await cloudAddMeal(targetDate, c);
+      if (cloudId) { c._id = cloudId; LS.set('sc_m', S.meals); }
+    }
+  } finally {
+    _copyInFlight = false;
+  }
+}
+
 /* ── Custom meal actions ── */
 async function cloudSaveCustomMeal(meal) {
   if (!sb) return null;
@@ -1746,11 +1776,14 @@ function vN() {
     <div class="card" style="margin-bottom:0">
       ${qlRenderWidget()}
     </div>
-    <div class="card" style="margin-bottom:0" id="drop-zone" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropMeal(event)">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div class="clbl" style="margin-bottom:0">Logged — ${S.mdate}</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div class="clbl" style="margin-bottom:0">Logged — ${S.mdate}</div>
+      <div style="display:flex;align-items:center;gap:8px">
         ${ms.length>0?`<span style="font-family:var(--fh);font-size:11px;color:var(--text3)">${ms.length} meal${ms.length!==1?'s':''} · ${t.kcal} kcal</span>`:''}
+        <button class="rst-btn" style="font-size:12px;padding:4px 10px" onclick="copyYesterdayMeals()">📋 Copy Yesterday</button>
       </div>
+    </div>
+    <div class="card" style="margin-bottom:0" id="drop-zone" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropMeal(event)">
       <div id="logged-list">${loggedRows}</div>
     </div>
   </div>
