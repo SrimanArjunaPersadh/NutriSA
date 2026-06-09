@@ -454,6 +454,7 @@ let S = {
   mdate: td(), wtab:'all', wfrom:'', wto:'', wmonth:'', wpick:{from:'',to:'',viewMonth:''}, wpickOpen:false, dashView:{offset:0,range:30}, openCards:{}, gO:{},
   dpOpen:false, dpViewMonth:'', dpDir:'',
   wdDate: td(), wdOpen:false, wdViewMonth:'', wdDir:'',
+  dashDate: td(), dashOpen:false, dashViewMonth:'', dashDir:'',
   sQ:'', lsQ:'',
   water:{},
   ql: { ings:[] },
@@ -1528,6 +1529,7 @@ function boot() {
     if (!e.target.closest('.la-search-wrap')) { document.querySelectorAll('[id^="la-dd-"]').forEach(dd => { dd.innerHTML=''; }); }
     if (!e.target.closest('#dp-wrap') && S.dpOpen) { S.dpOpen=false; render(); }
     if (!e.target.closest('#wd-wrap') && S.wdOpen) { S.wdOpen=false; render(); }
+    if (!e.target.closest('#dash-wrap') && S.dashOpen) { S.dashOpen=false; render(); }
   });
   /* Load from localStorage immediately — app is usable before cloud responds */
   S.weights = LS.get('sc_w') || [];
@@ -1773,11 +1775,16 @@ ${consRow}
 
 /* ─── DASHBOARD VIEW ──────────────────────────────────────────────────────── */
 function vD() {
-  const ms=dm(), t=tot(ms), cw=lw();
+  const ms=S.meals[S.dashDate]||[], t=tot(ms), cw=lw();
   const sw   = startW();
   const pctD = sw > GOAL ? Math.min(100, Math.round((sw-cw)/(sw-GOAL)*100)) : 0;
+  const isToday = S.dashDate === td();
   /* FIX #3 — using KCAL_TARGET constant throughout */
   return `
+<div style="display:flex;align-items:center;justify-content:flex-end;gap:8px;margin-bottom:14px;flex-wrap:wrap">
+  ${!isToday?`<button class="rst-btn" style="font-size:12px;padding:6px 12px" onclick="S.dashDate=td();render()">Today</button>`:''}
+  ${renderDatePicker(S.dashDate,{dateExpr:'S.dashDate',openKey:'dashOpen',vmKey:'dashViewMonth',dirKey:'dashDir',wrapId:'dash-wrap'})}
+</div>
 <div class="goal-strip">
   <div>
     <div style="font-family:var(--fh);font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:2px">Goal Weight</div>
@@ -1830,11 +1837,11 @@ function vD() {
     </div>
   </div>
   <div style="display:flex;flex-direction:column;gap:12px">
-    <div class="card"><div class="clbl">Today's Macros</div>${mac(t)}</div>
+    <div class="card"><div class="clbl">${isToday?"Today's Macros":'Macros'}</div>${mac(t)}</div>
     <div class="card">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px">
-        <div class="clbl" style="margin-bottom:0">Today's Meals</div>
-        <span style="font-size:11px;color:var(--text3)">${S.mdate}</span>
+        <div class="clbl" style="margin-bottom:0">${isToday?"Today's Meals":'Meals'}</div>
+        <span style="font-size:11px;color:var(--text3)">${S.dashDate}</span>
       </div>
       ${ms.length === 0
         ? `<div style="text-align:center;padding:24px 0">
