@@ -49,6 +49,9 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:15px
 .wci-wow{font-size:12px;color:var(--text2);padding:6px 0}
 .wci-adh{text-align:center;padding:8px 0 2px}
 .wci-adh-num{font-family:var(--fh);font-size:36px;font-weight:800;font-style:italic;line-height:1.1}
+.wci-3col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:10px 0}
+.wci-cons{display:flex;flex-direction:column;gap:2px}
+.wci-cons-v{font-family:var(--fh);font-size:17px;font-weight:800;font-style:italic;color:var(--text2);line-height:1.15}
 @media(max-width:480px){.wci-row{flex-wrap:wrap}.wci-badge{margin-left:0}.wci-2col{grid-template-columns:1fr;gap:10px}}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
@@ -1621,6 +1624,16 @@ function weeklyCheckIn() {
                  : adherence >= 60   ? 'var(--amber)'
                  :                     'var(--red)';
 
+  // ── Consistency metrics (raw data, no interpretation) ──
+  const weighIns = days.filter(d => ws.some(x => x.date === d)).length;
+  let lowPro = null, lowProDate = null;
+  if (n > 0) {
+    let mi = 0;
+    dailyTots.forEach((t, i) => { if (t.pro < dailyTots[mi].pro) mi = i; });
+    lowPro = Math.round(dailyTots[mi].pro);
+    lowProDate = loggedDays[mi];
+  }
+
   const prevStart = (() => {
     const d = new Date(b.start + 'T00:00:00'); d.setDate(d.getDate() - 7);
     return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
@@ -1634,14 +1647,16 @@ function weeklyCheckIn() {
 
   return { b, w1Trend, w2Trend, trendDelta, noNewW, rateLabel, rateColor,
            n, avgPro, avgKcal, proHit, kcalHit, adherence, adhColor,
-           prevAvgPro, prevAvgKcal, prevN };
+           prevAvgPro, prevAvgKcal, prevN,
+           weighIns, lowPro, lowProDate };
 }
 
 /* ─── WEEKLY CHECK-IN VIEW ───────────────────────────────────────────────── */
 function vWCI() {
   const { b, w1Trend, trendDelta, noNewW, rateLabel, rateColor,
           n, avgPro, avgKcal, proHit, kcalHit, adherence, adhColor,
-          prevAvgPro, prevAvgKcal, prevN } = weeklyCheckIn();
+          prevAvgPro, prevAvgKcal, prevN,
+          weighIns, lowPro, lowProDate } = weeklyCheckIn();
 
   const dayFmt = s => { const d = new Date(s+'T00:00:00'); return `${String(d.getDate()).padStart(2,'0')} ${MONTHS[d.getMonth()]}`; };
   const endD = new Date(b.end+'T00:00:00');
@@ -1700,7 +1715,21 @@ function vWCI() {
 <div class="wci-wow">vs prior week: Protein ${pSpan} &nbsp;·&nbsp; Calories ${kSpan}</div>`;
   }
 
-  // ── Section 4: Adherence ──
+  // ── Section 4: Consistency (raw context — days logged, weigh-ins, protein floor) ──
+  const DOW = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+  const lowProDay = lowProDate ? DOW[new Date(lowProDate+'T00:00:00').getDay()] : '';
+  const daysLoggedStr = `${n}/7`;
+  const weighInStr    = `${weighIns}/7`;
+  const lowProStr     = lowPro !== null ? `${lowPro}g${lowProDay ? ` (${lowProDay})` : ''}` : '--';
+  const consRow = `<div class="wci-sep"></div>
+<div class="wci-lbl" style="margin-bottom:4px">CONSISTENCY</div>
+<div class="wci-3col">
+  <div class="wci-cons"><div class="wci-cons-v">${daysLoggedStr}</div><div class="wci-sub">days logged</div></div>
+  <div class="wci-cons"><div class="wci-cons-v">${weighInStr}</div><div class="wci-sub">weigh-ins</div></div>
+  <div class="wci-cons"><div class="wci-cons-v">${lowProStr}</div><div class="wci-sub">low protein</div></div>
+</div>`;
+
+  // ── Section 5: Adherence ──
   const adhStr = adherence !== null ? `${adherence}%` : '--';
   const onTarget = proHit + kcalHit;
   const adhSub = n > 0 ? `${onTarget}/${2*n} days on target` : '';
@@ -1732,6 +1761,7 @@ function vWCI() {
     <div class="wci-sub">${kcalSub}</div>
   </div>
 </div>${wowRow}
+${consRow}
 <div class="wci-sep"></div>
 <div class="wci-adh">
   <div class="wci-lbl" style="margin-bottom:6px">ADHERENCE SCORE</div>
