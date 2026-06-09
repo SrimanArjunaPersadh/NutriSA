@@ -35,6 +35,21 @@ body{background:var(--bg);color:var(--text);font-family:var(--fb);font-size:15px
 .nwlbl{font-size:13px;color:var(--text3);text-align:right}
 .card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px 20px;margin-bottom:12px}
 .clbl{font-family:var(--fh);font-size:13px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:14px}
+.wci-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;font-family:var(--fh);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3)}
+.wci-row{display:flex;align-items:baseline;gap:8px;margin-bottom:6px}
+.wci-lbl{font-family:var(--fh);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.5px;color:var(--text3);min-width:110px;flex-shrink:0}
+.wci-val{font-family:var(--fh);font-size:14px;font-weight:800;font-style:italic}
+.wci-badge{font-family:var(--fh);font-size:12px;font-weight:700;font-style:italic;margin-left:auto}
+.wci-sep{height:1px;background:var(--border);margin:8px 0}
+.wci-dense{padding:14px 16px}
+.wci-2col{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:10px 0}
+.wci-col{display:flex;flex-direction:column;gap:3px}
+.wci-big{font-family:var(--fh);font-size:26px;font-weight:800;font-style:italic;line-height:1.1}
+.wci-sub{font-size:11px;color:var(--text3);margin-top:1px}
+.wci-wow{font-size:12px;color:var(--text2);padding:6px 0}
+.wci-adh{text-align:center;padding:8px 0 2px}
+.wci-adh-num{font-family:var(--fh);font-size:36px;font-weight:800;font-style:italic;line-height:1.1}
+@media(max-width:480px){.wci-row{flex-wrap:wrap}.wci-badge{margin-left:0}.wci-2col{grid-template-columns:1fr;gap:10px}}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .g4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:12px}
 @media(max-width:640px){.g2{grid-template-columns:1fr}.g4{grid-template-columns:repeat(2,1fr)}}
@@ -393,6 +408,7 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
       <button class="pill" onclick="go('nutrition')">Nutrition</button>
       <button class="pill" onclick="go('weight')">Weight</button>
       <button class="pill" onclick="go('library')">Library</button>
+      <button class="pill" onclick="go('report')">Report</button>
     </div>
     <div><div class="nwval"><span id="nw">--</span> kg</div><div class="nwlbl">Current weight</div><div class="sync-bar offline" id="sync-bar"><span class="sync-dot"></span><span id="sync-txt">Connecting...</span></div></div>
   </div>
@@ -451,6 +467,26 @@ function lw() { const s = sW(); return s.length ? s[s.length-1].w : 0; }
 function startW() { const s = sW(); return s.length ? s[0].w : 0; }
 function startDate() { const s = sW(); return s.length ? s[0].date.slice(5) : '--'; }
 function lost() { const s = sW(); return s.length ? Math.max(0, s[0].w - lw()).toFixed(1) : '0.0'; }
+function eachDayInRange(start, end) {
+  const days = [], cur = new Date(start + 'T00:00:00');
+  const last = new Date(end + 'T00:00:00');
+  while (cur <= last) {
+    const d = cur;
+    days.push(`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`);
+    cur.setDate(cur.getDate() + 1);
+  }
+  return days;
+}
+function lastWeekBounds() {
+  const today = new Date();
+  const day = today.getDay() || 7;
+  const lastSun = new Date(today);
+  lastSun.setDate(today.getDate() - day);
+  const lastMon = new Date(lastSun);
+  lastMon.setDate(lastSun.getDate() - 6);
+  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  return { start: fmt(lastMon), end: fmt(lastSun) };
+}
 function dm() { return S.meals[S.mdate] || []; }
 function tot(ms) {
   const r = ms.reduce((a,m) => ({kcal:a.kcal+m.kcal, pro:a.pro+m.pro, carb:a.carb+m.carb, fat:a.fat+m.fat}), {kcal:0,pro:0,carb:0,fat:0});
@@ -1518,6 +1554,7 @@ function render() {
   else if (S.view==='nutrition') vc.innerHTML = vN();
   else if (S.view==='weight')    vc.innerHTML = vW();
   else if (S.view==='library')   vc.innerHTML = vLib();
+  else if (S.view==='report')    vc.innerHTML = vWCI();
   document.getElementById('nw').textContent = lw().toFixed(1);
   setTimeout(ic, 80);
 }
@@ -1540,6 +1577,170 @@ const CG = {
     y:{ ticks:{color:'#4B5875',font:{size:10,family:'Barlow Condensed',weight:'600'},callback:v=>v.toFixed(1)}, grid:{color:'#1E233055'} }
   }
 };
+
+/* ─── WEEKLY CHECK-IN ────────────────────────────────────────────────────── */
+function weeklyCheckIn() {
+  const b = lastWeekBounds();
+  const prevEnd = (() => {
+    const d = new Date(b.start + 'T00:00:00');
+    d.setDate(d.getDate() - 1);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  })();
+
+  const ws = sW();
+  const w1Entries = ws.filter(x => x.date <= b.end);
+  const w2Entries = ws.filter(x => x.date <= prevEnd);
+  const w1Trend = w1Entries.length ? tL(w1Entries).at(-1).tw : null;
+  const w2Trend = w2Entries.length ? tL(w2Entries).at(-1).tw : null;
+  const trendDelta = (w1Trend !== null && w2Trend !== null) ? +(w1Trend - w2Trend).toFixed(2) : null;
+  const noNewW = w1Trend !== null && ws.filter(x => x.date >= b.start && x.date <= b.end).length === 0;
+
+  const rate = trendDelta;
+  let rateLabel = 'No Data', rateColor = 'var(--text3)';
+  if (rate !== null) {
+    if (rate < -0.6)        { rateLabel = 'Ahead';    rateColor = 'var(--green)'; }
+    else if (rate <= -0.4)  { rateLabel = 'On Track'; rateColor = 'var(--green)'; }
+    else if (rate < 0)      { rateLabel = 'Behind';   rateColor = 'var(--amber)'; }
+    else                    { rateLabel = 'Gaining';  rateColor = 'var(--red)';   }
+  }
+
+  const days = eachDayInRange(b.start, b.end);
+  const loggedDays = days.filter(d => (S.meals[d]||[]).length > 0);
+  const dailyTots = loggedDays.map(d => tot(S.meals[d]));
+  const n = loggedDays.length;
+
+  let avgPro = null, avgKcal = null, proHit = 0, kcalHit = 0;
+  if (n > 0) {
+    avgPro  = Math.round(dailyTots.reduce((a,t) => a + t.pro,  0) / n);
+    avgKcal = Math.round(dailyTots.reduce((a,t) => a + t.kcal, 0) / n);
+    proHit  = dailyTots.filter(t => t.pro  >= PRO_TARGET).length;
+    kcalHit = dailyTots.filter(t => t.kcal >= KCAL_MIN && t.kcal <= KCAL_MAX).length;
+  }
+  const adherence = n > 0 ? Math.round((proHit + kcalHit) / (2 * n) * 100) : null;
+  const adhColor = adherence === null ? 'var(--text3)'
+                 : adherence >= 80   ? 'var(--green)'
+                 : adherence >= 60   ? 'var(--amber)'
+                 :                     'var(--red)';
+
+  const prevStart = (() => {
+    const d = new Date(b.start + 'T00:00:00'); d.setDate(d.getDate() - 7);
+    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  })();
+  const prevDays   = eachDayInRange(prevStart, prevEnd);
+  const prevLogged = prevDays.filter(d => (S.meals[d]||[]).length > 0);
+  const prevTots   = prevLogged.map(d => tot(S.meals[d]));
+  const prevN      = prevLogged.length;
+  const prevAvgPro  = prevN > 0 ? Math.round(prevTots.reduce((a,t) => a+t.pro,  0) / prevN) : null;
+  const prevAvgKcal = prevN > 0 ? Math.round(prevTots.reduce((a,t) => a+t.kcal, 0) / prevN) : null;
+
+  return { b, w1Trend, w2Trend, trendDelta, noNewW, rateLabel, rateColor,
+           n, avgPro, avgKcal, proHit, kcalHit, adherence, adhColor,
+           prevAvgPro, prevAvgKcal, prevN };
+}
+
+/* ─── WEEKLY CHECK-IN VIEW ───────────────────────────────────────────────── */
+function vWCI() {
+  const { b, w1Trend, trendDelta, noNewW, rateLabel, rateColor,
+          n, avgPro, avgKcal, proHit, kcalHit, adherence, adhColor,
+          prevAvgPro, prevAvgKcal, prevN } = weeklyCheckIn();
+
+  const dayFmt = s => { const d = new Date(s+'T00:00:00'); return `${String(d.getDate()).padStart(2,'0')} ${MONTHS[d.getMonth()]}`; };
+  const endD = new Date(b.end+'T00:00:00');
+  const dateRange = `${dayFmt(b.start)} – ${dayFmt(b.end)} ${endD.getFullYear()}`;
+
+  // Empty state: no meals and no weight data at all
+  if (n === 0 && w1Trend === null) {
+    const t = new Date(); const dow = t.getDay() || 7;
+    const daysUntilSun = dow === 7 ? 7 : 7 - dow;
+    const ns = new Date(t); ns.setDate(t.getDate() + daysUntilSun);
+    const nss = `Sun, ${String(ns.getDate()).padStart(2,'0')} ${MONTHS[ns.getMonth()]}`;
+    return `<div class="card wci-dense">
+<div class="wci-hdr"><span>WEEKLY CHECK-IN</span><span>${dateRange}</span></div>
+<div style="text-align:center;padding:28px 0 16px">
+  <div style="font-size:28px;margin-bottom:14px">📋</div>
+  <div style="font-family:var(--fh);font-size:17px;font-weight:700;color:var(--text2)">First report available after ${nss}</div>
+  <div style="font-size:13px;color:var(--text3);margin-top:6px">Keep logging and check back Monday.</div>
+</div></div>`;
+  }
+
+  // ── Section 1: Weight ──
+  const twMain = w1Trend !== null ? `${w1Trend.toFixed(1)} kg` : '--';
+  let twDelta = '', twDeltaCol = 'var(--text3)';
+  if (trendDelta !== null && !noNewW) {
+    twDeltaCol = trendDelta < 0 ? 'var(--green)' : 'var(--red)';
+    twDelta = `${trendDelta < 0 ? '▼' : '▲'} ${Math.abs(trendDelta).toFixed(2)} kg`;
+  } else if (noNewW) {
+    twDelta = 'no new entries';
+  }
+  let rateVal = '--';
+  let effRateLabel = rateLabel, effRateColor = rateColor;
+  if (trendDelta !== null && !noNewW) {
+    rateVal = `${Math.abs(trendDelta).toFixed(2)} kg/wk`;
+  } else if (noNewW) {
+    effRateLabel = 'No Data'; effRateColor = 'var(--text3)';
+  }
+
+  // ── Section 2: Nutrition ──
+  const avgProStr  = n > 0 ? `avg ${avgPro}g`  : '--';
+  const avgKcalStr = n > 0 ? `avg ${avgKcal}`  : '--';
+  const proSub     = n > 0 ? `${proHit}/${n} days ≥ ${PRO_TARGET}g`         : 'no data';
+  const kcalSub    = n > 0 ? `${kcalHit}/${n} days ${KCAL_MIN}–${KCAL_MAX}` : 'no data';
+
+  // ── Section 3: Week-on-week (only if W-2 has data) ──
+  let wowRow = '';
+  if (n > 0 && prevN > 0) {
+    const pd = avgPro - prevAvgPro;
+    const kd = avgKcal - prevAvgKcal;
+    const pSpan = pd >= 0
+      ? `<span style="color:var(--green)">▲ +${pd}g</span>`
+      : `<span style="color:var(--red)">▼ ${Math.abs(pd)}g</span>`;
+    const kSpan = kd >= 0
+      ? `<span style="color:var(--green)">▲ +${kd}</span>`
+      : `<span style="color:var(--red)">▼ ${Math.abs(kd)}</span>`;
+    wowRow = `<div class="wci-sep"></div>
+<div class="wci-wow">vs prior week: Protein ${pSpan} &nbsp;·&nbsp; Calories ${kSpan}</div>`;
+  }
+
+  // ── Section 4: Adherence ──
+  const adhStr = adherence !== null ? `${adherence}%` : '--';
+  const onTarget = proHit + kcalHit;
+  const adhSub = n > 0 ? `${onTarget}/${2*n} days on target` : '';
+
+  return `<div class="card wci-dense">
+<div class="wci-hdr"><span>WEEKLY CHECK-IN</span><span>${dateRange}</span></div>
+<div class="wci-2col">
+  <div class="wci-col">
+    <div class="wci-lbl">TREND</div>
+    <div class="wci-big">${twMain}</div>
+    <div class="wci-sub" style="color:${twDeltaCol}">${twDelta}</div>
+  </div>
+  <div class="wci-col">
+    <div class="wci-lbl">RATE</div>
+    <div class="wci-big" style="color:${effRateColor}">${rateVal}</div>
+    <div class="wci-sub" style="color:${effRateColor};font-family:var(--fh);font-size:12px;font-weight:700;font-style:italic">${effRateLabel}</div>
+  </div>
+</div>
+<div class="wci-sep"></div>
+<div class="wci-2col">
+  <div class="wci-col">
+    <div class="wci-lbl">PROTEIN</div>
+    <div class="wci-big">${avgProStr}</div>
+    <div class="wci-sub">${proSub}</div>
+  </div>
+  <div class="wci-col">
+    <div class="wci-lbl">CALORIES</div>
+    <div class="wci-big">${avgKcalStr}</div>
+    <div class="wci-sub">${kcalSub}</div>
+  </div>
+</div>${wowRow}
+<div class="wci-sep"></div>
+<div class="wci-adh">
+  <div class="wci-lbl" style="margin-bottom:6px">ADHERENCE SCORE</div>
+  <div class="wci-adh-num" style="color:${adhColor}">${adhStr}</div>
+  ${adhSub ? `<div class="wci-sub" style="margin-top:4px">${adhSub}</div>` : ''}
+</div>
+</div>`;
+}
 
 /* ─── DASHBOARD VIEW ──────────────────────────────────────────────────────── */
 function vD() {
@@ -1611,7 +1812,7 @@ function vD() {
             <div style="font-size:28px;margin-bottom:8px">🍽️</div>
             <div style="font-family:var(--fh);font-size:14px;font-weight:700;color:var(--text2);margin-bottom:4px">No meals logged yet</div>
             <div style="font-size:12px;color:var(--text3);margin-bottom:14px">Start tracking your nutrition</div>
-            <button class="btn bb" onclick="showView('vN')" style="padding:8px 20px;font-size:13px">Log a meal</button>
+            <button class="btn bb" onclick="go('nutrition')" style="padding:8px 20px;font-size:13px">Log a meal</button>
            </div>`
         : ms.map((m,i) => {
             const ings = m._ings && m._ings.length ? m._ings : null;
