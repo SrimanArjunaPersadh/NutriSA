@@ -1172,28 +1172,27 @@ async function syncFromCloud() {
           time:   r.logged_time || '',
         });
       });
-      /* Merge strategy: cloud is source of truth for count.
-         But preserve _ings and _libId from local entries when cloud
-         doesn't have them yet (race condition during save). */
+      /* Merge strategy: cloud is source of truth.
+         Match by _id to patch _ings/_libId from local (race condition guard).
+         Append any local entries with no _id or unknown _id (pending upload). */
       const localMeals = S.meals || {};
       const allDates = new Set([...Object.keys(cloudMeals), ...Object.keys(localMeals)]);
       const merged = {};
       allDates.forEach(date => {
         const cloud = cloudMeals[date] || [];
         const local = localMeals[date] || [];
-        if (cloud.length >= local.length) {
-          /* Use cloud but patch in _ings/_libId from local where missing */
-          merged[date] = cloud.map((cm, i) => {
-            const lm = local[i];
-            return {
-              ...cm,
-              _ings:  cm._ings  || (lm && lm._ings)  || null,
-              _libId: cm._libId || (lm && lm._libId) || null,
-            };
-          });
-        } else {
-          merged[date] = local;
-        }
+        const cloudIds = new Set(cloud.map(cm => cm._id).filter(Boolean));
+        const patched = cloud.map(cm => {
+          const lm = local.find(l => l._id === cm._id);
+          return {
+            ...cm,
+            _ings:  cm._ings  || (lm && lm._ings)  || null,
+            _libId: cm._libId || (lm && lm._libId) || null,
+          };
+        });
+        /* Local entries never successfully uploaded (no _id assigned yet) */
+        const unsynced = local.filter(lm => !lm._id);
+        merged[date] = [...patched, ...unsynced];
       });
       S.meals = merged;
       LS.set('sc_m', S.meals);
