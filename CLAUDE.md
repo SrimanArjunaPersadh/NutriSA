@@ -50,7 +50,7 @@ User action
 
 On app load: `cloudSyncAll()` fetches all four Supabase tables and merges with localStorage (cloud wins on conflict by ID).
 
-### Four Supabase Tables
+### Five Supabase Tables
 
 | Table | Local cache key | In-memory var |
 |-------|----------------|---------------|
@@ -58,6 +58,12 @@ On app load: `cloudSyncAll()` fetches all four Supabase tables and merges with l
 | `meal_logs` | `sc_m` | `mLog` |
 | `custom_meals` | `sc_cu` | `cuMeals` |
 | `water_logs` | `sc_wa` | `waLog` |
+| `custom_foods` | `sc_cf` | `S.customFoods` |
+
+`custom_foods` holds scanned / manually-added ingredients (barcode-scanner feature).
+Rows are stored in the same `{name, cat, unit, defaultQty, per100\|perUnit}` shape as
+`FOOD_DB` and merged into `searchFoodDB()`, so they behave as first-class ingredients.
+The `barcode` column is indexed for instant local re-lookup (`findCustomFoodByBarcode`).
 
 ### Meal Object Shape
 

@@ -450,7 +450,7 @@ function debounce(fn, ms) {
 }
 
 let S = {
-  weights:[], meals:{}, custom:[], view:'dashboard',
+  weights:[], meals:{}, custom:[], customFoods:[], view:'dashboard',
   mdate: td(), wtab:'all', wfrom:'', wto:'', wmonth:'', wpick:{from:'',to:'',viewMonth:''}, wpickOpen:false, dashView:{offset:0,range:30}, openCards:{}, gO:{},
   dpOpen:false, dpViewMonth:'', dpDir:'',
   wdDate: td(), wdOpen:false, wdViewMonth:'', wdDir:'',
@@ -920,7 +920,11 @@ function unitMin(food) { return 0; }
 function searchFoodDB(q) {
   if (!q || q.trim().length < 1) return [];
   const lower = q.toLowerCase().trim();
-  return FOOD_DB.filter(f => f.name.toLowerCase().includes(lower)).slice(0, 8);
+  /* Built-in FOOD_DB + user's scanned/custom foods (sc_cf). Custom foods are
+     stored in the same {name,cat,unit,defaultQty,per100|perUnit} shape, so they
+     flow through foodMacros/mbAddIng identically. */
+  const pool = [...FOOD_DB, ...(S.customFoods || [])];
+  return pool.filter(f => f.name.toLowerCase().includes(lower)).slice(0, 8);
 }
 
 /* ─── MEAL BUILDER ────────────────────────────────────────────────────────── */
@@ -1137,17 +1141,19 @@ async function syncFromCloud() {
   if (!sb) { syncStatus('offline', 'Local only'); render(); return; }
   syncStatus('syncing', 'Syncing...');
   try {
-    const [wRes, mRes, cRes, waRes] = await Promise.all([
+    const [wRes, mRes, cRes, waRes, cfRes] = await Promise.all([
       sb.from('weight_logs').select('*').order('date', {ascending:true}),
       sb.from('meal_logs').select('*').order('date').order('sort_order'),
       sb.from('custom_meals').select('*').order('created_at'),
       sb.from('water_logs').select('*'),
+      sb.from('custom_foods').select('*').order('created_at'),
     ]);
 
     if (wRes.error)  { console.error('weight_logs error:', wRes.error); throw wRes.error; }
     if (mRes.error)  { console.error('meal_logs error:', mRes.error); throw mRes.error; }
     if (cRes.error)  { console.error('custom_meals error:', cRes.error); throw cRes.error; }
     if (waRes.error) { console.error('water_logs error:', waRes.error); throw waRes.error; }
+    if (cfRes.error) { console.error('custom_foods error:', cfRes.error); throw cfRes.error; }
 
     /* Weight logs → array of {date, w} */
     if (wRes.data.length > 0) {
@@ -1204,7 +1210,7 @@ async function syncFromCloud() {
 
     /* Custom meals */
     if (cRes.data.length > 0) {
-      S.custom = cRes.data.map(r => ({
+      const cloudCustom = cRes.data.map(r => ({
         _id:         r.id,   // kept for cloud delete operations
         id:          r.id,   // also expose as id so (c.id||c.name) lookups work
         name:        r.name,
@@ -1216,7 +1222,38 @@ async function syncFromCloud() {
         fat:         +parseFloat(r.fat).toFixed(1),
         ingredients: r.ingredients || [],
       }));
+      /* Preserve local meals never successfully uploaded (no _id), unless the
+         cloud already has one with the same name (custom_meals upserts on name).
+         Prevents losing a meal saved while offline / on a failed cloud write. */
+      const cloudNames = new Set(cloudCustom.map(m => m.name.toLowerCase()));
+      const unsynced = (S.custom || []).filter(m => !m._id && !cloudNames.has(m.name.toLowerCase()));
+      S.custom = [...cloudCustom, ...unsynced];
       LS.set('sc_cu', S.custom);
+    }
+
+    /* Custom foods (scanned / manually-added ingredients) — cloud is source of
+       truth. Stored in FOOD_DB shape so they merge into searchFoodDB(). */
+    if (cfRes.data.length > 0) {
+      const cloudFoods = cfRes.data.map(r => ({
+        _id:        r.id,
+        name:       r.name,
+        cat:        r.cat,
+        unit:       r.unit,
+        defaultQty: r.default_qty != null ? parseFloat(r.default_qty) : (isGramUnit({unit:r.unit}) ? 100 : 1),
+        ...(r.per100   ? {per100:   r.per100}   : {}),
+        ...(r.per_unit ? {perUnit:  r.per_unit} : {}),
+        ...(r.unit_label ? {unitLabel: r.unit_label} : {}),
+        barcode:    r.barcode || null,
+      }));
+      /* Preserve local entries never successfully uploaded (no _id), unless the
+         cloud already has the same food (match by barcode, else name). Mirrors
+         the meal_logs unsynced-entry guard above. Prevents losing a food added
+         while offline / on a failed cloud write. */
+      const keyOf = f => (f.barcode ? 'b:'+f.barcode : 'n:'+f.name.toLowerCase());
+      const cloudKeys = new Set(cloudFoods.map(keyOf));
+      const unsynced = (S.customFoods || []).filter(f => !f._id && !cloudKeys.has(keyOf(f)));
+      S.customFoods = [...cloudFoods, ...unsynced];
+      LS.set('sc_cf', S.customFoods);
     }
 
     /* Water logs */
@@ -1329,6 +1366,74 @@ async function cloudDelCustomMeal(mealId) {
   if (!sb || !mealId) return true;
   syncStatus('syncing', 'Deleting...');
   const {error} = await sb.from('custom_meals').delete().eq('id', mealId);
+  if (error) { syncStatus('error', 'Delete failed'); return false; }
+  syncStatus('synced', 'Synced');
+  return true;
+}
+
+/* ── Custom food (scanned ingredient) actions ── */
+
+/* Look up a previously-saved custom food by its barcode for instant fill.
+   Returns the food object or null. Local-only — no network. */
+function findCustomFoodByBarcode(code) {
+  if (!code) return null;
+  const c = String(code).trim();
+  return (S.customFoods || []).find(f => f.barcode && String(f.barcode) === c) || null;
+}
+
+/* Upsert a custom food to Supabase. Conflict target is `barcode` when present
+   (re-scanning the same product updates the row), else `name`. Returns row id. */
+async function cloudSaveCustomFood(food) {
+  if (!sb) return null;
+  syncStatus('syncing', 'Saving...');
+  const row = {
+    name: food.name, cat: food.cat || 'Other', unit: food.unit || 'g',
+    default_qty: food.defaultQty != null ? food.defaultQty : (isGramUnit(food) ? 100 : 1),
+    per100:    food.per100  || null,
+    per_unit:  food.perUnit || null,
+    unit_label: food.unitLabel || null,
+    barcode:   food.barcode || null,
+  };
+  const onConflict = food.barcode ? 'barcode' : 'name';
+  const {data, error} = await sb.from('custom_foods').upsert(row, {onConflict}).select().single();
+  if (error) { console.error('custom_foods save error:', error); syncStatus('error', 'Save failed'); return null; }
+  syncStatus('synced', 'Saved');
+  return data.id;
+}
+
+/* Data-layer entry point: persist a custom food locally (immediate, offline-safe)
+   then push to cloud. Dedupes by barcode, else by name. Returns the stored object.
+   The scan / manual-add UI (later steps) calls this. */
+async function saveCustomFood(food) {
+  /* Normalise to FOOD_DB shape */
+  const f = {
+    name: (food.name || '').trim(),
+    cat:  food.cat || 'Other',
+    unit: food.unit || 'g',
+    defaultQty: food.defaultQty != null ? food.defaultQty : (isGramUnit(food) ? 100 : 1),
+    ...(food.per100  ? {per100:  food.per100}  : {}),
+    ...(food.perUnit ? {perUnit: food.perUnit} : {}),
+    ...(food.unitLabel ? {unitLabel: food.unitLabel} : {}),
+    barcode: food.barcode ? String(food.barcode).trim() : null,
+  };
+  if (!f.name) { console.warn('saveCustomFood: name required'); return null; }
+  if (!f.per100 && !f.perUnit) { console.warn('saveCustomFood: per100 or perUnit required'); return null; }
+  /* Replace existing entry (match by barcode first, else name) */
+  const idx = (S.customFoods || []).findIndex(x =>
+    (f.barcode && x.barcode && String(x.barcode) === f.barcode) ||
+    (!f.barcode && x.name.toLowerCase() === f.name.toLowerCase()));
+  if (idx >= 0) { f._id = S.customFoods[idx]._id; S.customFoods[idx] = f; }
+  else { S.customFoods.push(f); }
+  LS.set('sc_cf', S.customFoods);
+  const cloudId = await cloudSaveCustomFood(f);
+  if (cloudId) { f._id = cloudId; LS.set('sc_cf', S.customFoods); }
+  return f;
+}
+
+async function cloudDelCustomFood(foodId) {
+  if (!sb || !foodId) return true;
+  syncStatus('syncing', 'Deleting...');
+  const {error} = await sb.from('custom_foods').delete().eq('id', foodId);
   if (error) { syncStatus('error', 'Delete failed'); return false; }
   syncStatus('synced', 'Synced');
   return true;
@@ -1532,10 +1637,11 @@ function boot() {
     if (!e.target.closest('#dash-wrap') && S.dashOpen) { S.dashOpen=false; render(); }
   });
   /* Load from localStorage immediately — app is usable before cloud responds */
-  S.weights = LS.get('sc_w') || [];
-  S.meals   = LS.get('sc_m') || {};
-  S.custom  = LS.get('sc_cu') || [];
-  S.water   = LS.get('sc_wa') || {};
+  S.weights     = LS.get('sc_w') || [];
+  S.meals       = LS.get('sc_m') || {};
+  S.custom      = LS.get('sc_cu') || [];
+  S.customFoods = LS.get('sc_cf') || [];
+  S.water       = LS.get('sc_wa') || {};
   render();
   /* Sync from Supabase after render — don't block UI */
   if (sb) {
