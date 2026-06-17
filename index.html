@@ -1157,7 +1157,7 @@ function cfRenderForm() {
       </div>
       <div>
         <label class="fl" id="cf-qty-lbl">Default Qty (g)</label>
-        <input id="cf-qty" type="number" inputmode="decimal" min="0" step="any" value="100" onchange="cfQtyChange()"/>
+        <input id="cf-qty" type="text" inputmode="decimal" value="100" onchange="cfQtyChange()"/>
       </div>
     </div>
 
@@ -1166,10 +1166,10 @@ function cfRenderForm() {
       <button type="button" id="cf-serving-toggle" onclick="cfToggleServing()" style="display:none;background:none;border:none;cursor:pointer;font-family:var(--fh);font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.6px;padding:0">↔ per 100g</button>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;align-items:end">
-      <div><label class="fl">Calories</label><input id="cf-kcal" type="number" inputmode="decimal" min="0" step="any" placeholder="kcal"/></div>
-      <div><label class="fl" style="color:var(--protein)">Protein</label><input id="cf-pro" type="number" inputmode="decimal" min="0" step="any" placeholder="g"/></div>
-      <div><label class="fl" style="color:var(--carbs)">Carbs</label><input id="cf-carb" type="number" inputmode="decimal" min="0" step="any" placeholder="g"/></div>
-      <div><label class="fl" style="color:var(--fats)">Fat</label><input id="cf-fat" type="number" inputmode="decimal" min="0" step="any" placeholder="g"/></div>
+      <div><label class="fl">Calories</label><input id="cf-kcal" type="text" inputmode="decimal" placeholder="kcal"/></div>
+      <div><label class="fl" style="color:var(--protein)">Protein</label><input id="cf-pro" type="text" inputmode="decimal" placeholder="g"/></div>
+      <div><label class="fl" style="color:var(--carbs)">Carbs</label><input id="cf-carb" type="text" inputmode="decimal" placeholder="g"/></div>
+      <div><label class="fl" style="color:var(--fats)">Fat</label><input id="cf-fat" type="text" inputmode="decimal" placeholder="g"/></div>
     </div>
 
     <div style="margin-top:10px">
@@ -1237,6 +1237,25 @@ function parseServingGrams(p) {
   return null;
 }
 
+const CF_NUM_RE = /^-?\d*[.,]?\d+$/;
+/* True (and alerts + focuses) if any macro/qty box holds non-numeric junk like
+   "12abc" or "1.2.3". Shared by Save and the live serving-size rescale so
+   parseFloat can't silently coerce malformed box values. A field is valid if it's
+   blank or a clean number with one optional comma/period decimal; the optional
+   leading "-" is allowed so cfSave's dedicated negative-value check still gives
+   its specific message. */
+function cfRejectBadNumber() {
+  for (const [id, lbl] of [['cf-kcal','Calories'],['cf-pro','Protein'],['cf-carb','Carbs'],['cf-fat','Fat'],['cf-qty','Default Qty']]) {
+    const raw = ((document.getElementById(id)||{}).value || '').trim();
+    if (raw && !CF_NUM_RE.test(raw)) {
+      alert(`${lbl} must be a number (e.g. 11 or 11,3) — "${raw}" isn't valid.`);
+      document.getElementById(id)?.focus();
+      return true;
+    }
+  }
+  return false;
+}
+
 /* Read/write the four macro boxes as numbers. Display rounds to 1 decimal (the
    project rounds at display time, never in stored data). */
 function _cfBoxes() {
@@ -1282,7 +1301,10 @@ function cfShowPer100() {
   cfServing.active = false;
 }
 
-function cfToggleServing() { cfServing.active ? cfShowPer100() : cfShowServing(); }
+function cfToggleServing() {
+  if (cfRejectBadNumber()) return;   // don't rescale off a coerced junk box
+  cfServing.active ? cfShowPer100() : cfShowServing();
+}
 
 /* User edited Default Qty while on the per-serving view → rescale the macros to the
    new amount and remember it as the serving size. Scaling boxes AND grams together
@@ -1290,6 +1312,7 @@ function cfToggleServing() { cfServing.active ? cfShowPer100() : cfShowServing()
    In per-100g mode the qty is independent of the macros, so we leave them untouched. */
 function cfQtyChange() {
   if (!cfServing.active || !cfServing.grams) return;
+  if (cfRejectBadNumber()) return;   // don't rescale off a coerced junk box
   const el = document.getElementById('cf-qty');
   const newX = parseFloat(((el||{}).value || '').replace(',', '.'));
   if (!isFinite(newX) || newX <= 0) return;
@@ -1565,6 +1588,12 @@ async function cfSave() {
 
   const name = val('cf-name');
   if (!name) { alert('Please enter a food name'); document.getElementById('cf-name')?.focus(); return; }
+
+  /* Reject malformed numeric input BEFORE parsing — shared with the live
+     serving-size rescale (cfRejectBadNumber). type="text" lets the SA comma
+     keypad through (the fix) but also lets junk like "12abc"/"1.2.3" through,
+     which parseFloat would silently coerce; this rejects it up front. */
+  if (cfRejectBadNumber()) return;
 
   const kcal = num('cf-kcal'), pro = num('cf-pro')??0, carb = num('cf-carb')??0, fat = num('cf-fat')??0;
   if (kcal == null) { alert('Calories are required'); document.getElementById('cf-kcal')?.focus(); return; }
