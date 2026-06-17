@@ -370,6 +370,15 @@ input:focus,select:focus{border-color:var(--blue)}input::placeholder{color:var(-
 .dp-day.sel.today::after,.dp-day.range-lo.today::after,.dp-day.range-hi.today::after{background:#fff}
 .dp-day.outside{color:var(--text3);opacity:.35;pointer-events:none}
 .dp-status{font-size:13px;color:var(--text3);margin-top:8px;min-height:18px}
+/* Mobile: the popup is normally anchored right:0 and grows leftward, which on a
+   narrow phone pushes the 252px calendar off the left edge (month header + Mon/Tue/Wed
+   clipped). On small screens, detach it and center it in the viewport like a mini-modal
+   so the whole calendar is always on-screen and tappable, regardless of which column the
+   button sits in. animation:none avoids the slideIn translateY clobbering our centring transform. */
+@media(max-width:768px){
+  .dp-popup{position:fixed;top:50%;left:50%;right:auto;transform:translate(-50%,-50%);animation:dpFade .12s ease-out}
+}
+@keyframes dpFade{from{opacity:0}to{opacity:1}}
 /* Aurora background */
 @keyframes aurora {
   from { background-position: 50% 50%, 50% 50%; }
@@ -1244,14 +1253,23 @@ const CF_NUM_RE = /^-?\d*[.,]?\d+$/;
    blank or a clean number with one optional comma/period decimal; the optional
    leading "-" is allowed so cfSave's dedicated negative-value check still gives
    its specific message. */
+/* Single source of truth for "is this text box a valid number?". Returns true
+   (and alerts + focuses) when the box holds non-numeric junk. allowBlank lets the
+   macro boxes treat empty as OK (blank = 0 elsewhere); for required fields like the
+   weight box, pass allowBlank:false so an empty box is also rejected. */
+function rejectBadNumber(id, lbl, allowBlank = true) {
+  const raw = ((document.getElementById(id)||{}).value || '').trim();
+  const ok = allowBlank ? (!raw || CF_NUM_RE.test(raw)) : (raw && CF_NUM_RE.test(raw));
+  if (!ok) {
+    alert(`${lbl} must be a number (e.g. 11 or 11,3) — "${raw}" isn't valid.`);
+    document.getElementById(id)?.focus();
+    return true;
+  }
+  return false;
+}
 function cfRejectBadNumber() {
   for (const [id, lbl] of [['cf-kcal','Calories'],['cf-pro','Protein'],['cf-carb','Carbs'],['cf-fat','Fat'],['cf-qty','Default Qty']]) {
-    const raw = ((document.getElementById(id)||{}).value || '').trim();
-    if (raw && !CF_NUM_RE.test(raw)) {
-      alert(`${lbl} must be a number (e.g. 11 or 11,3) — "${raw}" isn't valid.`);
-      document.getElementById(id)?.focus();
-      return true;
-    }
+    if (rejectBadNumber(id, lbl)) return true;
   }
   return false;
 }
@@ -2903,7 +2921,7 @@ function vW() {
     <div class="clbl">Log Weight</div>
     <div class="fr fr2">
       <div><label class="fl">Date</label>${renderDatePicker(S.wdDate,{dateExpr:'S.wdDate',openKey:'wdOpen',vmKey:'wdViewMonth',dirKey:'wdDir',wrapId:'wd-wrap'})}</div>
-      <div><label class="fl">Weight (kg)</label><input type="number" id="wv" step="0.1" placeholder="e.g. 96.8"/></div>
+      <div><label class="fl">Weight (kg)</label><input type="text" inputmode="decimal" id="wv" placeholder="e.g. 96.8"/></div>
     </div>
     <button class="btn bb bfw" onclick="logW()" style="margin-bottom:14px">Log Weight</button>
     <div style="padding:13px;background:var(--bg3);border-radius:var(--rs);font-size:12px;color:var(--text3);line-height:1.9;border:1px solid var(--border)">
@@ -3463,7 +3481,8 @@ async function delM(i) {
 }
 
 async function logW() {
-  const date=S.wdDate||td(), w=parseFloat(document.getElementById('wv').value);
+  if (rejectBadNumber('wv', 'Weight', false)) return;  // reject comma-key junk instead of coercing it
+  const date=S.wdDate||td(), w=parseFloat((document.getElementById('wv').value||'').replace(',', '.'));
   if (!date||isNaN(w)) return;
   const i = S.weights.findIndex(x=>x.date===date);
   if (i>=0) S.weights[i].w = w; else S.weights.push({date,w});
