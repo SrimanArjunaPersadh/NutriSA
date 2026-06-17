@@ -3493,7 +3493,9 @@ function dC() {
   const end=s.length-S.dashView.offset, start=Math.max(0,end-S.dashView.range);
   const vis=s.slice(start,end);
   const {labels,datasets}=bDS(vis);
-  CH['d']=new Chart(el,{type:'line',data:{labels,datasets},options:mO(vis.map(x=>x.w))});
+  /* Scale Y to the FULL weight history (s), not just the visible window, so the
+     Dashboard Y-axis matches the Weight page chart (which scales to fW() = all). */
+  CH['d']=new Chart(el,{type:'line',data:{labels,datasets},options:mO(s.map(x=>x.w))});
   initDashChartTouch(el,s);
 }
 
@@ -3508,7 +3510,7 @@ function updateDashChart() {
   const {labels,datasets}=bDS(vis);
   chart.data.labels=labels;
   chart.data.datasets.forEach((ds,i)=>{ if(datasets[i]) ds.data=datasets[i].data; });
-  const aw=vis.map(x=>x.w);
+  const aw=s.map(x=>x.w); // full history → stable Y that matches the Weight page chart
   chart.options.scales.y.min=Math.min(GOAL-1,...aw)-0.5;
   chart.options.scales.y.max=Math.max(...aw)+0.5;
   chart.update('none');
