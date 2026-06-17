@@ -1147,16 +1147,19 @@ function cfRenderForm() {
         </select>
       </div>
       <div id="cf-unit-wrap" style="display:none">
-        <label class="fl">Unit Name</label>
+        <label class="fl" id="cf-unit-lbl">Unit Name</label>
         <input id="cf-unit" type="text" placeholder="slice, scoop, piece" autocomplete="off"/>
       </div>
       <div>
         <label class="fl" id="cf-qty-lbl">Default Qty (g)</label>
-        <input id="cf-qty" type="number" inputmode="decimal" min="0" step="any" value="100"/>
+        <input id="cf-qty" type="number" inputmode="decimal" min="0" step="any" value="100" onchange="cfQtyChange()"/>
       </div>
     </div>
 
-    <div style="font-family:var(--fh);font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px;margin:14px 0 6px" id="cf-macro-hdr">Macros per 100 g</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin:14px 0 6px">
+      <span style="font-family:var(--fh);font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.8px" id="cf-macro-hdr">Macros per 100 g</span>
+      <button type="button" id="cf-serving-toggle" onclick="cfToggleServing()" style="display:none;background:none;border:none;cursor:pointer;font-family:var(--fh);font-size:11px;font-weight:700;color:var(--blue);text-transform:uppercase;letter-spacing:.6px;padding:0">↔ per 100g</button>
+    </div>
     <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:8px;align-items:end">
       <div><label class="fl">Calories</label><input id="cf-kcal" type="number" inputmode="decimal" min="0" step="any" placeholder="kcal"/></div>
       <div><label class="fl" style="color:var(--protein)">Protein</label><input id="cf-pro" type="number" inputmode="decimal" min="0" step="any" placeholder="g"/></div>
@@ -1200,9 +1203,95 @@ function cfRenderForm() {
 </div>`;
 }
 
+/* ─── SERVING-SIZE VIEW (per-serving display over canonical per-100g storage) ──
+   When OFF reports a serving, we SHOW the macros for one serving so they match the
+   label, but we always STORE per-100g (cfSave converts back). cfServing remembers
+   the serving size and which view is on screen. */
+let cfServing = { grams: null, active: false };
+
+/* Read a positive serving number from an OFF product, or null. serving_quantity is
+   already a clean number (grams for solids, ml for drinks); if it's absent we try to
+   pull "<number> g/ml" out of the free-text serving_size label. Commas → periods for
+   SA decimals, same as the macro inputs. */
+function parseServingGrams(p) {
+  let x = p.serving_quantity;
+  if (x != null) { x = parseFloat(String(x).replace(',', '.')); if (isFinite(x) && x > 0) return x; }
+  const m = (p.serving_size || '').toLowerCase().replace(',', '.').match(/(\d+(?:\.\d+)?)\s*(?:g|ml)\b/);
+  if (m) { const v = parseFloat(m[1]); if (isFinite(v) && v > 0) return v; }
+  return null;
+}
+
+/* Read/write the four macro boxes as numbers. Display rounds to 1 decimal (the
+   project rounds at display time, never in stored data). */
+function _cfBoxes() {
+  return ['cf-kcal','cf-pro','cf-carb','cf-fat']
+    .map(id => parseFloat(((document.getElementById(id)||{}).value || '').replace(',', '.')));
+}
+function _cfSetBoxes(vals) {
+  ['cf-kcal','cf-pro','cf-carb','cf-fat'].forEach((id, i) => {
+    const e = document.getElementById(id); if (!e) return;
+    e.value = (vals[i] == null || !isFinite(vals[i])) ? '' : String(Math.round(vals[i] * 10) / 10);
+  });
+}
+
+/* Flip the on-screen boxes from per-100g to one serving: macros × X/100, Qty = X. */
+function cfShowServing() {
+  const X = cfServing.grams; if (!X) return;
+  const u = (document.getElementById('cf-type')||{}).value === 'ml' ? 'ml' : 'g';
+  _cfSetBoxes(_cfBoxes().map(v => v * X / 100));
+  const qty = document.getElementById('cf-qty'); if (qty) qty.value = String(X);
+  const hdr = document.getElementById('cf-macro-hdr'); if (hdr) hdr.textContent = `Macros per serving (${X} ${u})`;
+  const lbl = document.getElementById('cf-qty-lbl'); if (lbl) lbl.textContent = `Default Qty (${u}) · 1 serving`;
+  const tgl = document.getElementById('cf-serving-toggle'); if (tgl) { tgl.style.display = ''; tgl.textContent = `↔ per 100${u}`; }
+  /* Offer to name the serving: if filled, Save stores a per-unit food so it logs by
+     the unit (e.g. 1.5 biscuits) instead of grams. Blank = save in grams as before. */
+  const uw = document.getElementById('cf-unit-wrap'); if (uw) uw.style.display = '';
+  const ul = document.getElementById('cf-unit-lbl'); if (ul) ul.textContent = 'Log as (optional)';
+  const ui = document.getElementById('cf-unit'); if (ui) ui.placeholder = 'biscuit, bar, slice…';
+  cfServing.active = true;
+}
+
+/* Flip back to per-100g: macros × 100/X (only if we're currently on the serving
+   view), Qty = 100. The toggle stays visible so you can switch back to the serving. */
+function cfShowPer100() {
+  const X = cfServing.grams;
+  const u = (document.getElementById('cf-type')||{}).value === 'ml' ? 'ml' : 'g';
+  if (cfServing.active && X) _cfSetBoxes(_cfBoxes().map(v => v * 100 / X));
+  const qty = document.getElementById('cf-qty'); if (qty) qty.value = '100';
+  const hdr = document.getElementById('cf-macro-hdr'); if (hdr) hdr.textContent = `Macros per 100 ${u}`;
+  const lbl = document.getElementById('cf-qty-lbl'); if (lbl) lbl.textContent = `Default Qty (${u})`;
+  const tgl = document.getElementById('cf-serving-toggle');
+  if (tgl && X) { tgl.style.display = ''; tgl.textContent = `↔ per serving (${X} ${u})`; }
+  const uw = document.getElementById('cf-unit-wrap'); if (uw) uw.style.display = 'none';
+  cfServing.active = false;
+}
+
+function cfToggleServing() { cfServing.active ? cfShowPer100() : cfShowServing(); }
+
+/* User edited Default Qty while on the per-serving view → rescale the macros to the
+   new amount and remember it as the serving size. Scaling boxes AND grams together
+   keeps boxes/grams = per-100g/100, so Save still recovers the correct per-100g.
+   In per-100g mode the qty is independent of the macros, so we leave them untouched. */
+function cfQtyChange() {
+  if (!cfServing.active || !cfServing.grams) return;
+  const el = document.getElementById('cf-qty');
+  const newX = parseFloat(((el||{}).value || '').replace(',', '.'));
+  if (!isFinite(newX) || newX <= 0) return;
+  const oldX = cfServing.grams;
+  if (newX === oldX) return;
+  _cfSetBoxes(_cfBoxes().map(v => v * newX / oldX));
+  cfServing.grams = newX;
+  const u = (document.getElementById('cf-type')||{}).value === 'ml' ? 'ml' : 'g';
+  const hdr = document.getElementById('cf-macro-hdr'); if (hdr) hdr.textContent = `Macros per serving (${newX} ${u})`;
+}
+
 /* Toggle unit-name field + macro/qty labels when switching measurement type.
    Per-unit foods must carry a non-gram unit so isGramUnit() stays false. */
 function cfTypeChange() {
+  /* Any manual type switch leaves the per-serving view; reset state + hide toggle.
+     (cfLookup re-applies the serving view AFTER calling this.) */
+  cfServing = { grams: null, active: false };
+  const _tgl = document.getElementById('cf-serving-toggle'); if (_tgl) _tgl.style.display = 'none';
   const type = (document.getElementById('cf-type')||{}).value || 'g';
   const unitWrap = document.getElementById('cf-unit-wrap');
   const qtyLbl = document.getElementById('cf-qty-lbl');
@@ -1210,6 +1299,9 @@ function cfTypeChange() {
   const qty = document.getElementById('cf-qty');
   if (type === 'unit') {
     if (unitWrap) unitWrap.style.display = '';
+    /* Restore the manual per-unit labels (the serving view borrows this field). */
+    const ul = document.getElementById('cf-unit-lbl'); if (ul) ul.textContent = 'Unit Name';
+    const ui = document.getElementById('cf-unit'); if (ui) ui.placeholder = 'slice, scoop, piece';
     if (qtyLbl) qtyLbl.textContent = 'Default Qty (units)';
     if (macroHdr) macroHdr.textContent = 'Macros per unit';
     if (qty && (qty.value==='100'||qty.value==='')) qty.value = '1';
@@ -1265,7 +1357,7 @@ async function cfLookup() {
        header from fetch (it's a "forbidden header"), so OFF sees the browser's UA. */
     const ctrl = new AbortController();
     const timer = setTimeout(() => ctrl.abort(), 5000);
-    const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=product_name,brands,nutriments,quantity`;
+    const url = `https://world.openfoodfacts.org/api/v2/product/${encodeURIComponent(code)}.json?fields=product_name,brands,nutriments,quantity,serving_size,serving_quantity`;
     let res;
     try { res = await fetch(url, {signal: ctrl.signal}); }
     finally { clearTimeout(timer); }
@@ -1308,6 +1400,16 @@ async function cfLookup() {
     status(missing
       ? `Filled from Open Food Facts — ${missing} value(s) missing, please complete & check.`
       : '✓ Filled from Open Food Facts — please double-check, then Save Food.');
+
+    /* Serving size: OFF gives serving_quantity (a clean number — grams for solids,
+       ml for drinks) and serving_size (raw label text). If we can read a positive
+       number, switch the form to a per-serving view: Default Qty = that number and
+       the four macro boxes recalculated from per-100g down to one serving. The
+       canonical per-100g values are restored at Save time, so storage stays correct. */
+    const sg = parseServingGrams(p);
+    cfServing.grams = sg; cfServing.active = false;
+    if (sg) cfShowServing();
+    else { const t = document.getElementById('cf-serving-toggle'); if (t) t.style.display = 'none'; }
   } catch (e) {
     console.error('Open Food Facts lookup failed:', e);
     status(e.name === 'AbortError'
@@ -1347,8 +1449,29 @@ async function cfSave() {
     }
     if (!unit) unit = 'unit';  // never let a per-unit food fall back to grams
     food = {name, cat, unit, unitLabel: unit, defaultQty: num('cf-qty') ?? 1, perUnit: macros, barcode: barcode || null};
+  } else if (cfServing.active && cfServing.grams && val('cf-unit')) {
+    /* Per-serving view + a named serving → save as a per-unit food so it logs by the
+       unit (e.g. 1.5 biscuits) instead of grams. The boxes already show macros for one
+       serving, so they ARE the per-unit macros; defaultQty starts at 1 unit, and the
+       label keeps the gram weight for reference, e.g. "biscuit (40g)". */
+    let unit = val('cf-unit').toLowerCase();
+    if (unit === 'g' || unit === 'ml') {
+      alert(`"${unit}" is a weight/volume unit, so it can't name a serving. Use a count name like biscuit, bar, or piece — or clear it to save in grams.`);
+      document.getElementById('cf-unit')?.focus();
+      return;
+    }
+    food = {name, cat, unit, unitLabel: `${unit} (${cfServing.grams}${type === 'ml' ? 'ml' : 'g'})`, defaultQty: 1, perUnit: macros, barcode: barcode || null};
   } else {
-    food = {name, cat, unit: type, defaultQty: num('cf-qty') ?? 100, per100: macros, barcode: barcode || null};
+    /* Per-serving view shows macros for one serving, but we STORE per-100g so the
+       food stays correct at any quantity. Divide the displayed values back out by the
+       serving size; defaultQty (the qty box) keeps the serving so it defaults to 1
+       serving when used. Round to 2 dp — enough precision, display rounds to whole. */
+    let per100 = macros;
+    if (cfServing.active && cfServing.grams) {
+      const X = cfServing.grams, c = v => Math.round((v * 100 / X) * 100) / 100;
+      per100 = {kcal: c(kcal), pro: c(pro), carb: c(carb), fat: c(fat)};
+    }
+    food = {name, cat, unit: type, defaultQty: num('cf-qty') ?? 100, per100, barcode: barcode || null};
   }
 
   /* Overwrite confirmation — mirror exactly what saveCustomFood() will do so the
