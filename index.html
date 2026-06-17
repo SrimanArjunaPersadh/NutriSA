@@ -6,7 +6,7 @@
      send data. 'unsafe-inline' is required because the app uses inline <script>, inline
      onclick handlers, and inline styles throughout. connect-src is the real exfil defense:
      even compromised CDN code can only talk to Supabase + Open Food Facts, not an attacker host. -->
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://ajajsaquxmimsdxbueqb.supabase.co wss://ajajsaquxmimsdxbueqb.supabase.co https://world.openfoodfacts.org; object-src 'none'; base-uri 'self'"/>
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob:; media-src 'self' blob:; connect-src 'self' https://ajajsaquxmimsdxbueqb.supabase.co wss://ajajsaquxmimsdxbueqb.supabase.co https://world.openfoodfacts.org https://cdn.jsdelivr.net; object-src 'none'; base-uri 'self'"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
 <title>NutriSA — Nutrition & Weight Tracker</title>
 <link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:ital,wght@0,400;0,600;0,700;0,800;1,700;1,800&family=Barlow:wght@300;400;500;600&display=swap" rel="stylesheet"/>
