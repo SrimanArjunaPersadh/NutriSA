@@ -1170,8 +1170,19 @@ function cfRenderForm() {
     <div style="margin-top:10px">
       <label class="fl">Barcode (optional)</label>
       <div style="display:flex;gap:8px;align-items:stretch">
-        <input id="cf-barcode" type="text" inputmode="numeric" placeholder="Type a barcode, then Look up to auto-fill" autocomplete="off" style="flex:1"/>
+        <input id="cf-barcode" type="text" inputmode="numeric" placeholder="Type or scan a barcode, then Look up" autocomplete="off" style="flex:1"/>
+        <button class="rst-btn" onclick="cfScanStart()" style="white-space:nowrap" title="Scan with camera">📷 Scan</button>
         <button class="rst-btn" onclick="cfLookup()" style="white-space:nowrap">🔍 Look up</button>
+      </div>
+      <!-- Inline camera viewfinder — hidden until Scan is pressed; collapses on exit -->
+      <div id="cf-scan-wrap" style="display:none;position:relative;margin-top:10px;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:#000">
+        <video id="cf-scan-video" playsinline muted style="display:block;width:100%;max-height:240px;object-fit:cover"></video>
+        <!-- Aiming guide: a centred frame so the user knows where to hold the barcode -->
+        <div style="position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center">
+          <div style="width:78%;height:46%;border:2px solid rgba(255,255,255,.85);border-radius:8px;box-shadow:0 0 0 2000px rgba(0,0,0,.28)"></div>
+        </div>
+        <button class="rst-btn" onclick="cfScanStop()" style="position:absolute;top:8px;right:8px;background:rgba(0,0,0,.55);border-color:rgba(255,255,255,.4);color:#fff">✕ Cancel</button>
+        <div id="cf-scan-status" style="position:absolute;left:0;right:0;bottom:0;font-family:var(--fh);font-size:12px;font-weight:700;color:#fff;background:rgba(0,0,0,.55);padding:6px 10px;text-align:center"></div>
       </div>
       <div id="cf-lookup-status" style="font-size:11px;color:var(--text3);margin-top:5px;min-height:14px"></div>
     </div>
@@ -1363,7 +1374,7 @@ async function cfLookup() {
     finally { clearTimeout(timer); }
     const data = await res.json();
     if (data.status !== 1 || !data.product) {
-      status('Not found in Open Food Facts — enter the macros manually.');
+      status("New product — add the macros once and it'll auto-fill instantly next time.");
       return;
     }
     const p = data.product, n = p.nutriments || {};
@@ -1416,6 +1427,129 @@ async function cfLookup() {
       ? 'Lookup timed out after 5s — enter the macros manually.'
       : 'Lookup failed (offline or blocked) — enter the macros manually.');
   }
+}
+
+/* ─── CAMERA BARCODE SCAN ─────────────────────────────────────────────────────
+   Opens an inline viewfinder and reads a barcode, then hands the number to the
+   existing cfLookup() exactly as if it were typed. Decoder strategy:
+     1. Native BarcodeDetector  — built into Chrome/Edge (Android & desktop).
+     2. @zxing/browser (CDN)    — fallback for iOS Safari, which has no native one.
+   Hard rule: EVERY exit (cancel / denied / no camera / load failure / timeout /
+   success) runs cfScanStop(), which kills the camera and hides the viewfinder.
+   The manual input + Look-up button are never disabled, so typing is always open. */
+const cfScan = { running:false, stream:null, detector:null, timer:0, deadline:0, zxControls:null };
+
+async function cfScanStart() {
+  if (cfScan.running) return;                       // guard against double-tap
+  const sstatus = msg => { const e=document.getElementById('cf-scan-status'); if(e) e.textContent = msg || ''; };
+  const wrap  = document.getElementById('cf-scan-wrap');
+  const video = document.getElementById('cf-scan-video');
+  if (!wrap || !video) return;
+
+  /* getUserMedia needs a secure context (https or localhost). Bail cleanly if not. */
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    cfScanStop('Camera needs HTTPS (or localhost) — type the barcode instead.');
+    return;
+  }
+
+  cfScan.running = true;
+  wrap.style.display = 'block';
+  sstatus('Starting camera…');
+
+  /* 1. Ask for the REAR camera. The browser shows its own permission prompt;
+        a block/deny/no-camera all land here as an exception → clean exit. */
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+  } catch (e) {
+    cfScanStop(e && e.name === 'NotAllowedError'
+      ? 'Camera blocked — allow access or type the barcode instead.'
+      : 'No camera available — type the barcode instead.');
+    return;
+  }
+  if (!cfScan.running) { stream.getTracks().forEach(t => t.stop()); return; } // cancelled mid-await
+  cfScan.stream = stream;
+  video.srcObject = stream;
+  try { await video.play(); } catch (e) { /* some browsers autoplay anyway */ }
+
+  /* Safety net: if nothing is read in 30s, stop and point back to manual entry. */
+  cfScan.deadline = setTimeout(() => cfScanStop("Couldn't read a barcode — type it in instead."), 30000);
+
+  /* 2. Prefer the browser's built-in reader when present. */
+  if ('BarcodeDetector' in window) {
+    try {
+      const supported = await BarcodeDetector.getSupportedFormats();
+      const want = ['ean_13','ean_8','upc_a','upc_e','code_128','code_39'].filter(f => supported.includes(f));
+      cfScan.detector = new BarcodeDetector(want.length ? { formats: want } : undefined);
+      sstatus('Point the rear camera at a barcode…');
+      cfScanLoopNative(video);
+      return;
+    } catch (e) { /* fall through to ZXing if the native reader won't construct */ }
+  }
+
+  /* 3. iOS Safari path: load ZXing from CDN and let it read frames. */
+  cfScanZXing(video, sstatus);
+}
+
+/* Native loop: read one frame, retry on a gentle interval until a hit or exit.
+   We re-check cfScan.running every tick so Cancel/timeout stops it immediately. */
+async function cfScanLoopNative(video) {
+  if (!cfScan.running || !cfScan.detector) return;
+  try {
+    const found = await cfScan.detector.detect(video);
+    if (found && found.length) { cfScanHit(found[0].rawValue); return; }
+  } catch (e) { /* transient per-frame errors are normal — just try again */ }
+  if (cfScan.running) cfScan.timer = setTimeout(() => cfScanLoopNative(video), 200);
+}
+
+/* ZXing fallback: dynamic-import the ESM bundle from jsDelivr, then decode from
+   the stream we already opened (so iOS does not prompt for the camera twice). */
+async function cfScanZXing(video, sstatus) {
+  let mod;
+  try {
+    mod = await import('https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/+esm');
+  } catch (e) {
+    cfScanStop('Scanner failed to load (offline?) — type the barcode instead.');
+    return;
+  }
+  if (!cfScan.running) return;                      // cancelled while downloading
+  try {
+    const reader = new mod.BrowserMultiFormatReader();
+    sstatus('Point the rear camera at a barcode…');
+    cfScan.zxControls = await reader.decodeFromStream(cfScan.stream, video, (result /*, err */) => {
+      if (result && cfScan.running) cfScanHit(result.getText());
+      /* a decode "error" fires on every frame without a barcode — that's normal, ignore it */
+    });
+  } catch (e) {
+    cfScanStop('Camera scan failed — type the barcode instead.');
+  }
+}
+
+/* A barcode was read: keep digits only, close the camera, fill the field, look up. */
+function cfScanHit(raw) {
+  const code = String(raw || '').replace(/\D/g, '');
+  if (!code) return;                               // garbage read → keep scanning
+  cfScanStop();
+  const inp = document.getElementById('cf-barcode');
+  if (inp) inp.value = code;
+  cfLookup();
+}
+
+/* The single, always-safe exit. Stops every resource and collapses the viewfinder.
+   Optional msg is shown in the normal lookup-status line so feedback survives the
+   viewfinder closing. Calling it when nothing is running is harmless. */
+function cfScanStop(msg) {
+  cfScan.running = false;
+  if (cfScan.timer)    { clearTimeout(cfScan.timer);    cfScan.timer = 0; }
+  if (cfScan.deadline) { clearTimeout(cfScan.deadline); cfScan.deadline = 0; }
+  if (cfScan.zxControls) { try { cfScan.zxControls.stop(); } catch (e) {} cfScan.zxControls = null; }
+  if (cfScan.stream)   { cfScan.stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} }); cfScan.stream = null; }
+  cfScan.detector = null;
+  const video = document.getElementById('cf-scan-video');
+  if (video) { try { video.pause(); } catch (e) {} video.srcObject = null; }
+  const wrap = document.getElementById('cf-scan-wrap'); if (wrap) wrap.style.display = 'none';
+  const ss = document.getElementById('cf-scan-status'); if (ss) ss.textContent = '';
+  if (msg) { const ls = document.getElementById('cf-lookup-status'); if (ls) ls.textContent = msg; }
 }
 
 async function cfSave() {
@@ -2055,6 +2189,7 @@ function go(v) {
 }
 
 function render() {
+  if (cfScan.running) cfScanStop(); // a re-render replaces the viewfinder DOM — release the camera first
   kc();
   const vc = document.getElementById('vc');
   if (S.view==='dashboard') vc.innerHTML = vD();
