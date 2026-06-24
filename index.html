@@ -3514,11 +3514,32 @@ function adjustWater(delta) {
 /* ─── CHARTS ──────────────────────────────────────────────────────────────── */
 function ic() { if(S.view==='dashboard') dC(); if(S.view==='weight') wC(); }
 
-function bDS(data) {
+/* Full-history colour + target arrays — computed ONCE over the entire
+   date-sorted weight history (sW()), so zoom / Week-Month-All filtering
+   never re-anchors them. Both arrays are index-aligned with `full`. */
+function fullChartArrays(full) {
+  if (!full.length) return {colour:[], target:[]};
+  const first = full[0].w, fd2 = new Date(full[0].date);
+  // Each day vs the previous CHRONOLOGICAL day; only the true first-ever entry is blue.
+  const colour = full.map((x,i) =>
+    i===0           ? '#0066FF'
+    : x.w<full[i-1].w ? '#22C55E'
+    : x.w>full[i-1].w ? '#FF3B30'
+    :                   '#0066FF');
+  // Target anchored to the true start weight/date, sloped at RATET per day.
+  const target = full.map(x => +(first - RATET * Math.round((new Date(x.date)-fd2)/864e5)).toFixed(2));
+  return {colour, target};
+}
+
+/* bDS no longer derives colour/target from its slice. It receives the
+   precomputed FULL colour + target arrays and slices them to the visible
+   window [start,end) — the same indices used for the data slice — so the
+   weight points, point colours, and target line stay index-aligned and
+   stable across zoom / Week-Month-All. */
+function bDS(data, colourFull, targetFull, start, end) {
   if (!data.length) return {labels:[],datasets:[]};
-  const first=data[0].w, fd2=new Date(data[0].date);
-  const tgt = data.map(x => +(first - RATET * Math.round((new Date(x.date)-fd2)/864e5)).toFixed(2));
-  const ptC = data.map((x,i) => i===0?'#0066FF': x.w<data[i-1].w?'#22C55E': x.w>data[i-1].w?'#FF3B30':'#0066FF');
+  const ptC = colourFull.slice(start, end);
+  const tgt = targetFull.slice(start, end);
   return {
     labels: data.map(x=>x.date.slice(5)),
     datasets:[
@@ -3540,7 +3561,8 @@ function dC() {
   S.dashView.offset = Math.max(0, Math.min(S.dashView.offset, s.length - S.dashView.range));
   const end=s.length-S.dashView.offset, start=Math.max(0,end-S.dashView.range);
   const vis=s.slice(start,end);
-  const {labels,datasets}=bDS(vis);
+  const {colour,target}=fullChartArrays(s);
+  const {labels,datasets}=bDS(vis, colour, target, start, end);
   /* Scale Y to the FULL weight history (s), not just the visible window, so the
      Dashboard Y-axis matches the Weight page chart (which scales to fW() = all). */
   CH['d']=new Chart(el,{type:'line',data:{labels,datasets},options:mO(s.map(x=>x.w))});
@@ -3555,9 +3577,19 @@ function updateDashChart() {
   const end=s.length-S.dashView.offset, start=Math.max(0,end-S.dashView.range);
   const vis=s.slice(start,end);
   if(!vis.length) return;
-  const {labels,datasets}=bDS(vis);
+  const {colour,target}=fullChartArrays(s);
+  const {labels,datasets}=bDS(vis, colour, target, start, end);
   chart.data.labels=labels;
-  chart.data.datasets.forEach((ds,i)=>{ if(datasets[i]) ds.data=datasets[i].data; });
+  chart.data.datasets.forEach((ds,i)=>{
+    if(!datasets[i]) return;
+    ds.data=datasets[i].data;
+    // keep point colours index-aligned with the new visible slice
+    if(datasets[i].pointBackgroundColor!==undefined){
+      ds.pointBackgroundColor=datasets[i].pointBackgroundColor;
+      ds.pointBorderColor=datasets[i].pointBorderColor;
+      ds.pointHoverBackgroundColor=datasets[i].pointHoverBackgroundColor;
+    }
+  });
   const aw=s.map(x=>x.w); // full history → stable Y that matches the Weight page chart
   chart.options.scales.y.min=Math.min(GOAL-1,...aw)-0.5;
   chart.options.scales.y.max=Math.max(...aw)+0.5;
@@ -3608,8 +3640,14 @@ function initDashChartTouch(el, s) {
 }
 function wC() {
   const el=document.getElementById('ch-w'); if(!el) return;
+  const s=sW(); if(!s.length) return;
   const fw=fW(); if(!fw.length) return;
-  const {labels,datasets}=bDS(fw);
+  // Map the date-filtered window back to its index range in the full
+  // history so colour + target stay anchored to all-time, not the filter.
+  const {colour,target}=fullChartArrays(s);
+  const start=s.findIndex(x=>x.date===fw[0].date);
+  const end=start+fw.length;
+  const {labels,datasets}=bDS(fw, colour, target, start, end);
   CH['w']=new Chart(el,{type:'line',data:{labels,datasets},options:mO(fw.map(x=>x.w))});
 }
 
